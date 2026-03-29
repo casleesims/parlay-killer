@@ -851,6 +851,97 @@
       margin-bottom: 12px;
       font-style: italic;
     }
+
+    /* ── SPORT TABS ── */
+    .sport-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .sport-tab {
+      font-family: var(--font);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      padding: 7px 12px 6px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+
+    .sport-tab:hover { color: var(--dim); }
+    .sport-tab.active { color: var(--white); border-bottom-color: var(--green); }
+
+    .tab-count {
+      font-weight: 600;
+      margin-left: 2px;
+      opacity: 0.6;
+    }
+
+    /* ── LAST UPDATED ── */
+    .last-updated {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-align: right;
+      margin-top: 5px;
+      min-height: 14px;
+    }
+
+    /* ── RESULTS BRAND ── */
+    .results-brand {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 0 8px;
+    }
+
+    .results-watermark {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--green);
+      opacity: 0.55;
+    }
+
+    .results-footer {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: center;
+      padding: 14px 0 2px;
+      opacity: 0.5;
+    }
+
+    /* ── SHARE BUTTON ── */
+    #share-btn {
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--white);
+      color: var(--white);
+      width: 100%;
+      padding: 16px;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: background 0.15s;
+    }
+
+    #share-btn:hover { background: rgba(255,255,255,0.05); }
+    #share-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -868,6 +959,7 @@
           <span class="live-dot"></span>
           DraftKings Live
         </div>
+        <div class="last-updated" id="last-updated"></div>
       </div>
     </div>
   </header>
@@ -878,6 +970,7 @@
       <span class="label-text">Live Odds — Click to add leg</span>
       <span class="label-badge" id="odds-count"></span>
     </div>
+    <div id="sport-tabs" class="sport-tabs"></div>
     <div id="odds-scroll">
       <div class="odds-loading">Loading odds&hellip;</div>
     </div>
@@ -909,6 +1002,11 @@
   <!-- ── RESULTS ── -->
   <div id="results">
     <hr class="results-divider" />
+
+    <!-- Brand watermark (visible in screenshot) -->
+    <div class="results-brand">
+      <span class="results-watermark">Parlay Killer</span>
+    </div>
 
     <!-- How is this calculated -->
     <details class="calc-explainer">
@@ -995,13 +1093,22 @@
       <div class="suggestion-body" id="suggest-body"></div>
     </div>
 
+    <!-- Screenshot footer -->
+    <div class="results-footer" id="results-footer">parlarkiller.up.railway.app</div>
+
+    <!-- Share button -->
+    <button id="share-btn" onclick="shareResults()">SHARE THIS PARLAY ↗</button>
+
   </div><!-- /results -->
 </div><!-- /wrap -->
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
   /* ─── State ──────────────────────────────────────────────── */
   let legCounter    = 0;
   const legBtnMap   = {};   // legId → bet button element
+  let allGames      = [];
+  let currentSport  = 'ALL';
 
   /* ─── Utilities ──────────────────────────────────────────── */
   function esc(s) {
@@ -1123,11 +1230,98 @@
         return;
       }
 
-      scroll.innerHTML = '';
-      data.forEach(game => scroll.appendChild(renderGameCard(game)));
+      allGames = data;
+      renderTabs(allGames);
+      renderOddsScroll(allGames);
       document.getElementById('odds-count').textContent = `${data.length} Games`;
     } catch (e) {
       scroll.innerHTML = `<div class="odds-error">Live odds unavailable — enter manually<br><span style="font-size:0.7rem;opacity:0.6;font-weight:400;letter-spacing:0">${e.message}</span></div>`;
+    }
+  }
+
+  function renderTabs(games) {
+    const tabsEl = document.getElementById('sport-tabs');
+    if (!tabsEl) return;
+
+    // Count games per sport
+    const counts = { ALL: games.length };
+    games.forEach(g => { counts[g.sport] = (counts[g.sport] || 0) + 1; });
+
+    // Build ordered list: ALL first, then sports sorted by count desc
+    const sports = ['ALL', ...Object.keys(counts)
+      .filter(s => s !== 'ALL')
+      .sort((a, b) => counts[b] - counts[a])];
+
+    tabsEl.innerHTML = '';
+    sports.forEach(sport => {
+      const btn = document.createElement('button');
+      btn.className = 'sport-tab' + (sport === currentSport ? ' active' : '');
+      btn.innerHTML = `${sport}<span class="tab-count">(${counts[sport]})</span>`;
+      btn.onclick = () => setFilter(sport);
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function setFilter(sport) {
+    currentSport = sport;
+    renderTabs(allGames);
+    const filtered = sport === 'ALL' ? allGames : allGames.filter(g => g.sport === sport);
+    renderOddsScroll(filtered);
+  }
+
+  function renderOddsScroll(games) {
+    const scroll = document.getElementById('odds-scroll');
+    scroll.innerHTML = '';
+    if (!games.length) {
+      scroll.innerHTML = '<div class="odds-error" style="border-color:var(--border)">No games for this sport.</div>';
+      return;
+    }
+    games.forEach(game => scroll.appendChild(renderGameCard(game)));
+  }
+
+  async function fetchStatus() {
+    try {
+      const res  = await fetch('/api/odds/status');
+      if (!res.ok) return;
+      const s = await res.json();
+      const el = document.getElementById('last-updated');
+      if (!el) return;
+      if (!s.cached) {
+        el.textContent = 'Fetching live odds…';
+        return;
+      }
+      const mins = Math.floor(s.age / 60);
+      el.textContent = mins < 1
+        ? 'Updated just now'
+        : `Updated ${mins} min${mins !== 1 ? 's' : ''} ago`;
+    } catch { /* silent */ }
+  }
+
+  async function shareResults() {
+    if (typeof html2canvas === 'undefined') {
+      alert('Screenshot library not loaded. Try refreshing the page.');
+      return;
+    }
+    const btn = document.getElementById('share-btn');
+    const target = document.getElementById('results');
+    btn.textContent = 'Generating…';
+    btn.disabled = true;
+    try {
+      const canvas = await html2canvas(target, {
+        backgroundColor: '#080808',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = 'parlay-killer-results.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (e) {
+      alert('Screenshot failed: ' + e.message);
+    } finally {
+      btn.textContent = 'SHARE THIS PARLAY ↗';
+      btn.disabled = false;
     }
   }
 
@@ -1340,6 +1534,7 @@
 
   /* ─── Init ───────────────────────────────────────────────── */
   fetchOdds();
+  fetchStatus();
 </script>
 </body>
 </html>
