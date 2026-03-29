@@ -13,11 +13,20 @@ function americanToProb(oddsStr) {
 router.post('/', (req, res) => {
   const { legs, wager } = req.body;
 
-  if (!legs || !Array.isArray(legs) || legs.length === 0) {
-    return res.status(400).json({ error: 'legs must be a non-empty array' });
+  if (!Array.isArray(legs) || legs.length < 2 || legs.length > 15) {
+    return res.status(400).json({ error: 'Invalid input: need 2-15 legs.' });
   }
-  if (typeof wager !== 'number' || wager <= 0) {
-    return res.status(400).json({ error: 'wager must be a positive number' });
+  for (const leg of legs) {
+    const odds = parseInt(leg.odds);
+    if (isNaN(odds) || odds === 0 || odds < -5000 || odds > 5000) {
+      return res.status(400).json({ error: `Invalid odds: ${leg.odds}` });
+    }
+    if (!leg.desc || leg.desc.length > 100) {
+      return res.status(400).json({ error: 'Invalid leg description.' });
+    }
+  }
+  if (!wager || wager < 1 || wager > 100000) {
+    return res.status(400).json({ error: 'Invalid wager amount.' });
   }
 
   const HOLD = 0.045;

@@ -1407,6 +1407,7 @@
         body: JSON.stringify({ legs, wager }),
       });
       data = await res.json();
+      if (res.status === 429) { showError("You've analyzed a lot of parlays — wait a moment and try again."); return; }
       if (!res.ok) { showError(data.error || 'Server error.'); return; }
     } catch {
       showError('Cannot reach server.');
