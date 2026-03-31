@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 
 const analyzeRouter = require('./routes/analyze');
 const oddsRouter    = require('./routes/odds');
+const scoresRouter  = require('./routes/scores');
 
 const app = express();
 
@@ -30,6 +31,12 @@ const oddsLimiter = rateLimit({
   message: { error: 'Too many requests — slow down.' },
 });
 
+const scoresLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: { error: 'Too many requests — slow down.' },
+});
+
 app.use(generalLimiter);
 app.use(cors());
 app.use(express.json());
@@ -45,6 +52,7 @@ app.use((req, res, next) => {
 
 app.use('/api/analyze', analyzeLimiter, analyzeRouter);
 app.use('/api/odds',    oddsLimiter,    oddsRouter);
+app.use('/api/scores',  scoresLimiter,  scoresRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

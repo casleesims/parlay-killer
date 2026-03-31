@@ -863,21 +863,21 @@
 
     .sport-tab {
       font-family: var(--font);
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
-      color: var(--muted);
+      color: rgba(255,255,255,0.7);
       padding: 7px 12px 6px;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s;
       margin-bottom: -1px;
     }
 
-    .sport-tab:hover { color: var(--dim); }
+    .sport-tab:hover { color: var(--white); }
     .sport-tab.active { color: var(--white); border-bottom-color: var(--green); }
 
     .tab-count {
@@ -885,6 +885,81 @@
       margin-left: 2px;
       opacity: 0.6;
     }
+
+    /* ── DAY TOGGLE ── */
+    .day-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .day-tab {
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 18px;
+      cursor: pointer;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      border-radius: 20px;
+      transition: all 0.15s;
+    }
+
+    .day-tab.active {
+      background: var(--green);
+      border-color: var(--green);
+      color: var(--bg);
+    }
+
+    .day-tab:not(.active):hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* ── CARD SCORE ── */
+    .card-score {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 3px 10px;
+      margin-bottom: 10px;
+    }
+
+    .score-team {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .score-team.away { color: var(--dim); }
+    .score-team.home { color: var(--white); }
+
+    .score-pts {
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: var(--white);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-badge {
+      display: inline-block;
+      font-size: 0.58rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+    }
+
+    .score-badge.live  { background: var(--red);   color: #fff; }
+    .score-badge.final { background: var(--muted); color: #fff; }
 
     /* ── LAST UPDATED ── */
     .last-updated {
@@ -969,6 +1044,10 @@
     <div class="section-label">
       <span class="label-text">Live Odds — Click to add leg</span>
       <span class="label-badge" id="odds-count"></span>
+    </div>
+    <div class="day-toggle">
+      <button class="day-tab active" data-day="today"    onclick="fetchOddsForDay('today')">Today</button>
+      <button class="day-tab"        data-day="tomorrow" onclick="fetchOddsForDay('tomorrow')">Tomorrow</button>
     </div>
     <div id="sport-tabs" class="sport-tabs"></div>
     <div id="odds-scroll">
@@ -1109,6 +1188,8 @@
   const legBtnMap   = {};   // legId → bet button element
   let allGames      = [];
   let currentSport  = 'ALL';
+  let currentDay    = 'today';
+  let scoresMap     = new Map(); // "home|away" → score object
 
   /* ─── Utilities ──────────────────────────────────────────── */
   function esc(s) {
@@ -1216,17 +1297,37 @@
 
   /* ─── Live Odds ──────────────────────────────────────────── */
   async function fetchOdds() {
-    const scroll = document.getElementById('odds-scroll');
-    try {
-      const res  = await fetch('/api/odds');
-      const data = await res.json();
+    return fetchOddsForDay('today');
+  }
 
-      if (!res.ok || data.error) {
-        throw new Error(data.error || 'API error');
-      }
+  async function fetchOddsForDay(day) {
+    currentDay = day;
+
+    // Update day toggle buttons
+    document.querySelectorAll('.day-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.day === day);
+    });
+
+    // Reset sport filter
+    currentSport = 'ALL';
+    document.getElementById('sport-tabs').innerHTML = '';
+    const scroll = document.getElementById('odds-scroll');
+    scroll.innerHTML = '<div class="odds-loading">Loading odds\u2026</div>';
+
+    try {
+      const endpoint = day === 'today' ? '/api/odds' : '/api/odds/tomorrow';
+
+      // Fetch odds and scores in parallel; scores only matter for today
+      const [oddsRes] = await Promise.all([
+        fetch(endpoint),
+        day === 'today' ? fetchScores() : Promise.resolve(),
+      ]);
+
+      const data = await oddsRes.json();
+      if (!oddsRes.ok || data.error) throw new Error(data.error || 'API error');
 
       if (!data.length) {
-        scroll.innerHTML = '<div class="odds-error">No upcoming games found.</div>';
+        scroll.innerHTML = '<div class="odds-error">No games found.</div>';
         return;
       }
 
@@ -1237,6 +1338,16 @@
     } catch (e) {
       scroll.innerHTML = `<div class="odds-error">Live odds unavailable — enter manually<br><span style="font-size:0.7rem;opacity:0.6;font-weight:400;letter-spacing:0">${e.message}</span></div>`;
     }
+  }
+
+  async function fetchScores() {
+    try {
+      const res = await fetch('/api/scores');
+      if (!res.ok) return;
+      const data = await res.json();
+      scoresMap = new Map();
+      data.forEach(s => scoresMap.set(`${s.home}|${s.away}`, s));
+    } catch { /* scores are optional — fail silently */ }
   }
 
   function renderTabs(games) {
@@ -1362,16 +1473,40 @@
       </div>`;
     }
 
+    // Score lookup
+    const score = scoresMap.get(`${game.home}|${game.away}`);
+
+    let statusHtml, teamsHtml;
+
+    if (score && (score.status === 'live' || score.status === 'final')) {
+      const badgeCls  = score.status === 'live' ? 'live' : 'final';
+      const badgeTxt  = score.status === 'live' ? 'LIVE' : 'FINAL';
+      const awayScore = score.awayScore ?? '—';
+      const homeScore = score.homeScore ?? '—';
+      statusHtml = `<span class="score-badge ${badgeCls}">${badgeTxt}</span>`;
+      teamsHtml  = `
+        <div class="card-score">
+          <div class="score-team away">${esc(game.away)}</div>
+          <div class="score-pts">${awayScore}</div>
+          <div class="score-team home">${esc(game.home)}</div>
+          <div class="score-pts">${homeScore}</div>
+        </div>`;
+    } else {
+      statusHtml = `<span class="game-time">${esc(game.time)}</span>`;
+      teamsHtml  = `
+        <div class="team-names">
+          <div class="team-away">${esc(game.away)}</div>
+          <div class="vs-sep">@</div>
+          <div class="team-home">${esc(game.home)}</div>
+        </div>`;
+    }
+
     card.innerHTML = `
       <div class="card-meta">
         <span class="sport-badge">${esc(game.sport)}</span>
-        <span class="game-time">${esc(game.time)}</span>
+        ${statusHtml}
       </div>
-      <div class="team-names">
-        <div class="team-away">${esc(game.away)}</div>
-        <div class="vs-sep">@</div>
-        <div class="team-home">${esc(game.home)}</div>
-      </div>
+      ${teamsHtml}
       <div class="bet-grid">${betRows}</div>
     `;
     return card;
