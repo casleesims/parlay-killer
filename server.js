@@ -15,6 +15,7 @@ const propsRouter       = require('./routes/props');
 const liveUnderRouter   = require('./routes/liveunder');
 const valueFinderRouter = require('./routes/valuefinder');
 const authRouter        = require('./routes/auth');
+const billingRouter     = require('./routes/billing');
 
 const app = express();
 
@@ -79,6 +80,10 @@ const authLimiter = rateLimit({
 // ── Middleware ─────────────────────────────────────────────
 app.use(generalLimiter);
 app.use(cors({ origin: true, credentials: true }));
+
+// Webhook needs raw body BEFORE express.json()
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -98,6 +103,7 @@ app.use('/api/scores',       scoresLimiter,     scoresRouter);
 app.use('/api/props',        propsLimiter,      propsRouter);
 app.use('/api/liveunder',    liveUnderLimiter,  liveUnderRouter);
 app.use('/api/valuefinder',  oddsLimiter,       valueFinderRouter);
+app.use('/api/billing',                         billingRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

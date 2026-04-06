@@ -154,6 +154,170 @@
       transition: border-color 0.15s, color 0.15s;
     }
     .auth-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* ── Usage counter in auth bar ── */
+    .auth-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .auth-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--dim);
+    }
+    .auth-pro-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--green);
+      background: rgba(0,255,135,0.08);
+      border: 1px solid rgba(0,255,135,0.25);
+      padding: 2px 7px;
+    }
+    .auth-divider {
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+    .auth-manage-link {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .auth-manage-link:hover { color: var(--green); }
+    .auth-usage {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .auth-usage-text {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--dim);
+      white-space: nowrap;
+    }
+    .auth-usage-text a {
+      color: var(--green);
+      text-decoration: none;
+      margin-left: 6px;
+    }
+    .auth-usage-text a:hover { text-decoration: underline; }
+    .auth-usage-bar {
+      width: 80px;
+      height: 3px;
+      background: var(--border2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .auth-usage-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    /* ── Upgrade modal ── */
+    .upgrade-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .upgrade-modal-overlay.open { display: flex; }
+    .upgrade-modal {
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-top: 3px solid var(--green);
+      padding: 36px 32px 30px;
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+    }
+    .upgrade-modal-close {
+      position: absolute;
+      top: 12px; right: 14px;
+      background: none; border: none;
+      color: var(--muted); font-size: 1.3rem;
+      cursor: pointer; line-height: 1;
+      transition: color 0.15s;
+    }
+    .upgrade-modal-close:hover { color: var(--white); }
+    .upgrade-modal-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .upgrade-modal-title {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+    .upgrade-modal-sub {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--dim);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .upgrade-btn {
+      display: block;
+      width: 100%;
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 13px 20px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-bottom: 10px;
+      text-align: center;
+      text-decoration: none;
+    }
+    .upgrade-btn:hover { opacity: 0.88; }
+    .upgrade-btn-primary {
+      background: var(--green);
+      color: #000;
+    }
+    .upgrade-btn-secondary {
+      background: transparent;
+      color: var(--green);
+      border: 1px solid rgba(0,255,135,0.3);
+    }
+    .upgrade-modal-wait {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 14px;
+    }
+
+    /* ── Signup hint (shown when auth-required gate fires) ── */
+    .signup-hint {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--green);
+      background: rgba(0,255,135,0.06);
+      border: 1px solid rgba(0,255,135,0.2);
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .signup-hint.show { display: block; }
+
     .auth-btn.primary {
       background: var(--green);
       border-color: var(--green);
@@ -1539,6 +1703,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-signup')">&times;</button>
     <div class="modal-title">Create Account</div>
+    <div class="signup-hint" id="signup-hint">Create a free account to analyze your parlay</div>
     <div class="modal-error" id="signup-error"></div>
     <div class="modal-field">
       <label class="modal-label">Name</label>
@@ -1556,6 +1721,19 @@
     <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
     <button class="modal-google" onclick="googleAuth()">G &nbsp; Continue with Google</button>
     <div class="modal-switch">Already have an account? <button onclick="switchModal('modal-signup','modal-login')">Log in</button></div>
+  </div>
+</div>
+
+<!-- ── UPGRADE MODAL ── -->
+<div class="upgrade-modal-overlay" id="modal-upgrade" onclick="handleUpgradeOverlayClick(event)">
+  <div class="upgrade-modal">
+    <button class="upgrade-modal-close" onclick="closeUpgradeModal()">&times;</button>
+    <div class="upgrade-modal-icon">&#9888;</div>
+    <div class="upgrade-modal-title">Daily Limit Reached</div>
+    <div class="upgrade-modal-sub">You've used your 3 free analyses today. Upgrade to Pro for unlimited analyses every day.</div>
+    <button class="upgrade-btn upgrade-btn-primary" id="upgrade-monthly-btn" onclick="startCheckout('monthly')">Upgrade to Pro &mdash; $9.99/month</button>
+    <button class="upgrade-btn upgrade-btn-secondary" id="upgrade-annual-btn" onclick="startCheckout('annual')">Get Annual &mdash; $39.99/year</button>
+    <div class="upgrade-modal-wait">Or wait until midnight for 3 more free analyses</div>
   </div>
 </div>
 
@@ -2227,14 +2405,32 @@
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ legs, wager }),
       });
       data = await res.json();
-      if (res.status === 429) { showError("You\u2019ve analyzed a lot of parlays \u2014 wait a moment and try again."); return; }
+      if (res.status === 401 && data.requiresAuth) {
+        // Not logged in — open signup modal with hint
+        const hint = document.getElementById('signup-hint');
+        if (hint) hint.classList.add('show');
+        openModal('modal-signup');
+        return;
+      }
+      if (res.status === 429 && data.requiresUpgrade) {
+        openUpgradeModal();
+        return;
+      }
       if (!res.ok) { showError(data.error || 'Server error.'); return; }
     } catch {
       showError('Cannot reach server.');
       return;
+    }
+
+    // Update usage counter from response
+    if (data.usage && data.usage.count != null && currentUser) {
+      currentUser.todayUsage = data.usage.count;
+      currentUser.remaining  = data.usage.remaining;
+      renderAuthBar();
     }
 
     renderResults(data);
@@ -2592,9 +2788,32 @@
     if (!bar) return;
     if (currentUser) {
       const display = currentUser.name || currentUser.email;
+      const isPro   = currentUser.plan === 'pro' || currentUser.usageLimit === null;
+
+      let usageHtml = '';
+      if (isPro) {
+        usageHtml = `<span class="auth-pro-badge">&#9889; PRO</span><a class="auth-manage-link" href="#" onclick="manageSubscription();return false;">Manage Subscription</a>`;
+      } else {
+        const used      = currentUser.todayUsage || 0;
+        const limit     = currentUser.usageLimit || 3;
+        const remaining = currentUser.remaining != null ? currentUser.remaining : (limit - used);
+        const fillPct   = Math.min(100, Math.round((used / limit) * 100));
+        const fillColor = remaining === 0 ? 'var(--red)' : remaining === 1 ? 'var(--yellow)' : 'var(--green)';
+        const upgradeLink = remaining === 0
+          ? `<a href="#" onclick="openUpgradeModal();return false;">Upgrade for unlimited</a>`
+          : '';
+        usageHtml = `
+          <div class="auth-usage">
+            <span class="auth-usage-text">${used} of ${limit} free analyses used today ${upgradeLink}</span>
+            <div class="auth-usage-bar"><div class="auth-usage-fill" style="width:${fillPct}%;background:${fillColor}"></div></div>
+          </div>`;
+      }
+
       bar.innerHTML = `
         <div class="auth-user">
           <span class="auth-name">${esc(display)}</span>
+          ${usageHtml}
+          <span class="auth-divider">|</span>
           <button class="auth-btn" onclick="submitLogout()">Sign Out</button>
         </div>
       `;
@@ -2627,6 +2846,71 @@
   function closeModal(id) {
     document.getElementById(id).classList.remove('open');
     clearModalError(id === 'modal-login' ? 'login-error' : 'signup-error');
+    if (id === 'modal-signup') {
+      const hint = document.getElementById('signup-hint');
+      if (hint) hint.classList.remove('show');
+    }
+  }
+
+  function openUpgradeModal() {
+    document.getElementById('modal-upgrade').classList.add('open');
+  }
+
+  function closeUpgradeModal() {
+    document.getElementById('modal-upgrade').classList.remove('open');
+    // Reset button states
+    const mb = document.getElementById('upgrade-monthly-btn');
+    const ab = document.getElementById('upgrade-annual-btn');
+    if (mb) { mb.disabled = false; mb.textContent = 'Upgrade to Pro \u2014 $9.99/month'; }
+    if (ab) { ab.disabled = false; ab.textContent = 'Get Annual \u2014 $39.99/year'; }
+  }
+
+  function handleUpgradeOverlayClick(e) {
+    if (e.target === document.getElementById('modal-upgrade')) closeUpgradeModal();
+  }
+
+  async function startCheckout(plan) {
+    const monthlyBtn = document.getElementById('upgrade-monthly-btn');
+    const annualBtn  = document.getElementById('upgrade-annual-btn');
+    const btn        = plan === 'monthly' ? monthlyBtn : annualBtn;
+
+    // Loading state
+    if (monthlyBtn) monthlyBtn.disabled = true;
+    if (annualBtn)  annualBtn.disabled  = true;
+    if (btn) btn.textContent = 'Redirecting\u2026';
+
+    try {
+      const res  = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to start checkout. Please try again.');
+        closeUpgradeModal();
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      alert('Network error. Please try again.');
+      closeUpgradeModal();
+    }
+  }
+
+  async function manageSubscription() {
+    try {
+      const res  = await fetch('/api/billing/portal', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Could not open subscription portal.');
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      alert('Network error. Please try again.');
+    }
   }
 
   function handleOverlayClick(e, id) {
@@ -2674,7 +2958,7 @@
       if (!res.ok) { showModalError('login-error', data.error || 'Login failed.'); return; }
       currentUser = data.user;
       closeModal('modal-login');
-      renderAuthBar();
+      await checkAuth(); // re-fetch to get todayUsage
       document.getElementById('login-email').value    = '';
       document.getElementById('login-password').value = '';
     } catch {
@@ -2704,7 +2988,7 @@
       if (!res.ok) { showModalError('signup-error', data.error || 'Registration failed.'); return; }
       currentUser = data.user;
       closeModal('modal-signup');
-      renderAuthBar();
+      await checkAuth(); // re-fetch to get todayUsage
       document.getElementById('signup-name').value     = '';
       document.getElementById('signup-email').value    = '';
       document.getElementById('signup-password').value = '';

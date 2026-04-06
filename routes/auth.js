@@ -103,7 +103,28 @@ router.get('/me', async (req, res) => {
       req.session.destroy(() => {});
       return res.json({ user: null });
     }
-    res.json({ user: safeUser(result.rows[0]) });
+
+    const user = result.rows[0];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const usageResult = await pool.query(
+      `SELECT COUNT(*) as count FROM usage
+       WHERE user_id = $1 AND action = 'analyze' AND created_at >= $2`,
+      [user.id, today]
+    );
+    const todayUsage = parseInt(usageResult.rows[0].count);
+    const isPro = user.plan === 'pro' || user.subscription_status === 'active';
+
+    const safe = safeUser(user);
+    res.json({
+      user: {
+        ...safe,
+        todayUsage,
+        usageLimit: isPro ? null : 3,
+        remaining: isPro ? null : Math.max(0, 3 - todayUsage),
+      },
+    });
   } catch (err) {
     console.error('Me error:', err);
     res.status(500).json({ error: 'Failed to fetch user' });

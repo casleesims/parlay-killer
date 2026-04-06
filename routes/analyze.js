@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { checkUsage } = require('../middleware/auth');
 
 function americanToProb(oddsStr) {
   const odds = parseFloat(oddsStr);
@@ -10,7 +11,7 @@ function americanToProb(oddsStr) {
   }
 }
 
-router.post('/', (req, res) => {
+router.post('/', checkUsage, (req, res) => {
   const { legs, wager } = req.body;
 
   if (!Array.isArray(legs) || legs.length < 2 || legs.length > 15) {
@@ -88,6 +89,11 @@ router.post('/', (req, res) => {
     warnings,
     suggestion,
     wager,
+    usage: {
+      count: req.usageCount || null,
+      limit: req.usageLimit || null,
+      remaining: req.usageLimit != null ? req.usageLimit - req.usageCount : null,
+    },
   });
 });
 
