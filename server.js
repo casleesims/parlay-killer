@@ -1,4 +1,15 @@
 require('dotenv').config();
+const sentryEnabled = process.env.SENTRY_DSN?.startsWith('https://');
+let Sentry;
+if (sentryEnabled) {
+  Sentry = require('@sentry/node');
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 0.1,
+  });
+}
+
 const express    = require('express');
 const cors       = require('cors');
 const path       = require('path');
@@ -16,6 +27,7 @@ const liveUnderRouter   = require('./routes/liveunder');
 const valueFinderRouter = require('./routes/valuefinder');
 const authRouter        = require('./routes/auth');
 const billingRouter     = require('./routes/billing');
+const passport          = require('./config/passport');
 
 const app = express();
 
@@ -33,6 +45,9 @@ app.use(session({
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   },
 }));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // ── Rate limiters ──────────────────────────────────────────
 const generalLimiter = rateLimit({
@@ -78,6 +93,7 @@ const authLimiter = rateLimit({
 });
 
 // ── Middleware ─────────────────────────────────────────────
+if (sentryEnabled) app.use(Sentry.Handlers.requestHandler());
 app.use(generalLimiter);
 app.use(cors({ origin: true, credentials: true }));
 
@@ -104,6 +120,12 @@ app.use('/api/props',        propsLimiter,      propsRouter);
 app.use('/api/liveunder',    liveUnderLimiter,  liveUnderRouter);
 app.use('/api/valuefinder',  oddsLimiter,       valueFinderRouter);
 app.use('/api/billing',                         billingRouter);
+
+if (sentryEnabled) app.use(Sentry.Handlers.errorHandler());
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something went wrong. We've been notified." });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

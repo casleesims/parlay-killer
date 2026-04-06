@@ -18,6 +18,12 @@ async function checkUsage(req, res, next) {
   }
 
   try {
+    // Owner bypass
+    const ownerCheck = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
+    if (ownerCheck.rows[0]?.email === 'simscaslee@gmail.com') {
+      return next();
+    }
+
     const userResult = await pool.query(
       'SELECT plan, subscription_status FROM users WHERE id = $1',
       [userId]

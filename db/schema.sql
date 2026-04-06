@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   stripe_customer_id VARCHAR(255),
   stripe_subscription_id VARCHAR(255),
   subscription_status VARCHAR(20) DEFAULT 'inactive',
+  email_verified BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

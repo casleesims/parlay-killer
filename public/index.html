@@ -304,6 +304,92 @@
       text-align: center;
       margin-top: 14px;
     }
+    .upgrade-modal-refund {
+      font-size: 0.65rem;
+      font-weight: 400;
+      color: #333;
+      text-align: center;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .upgrade-modal-refund a { color: #555; text-decoration: none; }
+    .upgrade-modal-refund a:hover { color: var(--green); }
+
+    /* ── Cookie consent banner ── */
+    .cookie-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #111;
+      border-top: 1px solid #222;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      z-index: 2000;
+    }
+    .cookie-banner.hidden { display: none; }
+    .cookie-text {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: #888;
+      line-height: 1.5;
+      flex: 1;
+      min-width: 200px;
+    }
+    .cookie-actions {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .cookie-accept {
+      font-family: var(--font);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 7px 18px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .cookie-accept:hover { opacity: 0.85; }
+    .cookie-learn {
+      font-family: var(--font);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: transparent;
+      color: #555;
+      border: 1px solid #333;
+      padding: 7px 18px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .cookie-learn:hover { color: var(--green); border-color: var(--green); }
+
+    /* ── Email verification banner ── */
+    .verify-banner {
+      background: rgba(244, 162, 97, 0.08);
+      border: 1px solid rgba(244, 162, 97, 0.25);
+      border-left: 3px solid var(--yellow);
+      padding: 10px 16px;
+      margin: 12px 0 0;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--yellow);
+      display: none;
+    }
+    .verify-banner.show { display: block; }
 
     /* ── Signup hint (shown when auth-required gate fires) ── */
     .signup-hint {
@@ -458,21 +544,26 @@
     .modal-divider-text { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 
     .modal-google {
-      font-family: var(--font);
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: transparent;
-      border: 1px solid var(--border2);
-      color: var(--dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      background: #ffffff;
+      border: 1px solid #dadce0;
+      color: #3c4043;
       width: 100%;
-      padding: 11px;
+      padding: 10px 16px;
       cursor: pointer;
       margin-bottom: 16px;
-      transition: border-color 0.15s, color 0.15s;
+      border-radius: 4px;
+      transition: box-shadow 0.15s, background 0.15s;
     }
-    .modal-google:hover { border-color: var(--green); color: var(--green); }
+    .modal-google:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .modal-google svg { flex-shrink: 0; }
 
     .modal-switch {
       font-size: 0.72rem;
@@ -739,6 +830,14 @@
       letter-spacing: 0.06em;
       color: var(--dim);
       text-transform: uppercase;
+    }
+
+    .card-odds-note {
+      font-size: 0.55rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-top: 8px;
     }
 
     .team-names { margin-bottom: 12px; }
@@ -1683,6 +1782,11 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-login')">&times;</button>
     <div class="modal-title">Log In</div>
+    <button class="modal-google" onclick="loginWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+    <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
     <div class="modal-error" id="login-error"></div>
     <div class="modal-field">
       <label class="modal-label">Email</label>
@@ -1693,8 +1797,6 @@
       <input type="password" class="modal-input" id="login-password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" autocomplete="current-password" />
     </div>
     <button class="modal-submit" id="login-submit" onclick="submitLogin()">Log In</button>
-    <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
-    <button class="modal-google" onclick="googleAuth()">G &nbsp; Continue with Google</button>
     <div class="modal-switch">No account? <button onclick="switchModal('modal-login','modal-signup')">Sign up free</button></div>
   </div>
 </div>
@@ -1704,6 +1806,11 @@
     <button class="modal-close" onclick="closeModal('modal-signup')">&times;</button>
     <div class="modal-title">Create Account</div>
     <div class="signup-hint" id="signup-hint">Create a free account to analyze your parlay</div>
+    <button class="modal-google" onclick="loginWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+    <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
     <div class="modal-error" id="signup-error"></div>
     <div class="modal-field">
       <label class="modal-label">Name</label>
@@ -1718,8 +1825,6 @@
       <input type="password" class="modal-input" id="signup-password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" autocomplete="new-password" />
     </div>
     <button class="modal-submit" id="signup-submit" onclick="submitSignup()">Create Account</button>
-    <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
-    <button class="modal-google" onclick="googleAuth()">G &nbsp; Continue with Google</button>
     <div class="modal-switch">Already have an account? <button onclick="switchModal('modal-signup','modal-login')">Log in</button></div>
   </div>
 </div>
@@ -1734,12 +1839,13 @@
     <button class="upgrade-btn upgrade-btn-primary" id="upgrade-monthly-btn" onclick="startCheckout('monthly')">Upgrade to Pro &mdash; $9.99/month</button>
     <button class="upgrade-btn upgrade-btn-secondary" id="upgrade-annual-btn" onclick="startCheckout('annual')">Get Annual &mdash; $39.99/year</button>
     <div class="upgrade-modal-wait">Or wait until midnight for 3 more free analyses</div>
+    <div class="upgrade-modal-refund">7-day refund policy. Cancel anytime. No questions asked.<br>Contact <a href="mailto:simscaslee@gmail.com">simscaslee@gmail.com</a> for refund requests.</div>
   </div>
 </div>
 
 <!-- ── DISCLAIMER BANNER ── -->
 <div class="disclaimer-banner" id="disclaimer-banner">
-  <span class="disclaimer-text">Parlay Killer is a math tool only — not betting advice. You must be 18+ to use this service.</span>
+  <span class="disclaimer-text">Parlay Killer is a mathematical analysis tool only. We do NOT facilitate, encourage, or provide gambling services of any kind. We do not accept bets or wagers. All analysis is based on publicly available odds data for informational and educational purposes only. Sports betting may be illegal in your jurisdiction. You must be 18+ to use this service. Always verify odds directly with your sportsbook before placing any bet.</span>
   <button class="disclaimer-dismiss" onclick="dismissBanner()" aria-label="Dismiss">&times;</button>
 </div>
 
@@ -1748,6 +1854,11 @@
   <!-- ── AUTH BAR ── -->
   <div class="auth-bar" id="auth-bar">
     <!-- populated by JS -->
+  </div>
+
+  <!-- ── EMAIL VERIFICATION BANNER ── -->
+  <div class="verify-banner" id="verify-banner">
+    Welcome! Please verify your email to ensure account security. Email verification coming soon &mdash; your account is active now.
   </div>
 
   <!-- ── HEADER ── -->
@@ -2023,7 +2134,7 @@
       <a href="/privacy.html">Privacy Policy</a>
       <a href="/terms.html">Terms of Service</a>
     </nav>
-    <p class="site-footer-legal">18+ only. For entertainment and mathematical analysis purposes only. Not betting advice. Gamble responsibly. If you have a gambling problem, call 1-800-522-4700.</p>
+    <p class="site-footer-legal">18+ only. Parlay Killer is not a sportsbook, betting advisor, or gambling service. We are a math tool. Use at your own risk. If you have a gambling problem, call 1-800-522-4700.</p>
   </footer>
 
 </div><!-- /wrap -->
@@ -2308,6 +2419,7 @@
       <div class="props-panel" id="props-panel-${safeId}">
         <div class="props-loading">Loading props\u2026</div>
       </div>
+      <div class="card-odds-note">Odds may be delayed. Verify with your sportsbook.</div>
     `;
     return card;
   }
@@ -2434,6 +2546,9 @@
     }
 
     renderResults(data);
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'analyze_parlay', { legs: legs.length, ev: data.evPct });
+    }
   }
 
   /* ─── Math Breakdown ─────────────────────────────────────── */
@@ -2814,6 +2929,8 @@
           <span class="auth-name">${esc(display)}</span>
           ${usageHtml}
           <span class="auth-divider">|</span>
+          <a class="auth-manage-link" href="/account.html">Settings</a>
+          <span class="auth-divider">|</span>
           <button class="auth-btn" onclick="submitLogout()">Sign Out</button>
         </div>
       `;
@@ -2834,6 +2951,7 @@
       currentUser = null;
     }
     renderAuthBar();
+    updateVerifyBanner();
   }
 
   function openModal(id) {
@@ -2870,6 +2988,9 @@
   }
 
   async function startCheckout(plan) {
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'begin_checkout', { plan });
+    }
     const monthlyBtn = document.getElementById('upgrade-monthly-btn');
     const annualBtn  = document.getElementById('upgrade-annual-btn');
     const btn        = plan === 'monthly' ? monthlyBtn : annualBtn;
@@ -2988,6 +3109,7 @@
       if (!res.ok) { showModalError('signup-error', data.error || 'Registration failed.'); return; }
       currentUser = data.user;
       closeModal('modal-signup');
+      if (typeof gtag !== 'undefined') gtag('event', 'sign_up', { method: 'email' });
       await checkAuth(); // re-fetch to get todayUsage
       document.getElementById('signup-name').value     = '';
       document.getElementById('signup-email').value    = '';
@@ -3007,8 +3129,8 @@
     renderAuthBar();
   }
 
-  function googleAuth() {
-    alert('Google sign-in coming soon \u2014 add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env to enable.');
+  function loginWithGoogle() {
+    window.location.href = '/api/auth/google';
   }
 
   // Allow Enter key in modal inputs
@@ -3027,10 +3149,62 @@
     document.getElementById('disclaimer-banner').classList.add('hidden');
   }
 
+  /* ─── Cookie consent ─────────────────────────────────────── */
+  function acceptCookies() {
+    localStorage.setItem('cookie-consent', '1');
+    document.getElementById('cookie-banner').classList.add('hidden');
+  }
+  if (localStorage.getItem('cookie-consent')) {
+    document.getElementById('cookie-banner').classList.add('hidden');
+  }
+
+  /* ─── Email verification banner ─────────────────────────── */
+  function updateVerifyBanner() {
+    const banner = document.getElementById('verify-banner');
+    if (!banner) return;
+    if (currentUser && !currentUser.email_verified) {
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  /* ─── Handle OAuth error redirect ───────────────────────── */
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'auth_failed') {
+      openModal('modal-login');
+      showModalError('login-error', 'Google sign-in failed. Please try again or use email.');
+      history.replaceState(null, '', '/');
+    }
+    if (params.get('google_signup') === '1') {
+      if (typeof gtag !== 'undefined') gtag('event', 'sign_up', { method: 'google' });
+      history.replaceState(null, '', '/');
+    }
+  })();
+
   /* ─── Init ───────────────────────────────────────────────── */
   checkAuth();
   fetchOdds();
   fetchStatus();
+</script>
+
+<!-- ── COOKIE CONSENT BANNER ── -->
+<div class="cookie-banner" id="cookie-banner">
+  <span class="cookie-text">We use essential cookies to keep you logged in. No tracking or advertising cookies. By continuing to use Parlay Killer you accept our use of essential cookies.</span>
+  <div class="cookie-actions">
+    <button class="cookie-accept" onclick="acceptCookies()">Accept</button>
+    <a class="cookie-learn" href="/privacy.html">Learn More</a>
+  </div>
+</div>
+
+<!-- Google Analytics placeholder - replace G-XXXXXXXXXX with real ID -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
 </script>
 </body>
 </html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Settings — Parlay Killer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- Google Analytics placeholder - replace G-XXXXXXXXXX with real ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #080808;
+      --s1:     #0d0d0d;
+      --border: #1a1a1a;
+      --border2:#242424;
+      --green:  #00ff87;
+      --red:    #ff3b3b;
+      --yellow: #f4a261;
+      --white:  #ffffff;
+      --dim:    #999999;
+      --muted:  #444444;
+      --font:   'Barlow Condensed', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .wrap { max-width: 700px; margin: 0 auto; padding: 0 24px 80px; }
+
+    /* ── Header ── */
+    header {
+      padding: 32px 0 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--green);
+      text-decoration: none;
+    }
+    .back-link {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid var(--muted);
+      padding: 5px 12px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .back-link:hover { color: var(--green); border-color: var(--green); }
+
+    /* ── Page title ── */
+    .page-title {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 32px;
+    }
+
+    /* ── Loading / not-authed states ── */
+    #loading-msg, #unauthed-msg {
+      font-size: 0.95rem;
+      color: var(--dim);
+      padding: 40px 0;
+    }
+    #account-content { display: none; }
+
+    /* ── Sections ── */
+    .section {
+      margin-bottom: 36px;
+      padding-bottom: 36px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-of-type { border-bottom: none; }
+
+    .section-label {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 4px;
+    }
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+
+    /* ── Info rows ── */
+    .info-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .info-key {
+      font-weight: 700;
+      color: var(--dim);
+      min-width: 80px;
+    }
+    .info-val { color: var(--white); }
+    .plan-badge {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      padding: 2px 8px;
+      text-transform: uppercase;
+    }
+    .plan-badge.pro { background: rgba(0,255,135,0.1); color: var(--green); border: 1px solid rgba(0,255,135,0.3); }
+    .plan-badge.free { background: rgba(255,255,255,0.05); color: var(--dim); border: 1px solid var(--border2); }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 5px;
+    }
+    .field input {
+      width: 100%;
+      background: var(--s1);
+      border: 1px solid var(--border2);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 0.95rem;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--green); }
+
+    /* ── Buttons ── */
+    .btn {
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 22px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+    .btn-primary { background: var(--green); color: #000; }
+    .btn-outline { background: transparent; color: var(--dim); border: 1px solid var(--border2); }
+    .btn-outline:hover { color: var(--green); border-color: var(--green); opacity: 1; }
+    .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(255,59,59,0.3); }
+    .btn-danger:hover { background: rgba(255,59,59,0.08); opacity: 1; }
+
+    /* ── Status messages ── */
+    .msg {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 8px 12px;
+      margin-top: 10px;
+      display: none;
+    }
+    .msg.show { display: block; }
+    .msg.success { background: rgba(0,255,135,0.06); color: var(--green); border: 1px solid rgba(0,255,135,0.2); }
+    .msg.error   { background: rgba(255,59,59,0.06);  color: var(--red);   border: 1px solid rgba(255,59,59,0.2); }
+
+    /* ── Delete confirm ── */
+    .delete-confirm { margin-top: 14px; display: none; }
+    .delete-confirm.show { display: block; }
+    .delete-note {
+      font-size: 0.82rem;
+      color: var(--dim);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .delete-note strong { color: var(--red); }
+
+    /* ── Forgot password note ── */
+    .forgot-note {
+      font-size: 0.78rem;
+      color: var(--dim);
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      line-height: 1.6;
+    }
+    .forgot-note a { color: var(--green); text-decoration: none; }
+    .forgot-note a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <a href="/" class="logo">Parlay Killer</a>
+    <a href="/" class="back-link">&#8592; Back to App</a>
+  </header>
+
+  <div class="page-title">Account Settings</div>
+
+  <div id="loading-msg">Loading your account&hellip;</div>
+  <div id="unauthed-msg" style="display:none">You need to be logged in to view account settings. <a href="/" style="color:var(--green)">Go back to the app</a></div>
+
+  <div id="account-content">
+
+    <!-- ── Profile info ── -->
+    <div class="section">
+      <div class="section-label">01</div>
+      <div class="section-title">Profile</div>
+      <div class="info-row"><span class="info-key">Name</span><span class="info-val" id="info-name">—</span></div>
+      <div class="info-row"><span class="info-key">Email</span><span class="info-val" id="info-email">—</span></div>
+      <div class="info-row"><span class="info-key">Plan</span><span class="info-val" id="info-plan">—</span></div>
+    </div>
+
+    <!-- ── Subscription ── -->
+    <div class="section" id="section-subscription" style="display:none">
+      <div class="section-label">02</div>
+      <div class="section-title">Subscription</div>
+      <p style="font-size:0.88rem;color:var(--dim);margin-bottom:16px;">You're on the Pro plan. Manage billing, update payment method, or cancel your subscription.</p>
+      <button class="btn btn-outline" onclick="openPortal()">Manage Subscription &rarr;</button>
+    </div>
+
+    <!-- ── Change Password ── -->
+    <div class="section" id="section-password">
+      <div class="section-label" id="password-section-num">03</div>
+      <div class="section-title">Change Password</div>
+
+      <div id="google-only-note" style="display:none;font-size:0.85rem;color:var(--dim);">
+        This account uses Google sign-in. Password changes are not available.
+      </div>
+
+      <div id="password-form">
+        <div class="field">
+          <label>Current Password</label>
+          <input type="password" id="current-pw" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
+        </div>
+        <div class="field">
+          <label>New Password (min 8 chars)</label>
+          <input type="password" id="new-pw" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" />
+        </div>
+        <div class="field">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirm-pw" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" />
+        </div>
+        <button class="btn btn-primary" id="pw-btn" onclick="changePassword()">Update Password</button>
+        <div class="msg" id="pw-msg"></div>
+      </div>
+
+      <div class="forgot-note">
+        Forgot your password? Email <a href="mailto:simscaslee@gmail.com?subject=Password Reset">simscaslee@gmail.com</a> with subject "Password Reset" and we'll reset it within 24 hours.
+      </div>
+    </div>
+
+    <!-- ── Danger Zone ── -->
+    <div class="section">
+      <div class="section-label" id="danger-section-num">04</div>
+      <div class="section-title">Danger Zone</div>
+
+      <button class="btn btn-danger" onclick="showDeleteConfirm()">Delete My Account</button>
+
+      <div class="delete-confirm" id="delete-confirm">
+        <div class="delete-note">
+          This is <strong>permanent and irreversible</strong>. Your account, usage history, and subscription will be deleted immediately. Type <strong>DELETE</strong> below to confirm.
+        </div>
+        <div class="field">
+          <input type="text" id="delete-confirm-input" placeholder="Type DELETE to confirm" autocomplete="off" />
+        </div>
+        <button class="btn btn-danger" id="delete-btn" onclick="deleteAccount()">Permanently Delete Account</button>
+        <button class="btn btn-outline" style="margin-left:10px" onclick="hideDeleteConfirm()">Cancel</button>
+        <div class="msg" id="delete-msg"></div>
+      </div>
+    </div>
+
+  </div><!-- /account-content -->
+
+</div>
+
+<script>
+  let currentUser = null;
+
+  function showMsg(id, type, text) {
+    const el = document.getElementById(id);
+    el.className = `msg ${type} show`;
+    el.textContent = text;
+  }
+
+  function clearMsg(id) {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'msg'; el.textContent = ''; }
+  }
+
+  function setBtn(id, loading, text) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.disabled = loading;
+    if (text) btn.textContent = loading ? 'Please wait\u2026' : text;
+  }
+
+  async function init() {
+    try {
+      const res  = await fetch('/api/auth/me', { credentials: 'include' });
+      const data = await res.json();
+      currentUser = data.user;
+    } catch {
+      currentUser = null;
+    }
+
+    document.getElementById('loading-msg').style.display = 'none';
+
+    if (!currentUser) {
+      document.getElementById('unauthed-msg').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('account-content').style.display = 'block';
+
+    const isPro = currentUser.plan === 'pro' || currentUser.subscription_status === 'active';
+    const hasGoogle = !!currentUser.google_id;
+
+    document.getElementById('info-name').textContent  = currentUser.name  || '—';
+    document.getElementById('info-email').textContent = currentUser.email || '—';
+    document.getElementById('info-plan').innerHTML = isPro
+      ? '<span class="plan-badge pro">&#9889; Pro</span>'
+      : '<span class="plan-badge free">Free</span>';
+
+    if (isPro) {
+      document.getElementById('section-subscription').style.display = 'block';
+      document.getElementById('password-section-num').textContent = '03';
+      document.getElementById('danger-section-num').textContent   = '04';
+    } else {
+      document.getElementById('password-section-num').textContent = '02';
+      document.getElementById('danger-section-num').textContent   = '03';
+    }
+
+    if (hasGoogle) {
+      document.getElementById('google-only-note').style.display = 'block';
+      document.getElementById('password-form').style.display    = 'none';
+    }
+  }
+
+  async function changePassword() {
+    clearMsg('pw-msg');
+    const current  = document.getElementById('current-pw').value;
+    const newPw    = document.getElementById('new-pw').value;
+    const confirm  = document.getElementById('confirm-pw').value;
+
+    if (!current || !newPw) { showMsg('pw-msg', 'error', 'All fields required.'); return; }
+    if (newPw !== confirm)   { showMsg('pw-msg', 'error', 'New passwords do not match.'); return; }
+    if (newPw.length < 8)    { showMsg('pw-msg', 'error', 'New password must be at least 8 characters.'); return; }
+
+    setBtn('pw-btn', true, 'Update Password');
+    try {
+      const res  = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ currentPassword: current, newPassword: newPw }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('pw-msg', 'error', data.error || 'Failed to update password.'); return; }
+      showMsg('pw-msg', 'success', 'Password updated successfully.');
+      document.getElementById('current-pw').value = '';
+      document.getElementById('new-pw').value     = '';
+      document.getElementById('confirm-pw').value = '';
+    } catch {
+      showMsg('pw-msg', 'error', 'Network error. Try again.');
+    } finally {
+      setBtn('pw-btn', false, 'Update Password');
+    }
+  }
+
+  function showDeleteConfirm() {
+    document.getElementById('delete-confirm').classList.add('show');
+  }
+
+  function hideDeleteConfirm() {
+    document.getElementById('delete-confirm').classList.remove('show');
+    document.getElementById('delete-confirm-input').value = '';
+    clearMsg('delete-msg');
+  }
+
+  async function deleteAccount() {
+    clearMsg('delete-msg');
+    const typed = document.getElementById('delete-confirm-input').value.trim();
+    if (typed !== 'DELETE') {
+      showMsg('delete-msg', 'error', 'Type DELETE in all caps to confirm.');
+      return;
+    }
+
+    setBtn('delete-btn', true, 'Permanently Delete Account');
+    try {
+      const res  = await fetch('/api/auth/account', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('delete-msg', 'error', data.error || 'Deletion failed.'); return; }
+      window.location.href = '/';
+    } catch {
+      showMsg('delete-msg', 'error', 'Network error. Try again.');
+    } finally {
+      setBtn('delete-btn', false, 'Permanently Delete Account');
+    }
+  }
+
+  async function openPortal() {
+    try {
+      const res  = await fetch('/api/billing/portal', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Could not open subscription portal.'); return; }
+      window.location.href = data.url;
+    } catch {
+      alert('Network error. Try again.');
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -1,7 +1,10 @@
-const express  = require('express');
-const bcrypt   = require('bcryptjs');
-const pool     = require('../db/index');
-const router   = express.Router();
+const express    = require('express');
+const bcrypt     = require('bcryptjs');
+const rateLimit  = require('express-rate-limit');
+const pool       = require('../db/index');
+const passport   = require('../config/passport');
+const { requireAuth } = require('../middleware/auth');
+const router     = express.Router();
 
 // ── Helpers ────────────────────────────────────────────────
 function isValidEmail(email) {
@@ -13,13 +16,34 @@ function safeUser(row) {
   return user;
 }
 
+const disposableDomains = [
+  'mailinator.com', 'guerrillamail.com', 'tempmail.com', 'throwaway.email',
+  'fakeinbox.com', 'sharklasers.com', 'guerrillamailblock.com', 'grr.la',
+  'guerrillamail.info', 'spam4.me', 'trashmail.com', 'yopmail.com',
+];
+
+// ── Rate limiter: strict on registration (3/hour per IP) ──
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { error: 'Too many signup attempts. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // ── POST /api/auth/register ────────────────────────────────
-router.post('/register', async (req, res) => {
+router.post('/register', registerLimiter, async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!email || !isValidEmail(email)) {
     return res.status(400).json({ error: 'Valid email required' });
   }
+
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (disposableDomains.includes(domain)) {
+    return res.status(400).json({ error: 'Please use a real email address.' });
+  }
+
   if (!password || password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters' });
   }
@@ -32,8 +56,8 @@ router.post('/register', async (req, res) => {
 
     const password_hash = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, name)
-       VALUES ($1, $2, $3)
+      `INSERT INTO users (email, password_hash, name, email_verified)
+       VALUES ($1, $2, $3, FALSE)
        RETURNING *`,
       [email.toLowerCase(), password_hash, name || null]
     );
@@ -131,14 +155,130 @@ router.get('/me', async (req, res) => {
   }
 });
 
-// ── GET /api/auth/google ───────────────────────────────────
-// Placeholder — requires GOOGLE_CLIENT_ID/SECRET in .env to activate
-router.get('/google', (req, res) => {
-  res.status(501).json({ error: 'Google OAuth not configured yet' });
+// ── POST /api/auth/change-password ────────────────────────
+router.post('/change-password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password required' });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters' });
+  }
+
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.session.userId]);
+    const user = result.rows[0];
+
+    if (!user.password_hash) {
+      return res.status(400).json({ error: 'This account uses Google sign-in — no password to change' });
+    }
+
+    const match = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!match) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [newHash, req.session.userId]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
 });
 
-router.get('/google/callback', (req, res) => {
-  res.status(501).json({ error: 'Google OAuth not configured yet' });
+// ── DELETE /api/auth/account ───────────────────────────────
+router.delete('/account', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.session.userId]);
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Cancel Stripe subscription if active
+    if (user.stripe_subscription_id) {
+      try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        await stripe.subscriptions.cancel(user.stripe_subscription_id);
+      } catch (stripeErr) {
+        console.error('Stripe cancel error during account deletion:', stripeErr.message);
+        // Continue with deletion even if Stripe fails
+      }
+    }
+
+    // Delete all sessions for this user
+    await pool.query(
+      `DELETE FROM sessions WHERE sess::jsonb->>'userId' = $1`,
+      [String(req.session.userId)]
+    );
+
+    // Delete usage records (CASCADE handles this, but explicit for clarity)
+    await pool.query('DELETE FROM usage WHERE user_id = $1', [req.session.userId]);
+
+    // Delete the user
+    await pool.query('DELETE FROM users WHERE id = $1', [req.session.userId]);
+
+    // Destroy current session
+    req.session.destroy(() => {});
+    res.clearCookie('connect.sid');
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
 });
+
+// ── POST /api/auth/reset-password-admin ───────────────────
+// Only callable from the owner's session
+router.post('/reset-password-admin', requireAuth, async (req, res) => {
+  try {
+    // Verify caller is the owner
+    const callerResult = await pool.query('SELECT email FROM users WHERE id = $1', [req.session.userId]);
+    if (callerResult.rows[0]?.email !== 'simscaslee@gmail.com') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Email and new password (min 8 chars) required' });
+    }
+
+    const target = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (!target.rows.length) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE email = $2',
+      [hash, email.toLowerCase()]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Admin reset error:', err);
+    res.status(500).json({ error: 'Reset failed' });
+  }
+});
+
+// ── GET /api/auth/google ───────────────────────────────────
+router.get('/google', passport.authenticate('google', {
+  scope: ['profile', 'email'],
+}));
+
+router.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: '/?error=auth_failed' }),
+  (req, res) => {
+    req.session.userId = req.user.id;
+    req.session.save(err => {
+      if (err) console.error('Session save error after Google auth:', err);
+      res.redirect('/');
+    });
+  }
+);
 
 module.exports = router;
