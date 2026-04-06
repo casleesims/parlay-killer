@@ -1,18 +1,39 @@
 require('dotenv').config();
-const express   = require('express');
-const cors      = require('cors');
-const path      = require('path');
-const helmet    = require('helmet');
-const rateLimit = require('express-rate-limit');
+const express    = require('express');
+const cors       = require('cors');
+const path       = require('path');
+const helmet     = require('helmet');
+const rateLimit  = require('express-rate-limit');
+const session    = require('express-session');
+const PgSession  = require('connect-pg-simple')(session);
+const pool       = require('./db/index');
 
-const analyzeRouter = require('./routes/analyze');
-const oddsRouter    = require('./routes/odds');
-const scoresRouter  = require('./routes/scores');
+const analyzeRouter     = require('./routes/analyze');
+const oddsRouter        = require('./routes/odds');
+const scoresRouter      = require('./routes/scores');
+const propsRouter       = require('./routes/props');
+const liveUnderRouter   = require('./routes/liveunder');
+const valueFinderRouter = require('./routes/valuefinder');
+const authRouter        = require('./routes/auth');
 
 const app = express();
 
 app.use(helmet({ contentSecurityPolicy: false }));
 
+// ── Session ────────────────────────────────────────────────
+app.use(session({
+  store: new PgSession({ pool, tableName: 'sessions' }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  },
+}));
+
+// ── Rate limiters ──────────────────────────────────────────
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -37,8 +58,27 @@ const scoresLimiter = rateLimit({
   message: { error: 'Too many requests — slow down.' },
 });
 
+const propsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: 'Too many requests — slow down.' },
+});
+
+const liveUnderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: 'Too many requests — slow down.' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many auth attempts — slow down.' },
+});
+
+// ── Middleware ─────────────────────────────────────────────
 app.use(generalLimiter);
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -50,9 +90,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api/analyze', analyzeLimiter, analyzeRouter);
-app.use('/api/odds',    oddsLimiter,    oddsRouter);
-app.use('/api/scores',  scoresLimiter,  scoresRouter);
+// ── Routes ─────────────────────────────────────────────────
+app.use('/api/auth',         authLimiter,       authRouter);
+app.use('/api/analyze',      analyzeLimiter,    analyzeRouter);
+app.use('/api/odds',         oddsLimiter,       oddsRouter);
+app.use('/api/scores',       scoresLimiter,     scoresRouter);
+app.use('/api/props',        propsLimiter,      propsRouter);
+app.use('/api/liveunder',    liveUnderLimiter,  liveUnderRouter);
+app.use('/api/valuefinder',  oddsLimiter,       valueFinderRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

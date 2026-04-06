@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Service — Parlay Killer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #080808;
+      --s1:     #0d0d0d;
+      --border: #1a1a1a;
+      --green:  #00ff87;
+      --white:  #ffffff;
+      --dim:    #999999;
+      --muted:  #444444;
+      --font:   'Barlow Condensed', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 36px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    .back-link {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid var(--muted);
+      padding: 5px 12px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .back-link:hover { color: var(--green); border-color: var(--green); }
+
+    /* ── Doc title ── */
+    .doc-title {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .doc-updated {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 48px;
+    }
+
+    /* ── Sections ── */
+    .section {
+      margin-bottom: 40px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-of-type { border-bottom: none; }
+
+    .section-num {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 14px;
+    }
+
+    .section-body {
+      font-size: 0.95rem;
+      font-weight: 400;
+      color: var(--dim);
+      line-height: 1.75;
+    }
+
+    .section-body p + p {
+      margin-top: 12px;
+    }
+
+    .section-body ul {
+      list-style: none;
+      margin: 10px 0;
+      padding: 0;
+    }
+
+    .section-body ul li {
+      padding: 3px 0 3px 16px;
+      position: relative;
+    }
+
+    .section-body ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--muted);
+    }
+
+    .section-body a {
+      color: var(--green);
+      text-decoration: none;
+    }
+    .section-body a:hover { text-decoration: underline; }
+
+    .highlight-box {
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-left: 3px solid var(--green);
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 0.92rem;
+      color: var(--dim);
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-copy {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-links a {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--green); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <a href="/" class="logo">Parlay Killer</a>
+    <a href="/" class="back-link">&#8592; Back to App</a>
+  </header>
+
+  <div class="doc-title">Terms of Service</div>
+  <div class="doc-updated">Last updated: April 5, 2026</div>
+
+  <div class="section">
+    <div class="section-num">01</div>
+    <div class="section-title">Acceptance of Terms</div>
+    <div class="section-body">
+      <p>By accessing or using Parlay Killer at <a href="https://parlay-killer.up.railway.app">parlay-killer.up.railway.app</a> (the "Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service.</p>
+      <p>We may update these Terms at any time. Continued use of the Service after changes constitutes acceptance of the updated Terms. We will note the revision date at the top of this page.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">02</div>
+    <div class="section-title">Age Requirement</div>
+    <div class="section-body">
+      <div class="highlight-box">You must be 18 years of age or older to use Parlay Killer. Sports betting is restricted to adults in most jurisdictions. By using this Service, you confirm that you are at least 18 years old.</div>
+      <p>If we discover that a user is under 18, we will immediately terminate their account and delete associated data.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">03</div>
+    <div class="section-title">Not Betting Advice</div>
+    <div class="section-body">
+      <div class="highlight-box">Parlay Killer is a mathematical analysis tool only. Nothing on this Service constitutes betting advice, financial advice, or a recommendation to place any wager.</div>
+      <p>All outputs — including expected value calculations, projections, confidence scores, and recommendations — are generated by mathematical models based on publicly available odds data. These outputs do not guarantee any outcome.</p>
+      <p>You are solely responsible for your own betting decisions. Parlay Killer bears no responsibility for any financial losses incurred as a result of using this Service. Bet responsibly, and only within your means.</p>
+      <p>If you or someone you know has a gambling problem, contact the National Problem Gambling Helpline: <strong style="color:#fff">1-800-522-4700</strong>.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">04</div>
+    <div class="section-title">Accounts</div>
+    <div class="section-body">
+      <p>To access certain features, you must create an account. You agree to:</p>
+      <ul>
+        <li>Provide accurate and complete information when registering</li>
+        <li>Keep your password secure and confidential</li>
+        <li>Notify us immediately of any unauthorized use of your account</li>
+        <li>Be responsible for all activity that occurs under your account</li>
+      </ul>
+      <p>We reserve the right to suspend or terminate accounts that violate these Terms, engage in abuse, or are inactive for extended periods.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">05</div>
+    <div class="section-title">Subscriptions and Payments</div>
+    <div class="section-body">
+      <p>Parlay Killer offers the following plans:</p>
+      <ul>
+        <li><strong style="color:#fff">Free</strong> — limited daily analyses, access to core features</li>
+        <li><strong style="color:#fff">Pro Monthly</strong> — $9.99/month, unlimited analyses, all features</li>
+        <li><strong style="color:#fff">Pro Annual</strong> — $39.99/year, same as Pro Monthly with ~67% savings</li>
+      </ul>
+      <p>All payments are processed securely by Stripe. We do not store your card details. Subscriptions renew automatically at the end of each billing period unless cancelled.</p>
+      <p>You may cancel your subscription at any time from your account settings. Cancellation takes effect at the end of the current billing period — no refunds are issued for partial periods.</p>
+      <p>We reserve the right to change pricing with 30 days' notice to existing subscribers.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">06</div>
+    <div class="section-title">Acceptable Use</div>
+    <div class="section-body">
+      <p>You agree not to:</p>
+      <ul>
+        <li>Scrape, crawl, or automatically extract data from the Service</li>
+        <li>Attempt to reverse-engineer, decompile, or access non-public areas of the Service</li>
+        <li>Use the Service to build a competing product</li>
+        <li>Share your account credentials with others</li>
+        <li>Circumvent or attempt to circumvent usage limits or rate limiting</li>
+        <li>Use the Service in any jurisdiction where sports betting is illegal</li>
+        <li>Transmit malware, spam, or any harmful content</li>
+      </ul>
+      <p>Violation of these rules may result in immediate account termination without refund.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">07</div>
+    <div class="section-title">Disclaimer of Warranties</div>
+    <div class="section-body">
+      <p>The Service is provided "as is" and "as available" without warranties of any kind, express or implied. We do not warrant that:</p>
+      <ul>
+        <li>The Service will be uninterrupted, error-free, or available at all times</li>
+        <li>Odds data or projections will be accurate, complete, or current</li>
+        <li>Any particular outcome will result from using the Service</li>
+      </ul>
+      <p>Odds data is sourced from third-party providers and may be delayed or inaccurate. Always verify odds directly with your sportsbook before placing any wager.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">08</div>
+    <div class="section-title">Limitation of Liability</div>
+    <div class="section-body">
+      <p>To the fullest extent permitted by law, Parlay Killer and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:</p>
+      <ul>
+        <li>Gambling or betting losses of any amount</li>
+        <li>Loss of profits, data, or business opportunity</li>
+        <li>Damages arising from reliance on any output of the Service</li>
+      </ul>
+      <p>Our total liability to you for any claim arising from use of the Service shall not exceed the amount you paid us in the 30 days preceding the claim, or $10, whichever is greater.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">09</div>
+    <div class="section-title">Changes and Contact</div>
+    <div class="section-body">
+      <p>We reserve the right to modify, suspend, or discontinue any part of the Service at any time without notice.</p>
+      <p>Questions or concerns about these Terms:</p>
+      <p style="margin-top:10px"><a href="mailto:simscaslee@gmail.com">simscaslee@gmail.com</a></p>
+      <p style="margin-top:6px; font-size:0.85rem;">Parlay Killer &mdash; <a href="https://parlay-killer.up.railway.app">parlay-killer.up.railway.app</a></p>
+    </div>
+  </div>
+
+  <footer>
+    <span class="footer-copy">&copy; 2026 Parlay Killer. All rights reserved.</span>
+    <nav class="footer-links">
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/">Back to App</a>
+    </nav>
+  </footer>
+
+</div>
+</body>
+</html>

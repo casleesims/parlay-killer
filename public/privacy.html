@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Parlay Killer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #080808;
+      --s1:     #0d0d0d;
+      --border: #1a1a1a;
+      --green:  #00ff87;
+      --white:  #ffffff;
+      --dim:    #999999;
+      --muted:  #444444;
+      --font:   'Barlow Condensed', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 36px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    .back-link {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid var(--muted);
+      padding: 5px 12px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .back-link:hover { color: var(--green); border-color: var(--green); }
+
+    /* ── Doc title ── */
+    .doc-title {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .doc-updated {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 48px;
+    }
+
+    /* ── Sections ── */
+    .section {
+      margin-bottom: 40px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-of-type { border-bottom: none; }
+
+    .section-num {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 14px;
+    }
+
+    .section-body {
+      font-size: 0.95rem;
+      font-weight: 400;
+      color: var(--dim);
+      line-height: 1.75;
+    }
+
+    .section-body ul {
+      list-style: none;
+      margin: 10px 0;
+      padding: 0;
+    }
+
+    .section-body ul li {
+      padding: 3px 0 3px 16px;
+      position: relative;
+    }
+
+    .section-body ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--muted);
+    }
+
+    .section-body a {
+      color: var(--green);
+      text-decoration: none;
+    }
+    .section-body a:hover { text-decoration: underline; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-copy {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-links a {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--green); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <a href="/" class="logo">Parlay Killer</a>
+    <a href="/" class="back-link">&#8592; Back to App</a>
+  </header>
+
+  <div class="doc-title">Privacy Policy</div>
+  <div class="doc-updated">Last updated: April 5, 2026</div>
+
+  <div class="section">
+    <div class="section-num">01</div>
+    <div class="section-title">Information We Collect</div>
+    <div class="section-body">
+      <p>We collect the following information when you use Parlay Killer:</p>
+      <ul>
+        <li>Email address and name when you create an account</li>
+        <li>Google account information (name, email, profile picture) if you sign in with Google</li>
+        <li>Usage data — which features you use and how often, to enforce plan limits</li>
+        <li>Payment information processed by Stripe — we never see or store your card details directly</li>
+        <li>IP address and browser type for security and abuse prevention</li>
+        <li>Session data stored in cookies to keep you logged in</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">02</div>
+    <div class="section-title">How We Use Your Information</div>
+    <div class="section-body">
+      <p>We use the information we collect to:</p>
+      <ul>
+        <li>Provide and operate the Parlay Killer service</li>
+        <li>Manage your account and subscription</li>
+        <li>Process payments securely through Stripe</li>
+        <li>Enforce daily usage limits based on your plan</li>
+        <li>Send account-related emails (receipts, password resets) — no marketing emails without your consent</li>
+        <li>Detect and prevent abuse or unauthorized access</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">03</div>
+    <div class="section-title">Data Sharing</div>
+    <div class="section-body">
+      <p>We do not sell your data. We do not share your personal information with sportsbooks, advertisers, or unrelated third parties.</p>
+      <p style="margin-top:12px">We share data only with:</p>
+      <ul>
+        <li><strong style="color:#fff">Stripe</strong> — payment processing. Subject to <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe's Privacy Policy</a></li>
+        <li><strong style="color:#fff">Google</strong> — only if you choose to sign in with Google. Subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a></li>
+        <li><strong style="color:#fff">Railway</strong> — our hosting provider, who stores data on our behalf under their terms</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">04</div>
+    <div class="section-title">Data Retention</div>
+    <div class="section-body">
+      <p>Your data is retained for as long as your account is active. You may request deletion of your account and all associated data at any time by emailing <a href="mailto:simscaslee@gmail.com">simscaslee@gmail.com</a>.</p>
+      <p style="margin-top:10px">Usage logs (analysis history, feature usage counts) are retained for 90 days and then automatically deleted.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">05</div>
+    <div class="section-title">Cookies and Sessions</div>
+    <div class="section-body">
+      <p>We use session cookies only — a single cookie to keep you logged in. This cookie is deleted when you sign out or when your session expires (30 days).</p>
+      <p style="margin-top:10px">We do not use tracking cookies, advertising cookies, or any third-party analytics cookies. We do not use Google Analytics or similar services.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">06</div>
+    <div class="section-title">Your Rights</div>
+    <div class="section-body">
+      <p>You have the right to:</p>
+      <ul>
+        <li>Access the personal data we hold about you</li>
+        <li>Request correction of inaccurate data</li>
+        <li>Request deletion of your account and all associated data</li>
+        <li>Withdraw consent for data processing at any time</li>
+      </ul>
+      <p style="margin-top:12px">To exercise any of these rights, email us at <a href="mailto:simscaslee@gmail.com">simscaslee@gmail.com</a>. We will respond within 30 days.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">07</div>
+    <div class="section-title">Children</div>
+    <div class="section-body">
+      <p>Parlay Killer is intended for users 18 years of age or older. We do not knowingly collect personal information from anyone under 18. If you believe a minor has created an account, please contact us at <a href="mailto:simscaslee@gmail.com">simscaslee@gmail.com</a> and we will promptly delete the account.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">08</div>
+    <div class="section-title">Contact</div>
+    <div class="section-body">
+      <p>Questions, requests, or concerns about this Privacy Policy:</p>
+      <p style="margin-top:10px"><a href="mailto:simscaslee@gmail.com">simscaslee@gmail.com</a></p>
+      <p style="margin-top:6px; font-size:0.85rem;">Parlay Killer &mdash; <a href="https://parlay-killer.up.railway.app">parlay-killer.up.railway.app</a></p>
+    </div>
+  </div>
+
+  <footer>
+    <span class="footer-copy">&copy; 2026 Parlay Killer. All rights reserved.</span>
+    <nav class="footer-links">
+      <a href="/terms.html">Terms of Service</a>
+      <a href="/">Back to App</a>
+    </nav>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(curl -s http://localhost:3000/api/odds/status)",
+      "Bash(curl -s -X POST http://localhost:3000/api/liveunder -H 'Content-Type: application/json' -d '{\"playerName\":\"test\",\"currentStats\":10,\"propLine\":20,\"quarter\":\"Q3\",\"teamPace\":\"Average\",\"gameContext\":\"Close Game 1-9\"}')",
+      "Bash(curl -s http://localhost:3000/api/valuefinder)",
+      "Bash(kill %1)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

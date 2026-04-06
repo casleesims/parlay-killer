@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -25,6 +25,19 @@
       --dim:     #999999;
       --muted:   #444444;
       --font:    'Barlow Condensed', sans-serif;
+      --mono:    'Courier New', Courier, monospace;
+    }
+
+    [data-theme="light"] {
+      --bg:      #f0f0f0;
+      --s1:      #ffffff;
+      --s2:      #f8f8f8;
+      --s3:      #ebebeb;
+      --border:  #e0e0e0;
+      --border2: #cccccc;
+      --white:   #111111;
+      --dim:     #555555;
+      --muted:   #aaaaaa;
     }
 
     html { scroll-behavior: smooth; }
@@ -36,20 +49,304 @@
       font-size: 16px;
       line-height: 1.4;
       min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
     }
 
     /* ── WRAP ── */
-    .wrap {
-      max-width: 1040px;
-      margin: 0 auto;
-      padding: 0 20px 80px;
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px 0; }
+
+    /* ── DISCLAIMER BANNER ── */
+    .disclaimer-banner {
+      background: #0d0d0d;
+      border-bottom: 1px solid #1a1a1a;
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .disclaimer-banner.hidden { display: none; }
+    .disclaimer-text {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: #666;
+      text-transform: uppercase;
+    }
+    .disclaimer-dismiss {
+      background: none;
+      border: none;
+      color: #444;
+      font-size: 1rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 4px;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .disclaimer-dismiss:hover { color: var(--green); }
+
+    /* ── SITE FOOTER ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 22px 0 32px;
+      margin-top: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .site-footer-copy {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .site-footer-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .site-footer-links a {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .site-footer-links a:hover { color: var(--green); }
+    .site-footer-legal {
+      width: 100%;
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #333;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── AUTH BAR ── */
+    .auth-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+      min-height: 38px;
+    }
+
+    .auth-btn {
+      font-family: var(--font);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      padding: 5px 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .auth-btn:hover { border-color: var(--green); color: var(--green); }
+    .auth-btn.primary {
+      background: var(--green);
+      border-color: var(--green);
+      color: var(--bg);
+    }
+    .auth-btn.primary:hover { background: var(--green2); border-color: var(--green2); }
+
+    .auth-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .auth-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .auth-usage {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border2);
+      padding: 3px 9px;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #0f0f0f;
+      border: 1px solid var(--border2);
+      width: 100%;
+      max-width: 400px;
+      padding: 32px 28px;
+      position: relative;
+    }
+    [data-theme="light"] .modal { background: #ffffff; }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      font-family: var(--font);
+      font-size: 1.3rem;
+      font-weight: 300;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--white); }
+
+    .modal-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 22px;
+    }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 14px;
+    }
+
+    .modal-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .modal-input {
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--s3);
+      border: 1px solid var(--border2);
+      color: var(--white);
+      padding: 10px 12px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .modal-input:focus { border-color: var(--green); }
+    .modal-input::placeholder { color: var(--muted); font-weight: 400; }
+
+    .modal-submit {
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--green);
+      border: none;
+      color: var(--bg);
+      width: 100%;
+      padding: 14px;
+      cursor: pointer;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      transition: background 0.15s;
+    }
+    .modal-submit:hover    { background: var(--green2); }
+    .modal-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .modal-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 2px 0 12px;
+    }
+    .modal-divider-line { flex: 1; height: 1px; background: var(--border2); }
+    .modal-divider-text { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+    .modal-google {
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      width: 100%;
+      padding: 11px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .modal-google:hover { border-color: var(--green); color: var(--green); }
+
+    .modal-switch {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .modal-switch button {
+      background: transparent;
+      border: none;
+      color: var(--green);
+      font-family: var(--font);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .modal-error {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--red);
+      background: rgba(255,59,59,0.06);
+      border: 1px solid var(--red);
+      padding: 9px 12px;
+      margin-bottom: 12px;
+      display: none;
     }
 
     /* ── HEADER ── */
     header {
       padding: 44px 0 36px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 40px;
+      margin-bottom: 32px;
     }
 
     .header-inner {
@@ -80,9 +377,9 @@
       margin-top: 10px;
     }
 
-    .header-right {
-      text-align: right;
-    }
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+    .header-controls { display: flex; align-items: center; gap: 10px; }
 
     .live-badge {
       display: inline-flex;
@@ -98,17 +395,71 @@
     }
 
     .live-dot {
-      width: 6px;
-      height: 6px;
+      width: 6px; height: 6px;
       background: var(--green);
       border-radius: 50%;
       animation: pulse 1.4s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.2; }
+    @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.2} }
+    @keyframes pulsered { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* Theme toggle */
+    .theme-toggle {
+      font-family: var(--font);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
     }
+    .theme-toggle:hover { border-color: var(--green); color: var(--green); }
+
+    /* ── MAIN TABS ── */
+    .main-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 28px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .main-tab {
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--dim);
+      padding: 10px 22px 9px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -2px;
+    }
+
+    .main-tab:hover { color: var(--white); }
+    .main-tab.active { color: var(--white); border-bottom-color: var(--green); }
+
+    .red-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      background: var(--red);
+      border-radius: 50%;
+      margin-left: 5px;
+      animation: pulsered 1.4s ease-in-out infinite;
+      vertical-align: middle;
+    }
+
+    /* ── TAB PANELS ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
     /* ── SECTION LABEL ── */
     .section-label {
@@ -139,7 +490,7 @@
     /* ── PANELS ── */
     .panel { margin-bottom: 28px; }
 
-    /* ── LIVE ODDS ── */
+    /* ── ODDS SCROLL ── */
     #odds-scroll {
       display: flex;
       gap: 10px;
@@ -148,7 +499,6 @@
       scrollbar-width: thin;
       scrollbar-color: var(--border2) transparent;
     }
-
     #odds-scroll::-webkit-scrollbar { height: 4px; }
     #odds-scroll::-webkit-scrollbar-track { background: transparent; }
     #odds-scroll::-webkit-scrollbar-thumb { background: var(--border2); }
@@ -162,19 +512,44 @@
       border: 1px solid var(--border);
       width: 100%;
     }
-
     .odds-loading { color: var(--muted); }
     .odds-error   { color: var(--red); border-color: var(--red); background: rgba(255,59,59,0.04); }
 
+    /* ── SKELETON ── */
+    @keyframes shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+
+    .skeleton-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      min-width: 284px;
+      flex-shrink: 0;
+    }
+
+    .skel {
+      background: linear-gradient(90deg, var(--s3) 25%, var(--s2) 50%, var(--s3) 75%);
+      background-size: 600px 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 2px;
+    }
+
+    .skel-badge { height: 14px; width: 48px; margin-bottom: 14px; }
+    .skel-team  { height: 11px; width: 65%; margin-bottom: 7px; }
+    .skel-team2 { height: 14px; width: 80%; margin-bottom: 16px; }
+    .skel-btn   { height: 30px; width: 100%; margin-bottom: 5px; }
+
+    /* ── GAME CARD ── */
     .game-card {
       background: var(--s1);
       border: 1px solid var(--border);
       padding: 14px 16px;
-      min-width: 268px;
+      min-width: 284px;
       flex-shrink: 0;
       transition: border-color 0.15s;
     }
-
     .game-card:hover { border-color: var(--border2); }
 
     .card-meta {
@@ -202,9 +577,7 @@
       text-transform: uppercase;
     }
 
-    .team-names {
-      margin-bottom: 12px;
-    }
+    .team-names { margin-bottom: 12px; }
 
     .team-away {
       font-size: 0.82rem;
@@ -228,18 +601,9 @@
       text-overflow: ellipsis;
     }
 
-    .vs-sep {
-      font-size: 0.55rem;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-      margin: 1px 0;
-    }
+    .vs-sep { font-size: 0.55rem; color: var(--muted); letter-spacing: 0.1em; margin: 1px 0; }
 
-    .bet-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
+    .bet-grid { display: flex; flex-direction: column; gap: 5px; }
 
     .bet-row {
       display: grid;
@@ -264,28 +628,94 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .bet-btn:hover  { border-color: var(--green); color: var(--green); }
+    .bet-btn.active { background: var(--green); border-color: var(--green); color: var(--bg); }
+    .bet-btn .btn-odds { font-weight: 900; margin-left: 4px; }
 
-    .bet-btn:hover {
-      border-color: var(--green);
-      color: var(--green);
+    /* Props button */
+    .props-btn {
+      font-family: var(--font);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      padding: 5px 10px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 6px;
+      transition: border-color 0.1s, color 0.1s;
+    }
+    .props-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+    .props-btn.open  { border-color: var(--yellow); color: var(--yellow); background: rgba(244,162,97,0.05); }
+
+    /* Props panel */
+    .props-panel {
+      display: none;
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+    .props-panel.open { display: block; }
+
+    .props-loading  { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 0; color: var(--muted); }
+    .props-err-msg  { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; padding: 8px 0; color: var(--red); }
+
+    .player-name {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 6px 0 3px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+      margin-top: 6px;
+    }
+    .player-name:first-child { margin-top: 0; }
+
+    .prop-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 0;
+      gap: 6px;
     }
 
-    .bet-btn.active {
-      background: var(--green);
-      border-color: var(--green);
-      color: var(--bg);
+    .prop-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--dim);
+      flex: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
-    .bet-btn .btn-odds {
-      font-weight: 900;
-      margin-left: 4px;
+    .prop-ou-btns { display: flex; gap: 3px; }
+
+    .prop-ou-btn {
+      font-family: var(--font);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      padding: 2px 6px;
+      cursor: pointer;
+      transition: all 0.1s;
     }
+    .prop-ou-btn:hover  { border-color: var(--green); color: var(--green); }
+    .prop-ou-btn.active { background: var(--green); border-color: var(--green); color: var(--bg); }
 
     /* ── PARLAY BUILDER ── */
-    #legs-container {
-      display: flex;
-      flex-direction: column;
-    }
+    #legs-container { display: flex; flex-direction: column; }
 
     .legs-empty {
       font-size: 0.75rem;
@@ -306,15 +736,9 @@
       padding: 8px 0;
       border-bottom: 1px solid var(--border);
     }
-
     .leg-row:first-child { border-top: 1px solid var(--border); }
 
-    .leg-num {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: var(--muted);
-      text-align: center;
-    }
+    .leg-num { font-size: 0.65rem; font-weight: 700; color: var(--muted); text-align: center; }
 
     .leg-input {
       font-family: var(--font);
@@ -330,7 +754,6 @@
       transition: border-color 0.15s;
       letter-spacing: 0.02em;
     }
-
     .leg-input:focus { border-bottom-color: var(--green); }
     .leg-input::placeholder { color: var(--muted); font-weight: 400; }
 
@@ -348,7 +771,6 @@
       transition: border-color 0.15s;
       letter-spacing: 0.02em;
     }
-
     .leg-odds-input:focus { border-color: var(--green); }
     .leg-odds-input::placeholder { color: var(--muted); font-weight: 400; font-size: 0.75rem; }
 
@@ -365,7 +787,6 @@
       transition: color 0.15s;
       text-align: center;
     }
-
     .leg-remove:hover { color: var(--red); }
 
     /* ── BUILDER FOOTER ── */
@@ -391,28 +812,11 @@
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
     }
-
     .btn-add-leg:hover { border-color: var(--green); color: var(--green); }
 
-    .wager-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .wager-label {
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .wager-symbol {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--dim);
-    }
+    .wager-group { display: flex; align-items: center; gap: 8px; }
+    .wager-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+    .wager-symbol { font-size: 1rem; font-weight: 700; color: var(--dim); }
 
     #wager {
       font-family: var(--font);
@@ -427,7 +831,6 @@
       text-align: center;
       transition: border-color 0.15s;
     }
-
     #wager:focus { border-color: var(--green); }
 
     /* ── ANALYZE BUTTON ── */
@@ -446,9 +849,7 @@
       margin-bottom: 12px;
       transition: background 0.15s;
     }
-
-    #analyze-btn:hover { background: var(--green2); }
-
+    #analyze-btn:hover  { background: var(--green2); }
     #analyze-btn:active { transform: scale(0.995); }
 
     /* ── ERROR ── */
@@ -467,14 +868,9 @@
 
     /* ── RESULTS ── */
     #results { display: none; }
+    .results-divider { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
 
-    .results-divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 36px 0;
-    }
-
-    /* Big probability */
+    /* Hero */
     .hero-metric {
       text-align: center;
       padding: 48px 20px 36px;
@@ -509,90 +905,29 @@
       margin-top: 14px;
     }
 
-    .hero-sub {
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--muted);
-      margin-top: 6px;
-    }
+    .hero-sub { font-size: 0.72rem; font-weight: 600; color: var(--muted); margin-top: 6px; }
 
     /* Metric row */
-    .metrics-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 12px;
-    }
+    .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
 
-    .metric-card {
-      background: var(--s1);
-      border: 1px solid var(--border);
-      padding: 18px 16px;
-      text-align: center;
-    }
-
-    .metric-value {
-      font-size: clamp(1.5rem, 4vw, 2.2rem);
-      font-weight: 900;
-      letter-spacing: -0.01em;
-      line-height: 1;
-    }
-
-    .metric-sub {
-      font-size: 0.68rem;
-      font-weight: 600;
-      color: var(--muted);
-      margin-top: 4px;
-      letter-spacing: 0.04em;
-    }
-
-    .metric-label {
-      font-size: 0.6rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-top: 8px;
-    }
+    .metric-card { background: var(--s1); border: 1px solid var(--border); padding: 18px 16px; text-align: center; }
+    .metric-value { font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 900; letter-spacing: -0.01em; line-height: 1; }
+    .metric-sub   { font-size: 0.68rem; font-weight: 600; color: var(--muted); margin-top: 4px; letter-spacing: 0.04em; }
+    .metric-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
 
     /* Verdict */
-    .verdict {
-      border: 1px solid var(--border);
-      padding: 20px 22px;
-      margin-bottom: 12px;
-    }
+    .verdict { border: 1px solid var(--border); padding: 20px 22px; margin-bottom: 12px; }
+    .verdict.good    { border-color: var(--green);  background: rgba(0,255,135,0.04); }
+    .verdict.bad     { border-color: var(--red);    background: rgba(255,59,59,0.04); }
+    .verdict.caution { border-color: var(--yellow); background: rgba(244,162,97,0.04); }
 
-    .verdict.good   { border-color: var(--green);  background: rgba(0,255,135,0.04); }
-    .verdict.bad    { border-color: var(--red);    background: rgba(255,59,59,0.04); }
-    .verdict.caution{ border-color: var(--yellow); background: rgba(244,162,97,0.04); }
-
-    .verdict-eyebrow {
-      font-size: 0.6rem;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
+    .verdict-eyebrow { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 6px; }
     .verdict.good    .verdict-eyebrow { color: var(--green); }
     .verdict.bad     .verdict-eyebrow { color: var(--red); }
     .verdict.caution .verdict-eyebrow { color: var(--yellow); }
 
-    .verdict-title {
-      font-size: clamp(1.1rem, 3vw, 1.5rem);
-      font-weight: 900;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      color: var(--white);
-      margin-bottom: 8px;
-    }
-
-    .verdict-body {
-      font-size: 0.85rem;
-      font-weight: 400;
-      color: var(--dim);
-      line-height: 1.6;
-    }
+    .verdict-title { font-size: clamp(1.1rem, 3vw, 1.5rem); font-weight: 900; letter-spacing: 0.02em; text-transform: uppercase; color: var(--white); margin-bottom: 8px; }
+    .verdict-body  { font-size: 0.85rem; font-weight: 400; color: var(--dim); line-height: 1.6; }
 
     /* Warnings */
     #warnings-panel { display: none; margin-bottom: 12px; }
@@ -611,201 +946,50 @@
       letter-spacing: 0.02em;
       line-height: 1.5;
     }
-
     .warning-item:last-child { margin-bottom: 0; }
 
     /* Leg table */
-    .table-panel {
-      border: 1px solid var(--border);
-      background: var(--s1);
-      margin-bottom: 12px;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
-    thead tr {
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      font-size: 0.58rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: 10px 14px;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 11px 14px;
-      border-bottom: 1px solid var(--border);
-      color: var(--white);
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
+    .table-panel { border: 1px solid var(--border); background: var(--s1); margin-bottom: 12px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead tr { border-bottom: 1px solid var(--border); }
+    th { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding: 10px 14px; text-align: left; white-space: nowrap; }
+    td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--white); font-weight: 600; white-space: nowrap; }
     tbody tr:last-child td { border-bottom: none; }
-
     tbody tr:hover td { background: var(--s2); }
 
-    .td-num { color: var(--muted); font-size: 0.75rem; }
-
-    .td-odds-pos { color: var(--green); }
-    .td-odds-neg { color: var(--white); }
+    .td-num        { color: var(--muted); font-size: 0.75rem; }
+    .td-odds-pos   { color: var(--green); }
+    .td-odds-neg   { color: var(--white); }
     .td-odds-heavy { color: var(--red); }
 
-    .bar-wrap {
-      display: inline-block;
-      vertical-align: middle;
-      width: 80px;
-      height: 4px;
-      background: var(--s3);
-      margin-left: 8px;
-      position: relative;
-    }
-
-    .bar-fill {
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      background: var(--green);
-      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-    }
+    .bar-wrap { display: inline-block; vertical-align: middle; width: 80px; height: 4px; background: var(--s3); margin-left: 8px; position: relative; }
+    .bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--green); transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
 
     /* Suggestion */
-    .suggestion-panel {
-      background: rgba(0,255,135,0.04);
-      border: 1px solid var(--green);
-      padding: 18px 20px;
-    }
+    .suggestion-panel { background: rgba(0,255,135,0.04); border: 1px solid var(--green); padding: 18px 20px; }
+    .suggestion-eyebrow { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green); margin-bottom: 6px; }
+    .suggestion-title { font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--white); margin-bottom: 6px; }
+    .suggestion-body  { font-size: 0.82rem; font-weight: 400; color: var(--dim); line-height: 1.6; }
 
-    .suggestion-eyebrow {
-      font-size: 0.6rem;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 6px;
-    }
-
-    .suggestion-title {
-      font-size: 1rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--white);
-      margin-bottom: 6px;
-    }
-
-    .suggestion-body {
-      font-size: 0.82rem;
-      font-weight: 400;
-      color: var(--dim);
-      line-height: 1.6;
-    }
-
-    /* Colors for EV values */
+    /* Color helpers */
     .col-green  { color: var(--green); }
     .col-red    { color: var(--red); }
     .col-yellow { color: var(--yellow); }
     .col-white  { color: var(--white); }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 600px) {
-      .metrics-row { grid-template-columns: 1fr 1fr; }
-      .metrics-row .metric-card:last-child { grid-column: span 2; }
-      .leg-row { grid-template-columns: 18px 1fr 78px 24px; }
-      h1 { font-size: 3.2rem; }
-    }
-
-    @media (max-width: 420px) {
-      .metrics-row { grid-template-columns: 1fr; }
-      .metrics-row .metric-card:last-child { grid-column: span 1; }
-    }
-
-    /* ── TOOLTIPS ── */
-    .tip-wrap {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      vertical-align: middle;
-    }
-
-    .tip-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 13px;
-      height: 13px;
-      border: 1px solid var(--muted);
-      border-radius: 50%;
-      font-size: 0.55rem;
-      font-weight: 700;
-      font-family: var(--font);
-      color: var(--muted);
-      cursor: help;
-      margin-left: 5px;
-      flex-shrink: 0;
-      line-height: 1;
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .tip-wrap:hover .tip-icon {
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    .tip-box {
-      display: none;
-      position: absolute;
-      bottom: calc(100% + 9px);
-      left: 50%;
-      transform: translateX(-50%);
-      width: 230px;
-      max-width: 88vw;
-      background: #1a1a1a;
+    /* ── MATH BREAKDOWN ── */
+    .math-breakdown {
       border: 1px solid var(--border2);
-      color: #aaaaaa;
-      font-size: 0.73rem;
-      font-weight: 400;
-      letter-spacing: 0.01em;
-      text-transform: none;
-      line-height: 1.55;
-      padding: 10px 13px;
-      z-index: 200;
-      pointer-events: none;
-      text-align: left;
-    }
-
-    .tip-box::after {
-      content: '';
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 5px solid transparent;
-      border-top-color: var(--border2);
-    }
-
-    .tip-wrap:hover .tip-box { display: block; }
-
-    /* ── CALC EXPLAINER ── */
-    .calc-explainer {
-      border: 1px solid var(--border2);
+      background: #060606;
       margin-bottom: 12px;
-      background: var(--s1);
     }
+    [data-theme="light"] .math-breakdown { background: #1c1c1c; }
 
-    .calc-explainer summary {
-      font-size: 0.68rem;
+    .math-breakdown summary {
+      font-family: var(--font);
+      font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--green);
       padding: 13px 16px;
@@ -816,82 +1000,99 @@
       justify-content: space-between;
       user-select: none;
     }
+    .math-breakdown summary::-webkit-details-marker { display: none; }
+    .math-breakdown summary:focus { outline: none; }
+    .math-breakdown summary::after { content: '+'; font-size: 1.1rem; font-weight: 300; color: var(--green); line-height: 1; margin-left: 12px; flex-shrink: 0; }
+    .math-breakdown[open] summary::after { content: '−'; }
 
+    .math-body { padding: 0 16px 18px; border-top: 1px solid var(--border); }
+
+    .math-step { margin-top: 16px; }
+
+    .math-step-label {
+      font-family: var(--font);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #666666;
+      margin-bottom: 7px;
+    }
+
+    .math-line {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: #bbbbbb;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .mn   { color: var(--green); font-weight: bold; }
+    .mred { color: var(--red); font-weight: bold; }
+
+    .math-result {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--green);
+      margin-top: 6px;
+    }
+
+    /* ── CALC EXPLAINER ── */
+    .calc-explainer { border: 1px solid var(--border2); margin-bottom: 12px; background: var(--s1); }
+    .calc-explainer summary {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--green); padding: 13px 16px; cursor: pointer; list-style: none;
+      display: flex; align-items: center; justify-content: space-between; user-select: none;
+    }
     .calc-explainer summary::-webkit-details-marker { display: none; }
     .calc-explainer summary:focus { outline: none; }
-
-    .calc-explainer summary::after {
-      content: '+';
-      font-size: 1.1rem;
-      font-weight: 300;
-      color: var(--green);
-      line-height: 1;
-      margin-left: 12px;
-      flex-shrink: 0;
-    }
-
+    .calc-explainer summary::after { content: '+'; font-size: 1.1rem; font-weight: 300; color: var(--green); line-height: 1; margin-left: 12px; flex-shrink: 0; }
     .calc-explainer[open] summary::after { content: '−'; }
-
-    .calc-body {
-      font-size: 0.82rem;
-      font-weight: 400;
-      color: var(--dim);
-      line-height: 1.7;
-      padding: 14px 16px 16px;
-      border-top: 1px solid var(--border);
-    }
+    .calc-body { font-size: 0.82rem; font-weight: 400; color: var(--dim); line-height: 1.7; padding: 14px 16px 16px; border-top: 1px solid var(--border); }
 
     /* ── EV EXPLAINER ── */
-    .ev-explainer {
-      font-size: 0.74rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      color: var(--muted);
-      padding: 8px 0 4px;
-      margin-bottom: 12px;
-      font-style: italic;
-    }
+    .ev-explainer { font-size: 0.74rem; font-weight: 500; letter-spacing: 0.02em; color: var(--muted); padding: 8px 0 4px; margin-bottom: 12px; font-style: italic; }
 
     /* ── SPORT TABS ── */
+    .sport-tabs-wrap {
+      overflow-x: auto;
+      margin-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .sport-tabs-wrap::-webkit-scrollbar { display: none; }
+
     .sport-tabs {
       display: flex;
       gap: 0;
-      margin-bottom: 12px;
       border-bottom: 1px solid var(--border);
-      flex-wrap: wrap;
+      min-width: max-content;
     }
 
     .sport-tab {
       font-family: var(--font);
-      font-size: 0.75rem;
+      font-size: 0.83rem;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
-      color: rgba(255,255,255,0.7);
-      padding: 7px 12px 6px;
+      color: var(--white);
+      padding: 7px 14px 6px;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s;
       margin-bottom: -1px;
+      white-space: nowrap;
     }
-
     .sport-tab:hover { color: var(--white); }
     .sport-tab.active { color: var(--white); border-bottom-color: var(--green); }
-
-    .tab-count {
-      font-weight: 600;
-      margin-left: 2px;
-      opacity: 0.6;
-    }
+    .tab-count { font-weight: 600; margin-left: 2px; opacity: 0.5; font-size: 0.75rem; }
 
     /* ── DAY TOGGLE ── */
-    .day-toggle {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
+    .day-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
 
     .day-tab {
       font-family: var(--font);
@@ -903,100 +1104,30 @@
       cursor: pointer;
       border: 1px solid var(--border2);
       background: transparent;
-      color: rgba(255,255,255,0.7);
+      color: var(--white);
       border-radius: 20px;
       transition: all 0.15s;
     }
-
-    .day-tab.active {
-      background: var(--green);
-      border-color: var(--green);
-      color: var(--bg);
-    }
-
-    .day-tab:not(.active):hover {
-      border-color: var(--green);
-      color: var(--green);
-    }
+    .day-tab.active { background: var(--green); border-color: var(--green); color: var(--bg); }
+    .day-tab:not(.active):hover { border-color: var(--green); color: var(--green); }
 
     /* ── CARD SCORE ── */
-    .card-score {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 3px 10px;
-      margin-bottom: 10px;
-    }
-
-    .score-team {
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
+    .card-score { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 3px 10px; margin-bottom: 10px; }
+    .score-team { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .score-team.away { color: var(--dim); }
     .score-team.home { color: var(--white); }
-
-    .score-pts {
-      font-size: 1.05rem;
-      font-weight: 900;
-      color: var(--white);
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .score-badge {
-      display: inline-block;
-      font-size: 0.58rem;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      padding: 2px 7px;
-    }
-
+    .score-pts { font-size: 1.05rem; font-weight: 900; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; }
+    .score-badge { display: inline-block; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; padding: 2px 7px; }
     .score-badge.live  { background: var(--red);   color: #fff; }
     .score-badge.final { background: var(--muted); color: #fff; }
 
     /* ── LAST UPDATED ── */
-    .last-updated {
-      font-size: 0.6rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      text-align: right;
-      margin-top: 5px;
-      min-height: 14px;
-    }
+    .last-updated { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.06em; color: var(--muted); text-align: right; margin-top: 5px; min-height: 14px; }
 
     /* ── RESULTS BRAND ── */
-    .results-brand {
-      display: flex;
-      justify-content: flex-end;
-      padding: 0 0 8px;
-    }
-
-    .results-watermark {
-      font-size: 0.6rem;
-      font-weight: 800;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--green);
-      opacity: 0.55;
-    }
-
-    .results-footer {
-      font-size: 0.6rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      text-align: center;
-      padding: 14px 0 2px;
-      opacity: 0.5;
-    }
+    .results-brand { display: flex; justify-content: flex-end; padding: 0 0 8px; }
+    .results-watermark { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); opacity: 0.55; }
+    .results-footer { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em; color: var(--muted); text-align: center; padding: 14px 0 2px; opacity: 0.5; }
 
     /* ── SHARE BUTTON ── */
     #share-btn {
@@ -1014,13 +1145,432 @@
       margin-top: 16px;
       transition: background 0.15s;
     }
-
     #share-btn:hover { background: rgba(255,255,255,0.05); }
     #share-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── TOOLTIPS ── */
+    .tip-wrap { position: relative; display: inline-flex; align-items: center; vertical-align: middle; }
+    .tip-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 13px; height: 13px; border: 1px solid var(--muted); border-radius: 50%;
+      font-size: 0.55rem; font-weight: 700; font-family: var(--font); color: var(--muted);
+      cursor: help; margin-left: 5px; flex-shrink: 0; line-height: 1;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .tip-wrap:hover .tip-icon { border-color: var(--green); color: var(--green); }
+    .tip-box {
+      display: none; position: absolute; bottom: calc(100% + 9px); left: 50%; transform: translateX(-50%);
+      width: 230px; max-width: 88vw; background: #1a1a1a; border: 1px solid var(--border2);
+      color: #aaaaaa; font-size: 0.73rem; font-weight: 400; letter-spacing: 0.01em;
+      text-transform: none; line-height: 1.55; padding: 10px 13px; z-index: 200; pointer-events: none; text-align: left;
+    }
+    .tip-box::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--border2); }
+    .tip-wrap:hover .tip-box { display: block; }
+
+    /* ── VALUE FINDER ── */
+    .vf-disclaimer {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 16px;
+      line-height: 1.5;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      background: var(--s1);
+    }
+
+    .vf-scan-btn {
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--green);
+      border: none;
+      color: var(--bg);
+      padding: 16px 28px;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 16px;
+    }
+    .vf-scan-btn:hover { background: var(--green2); }
+    .vf-scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #vf-results { margin-top: 4px; }
+
+    .vf-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--s1);
+      transition: background 0.1s;
+    }
+    .vf-row:first-child { border-top: 1px solid var(--border); }
+    .vf-row:hover { background: var(--s2); }
+
+    .vf-pick {
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+
+    .vf-meta {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+    }
+
+    .vf-ev {
+      font-size: 0.88rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .vf-ev-sub {
+      font-size: 0.58rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .vf-add-btn {
+      font-family: var(--font);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      padding: 6px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.1s;
+    }
+    .vf-add-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* ── LIVE UNDERS ── */
+    .lu-form {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .lu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .lu-field { display: flex; flex-direction: column; gap: 5px; }
+    .lu-field.full { grid-column: span 2; }
+
+    .lu-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .lu-input, .lu-select {
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 700;
+      background: var(--s3);
+      border: 1px solid var(--border2);
+      color: var(--white);
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+      letter-spacing: 0.02em;
+      -webkit-appearance: none;
+    }
+    .lu-input:focus, .lu-select:focus { border-color: var(--green); }
+    .lu-input::placeholder { color: var(--muted); font-weight: 400; }
+
+    .lu-score-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .lu-score-sep { font-size: 0.75rem; color: var(--muted); text-align: center; font-weight: 700; }
+
+    .lu-submit {
+      font-family: var(--font);
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--green);
+      border: none;
+      color: var(--bg);
+      width: 100%;
+      padding: 18px;
+      cursor: pointer;
+      margin-top: 18px;
+      transition: background 0.15s;
+    }
+    .lu-submit:hover { background: var(--green2); }
+
+    #lu-results { display: none; margin-top: 0; }
+
+    .lu-result-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    /* Recommendation badge */
+    .lu-badge {
+      display: inline-block;
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 7px 18px;
+      margin-bottom: 6px;
+    }
+    .lu-badge.strong-over  { background: var(--green); color: #000; }
+    .lu-badge.lean-over    { background: transparent; border: 2px solid var(--green); color: var(--green); }
+    .lu-badge.toss-up      { background: transparent; border: 2px solid var(--yellow); color: var(--yellow); }
+    .lu-badge.lean-under   { background: transparent; border: 2px solid #ff7f50; color: #ff7f50; }
+    .lu-badge.strong-under { background: var(--red); color: #fff; }
+
+    .lu-confidence-text {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    /* Projection vs line */
+    .lu-projection {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: var(--s3);
+      border: 1px solid var(--border);
+    }
+
+    .lu-proj-col { text-align: center; }
+
+    .lu-proj-num {
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .lu-proj-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    .lu-proj-vs {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* Pace bar */
+    .lu-bar-wrap { margin-bottom: 20px; }
+
+    .lu-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .lu-bar-track {
+      height: 6px;
+      background: var(--s3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lu-bar-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .lu-bar-marker {
+      position: absolute;
+      top: -3px;
+      bottom: -3px;
+      width: 2px;
+      background: var(--white);
+      opacity: 0.7;
+    }
+
+    /* Explanation */
+    .lu-explanation {
+      font-size: 0.98rem;
+      font-weight: 400;
+      color: var(--dim);
+      line-height: 1.65;
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      border-left: 3px solid var(--border2);
+    }
+
+    /* Signals */
+    .lu-signals { margin-bottom: 20px; }
+
+    .lu-signal {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      font-size: 0.86rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
+    }
+    .lu-signal:last-child { border-bottom: none; }
+
+    .lu-signal-icon {
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-weight: 900;
+    }
+    .lu-signal.over    .lu-signal-icon { color: var(--green); }
+    .lu-signal.under   .lu-signal-icon { color: var(--red); }
+    .lu-signal.neutral .lu-signal-icon { color: var(--muted); }
+
+    .lu-add-btn {
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 14px 20px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 14px;
+      transition: all 0.15s;
+    }
+    .lu-add-btn:hover { background: var(--green); color: var(--bg); }
+
+    .lu-disclaimer {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--muted);
+      font-style: italic;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .metrics-row { grid-template-columns: 1fr 1fr; }
+      .metrics-row .metric-card:last-child { grid-column: span 2; }
+      .leg-row { grid-template-columns: 18px 1fr 78px 24px; }
+      h1 { font-size: 3.2rem; }
+      .lu-grid { grid-template-columns: 1fr; }
+      .lu-field.full { grid-column: span 1; }
+    }
+
+    @media (max-width: 420px) {
+      .metrics-row { grid-template-columns: 1fr; }
+      .metrics-row .metric-card:last-child { grid-column: span 1; }
+    }
   </style>
 </head>
 <body>
+<!-- ── AUTH MODALS ── -->
+<div class="modal-overlay" id="modal-login" onclick="handleOverlayClick(event,'modal-login')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-login')">&times;</button>
+    <div class="modal-title">Log In</div>
+    <div class="modal-error" id="login-error"></div>
+    <div class="modal-field">
+      <label class="modal-label">Email</label>
+      <input type="email" class="modal-input" id="login-email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Password</label>
+      <input type="password" class="modal-input" id="login-password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" autocomplete="current-password" />
+    </div>
+    <button class="modal-submit" id="login-submit" onclick="submitLogin()">Log In</button>
+    <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
+    <button class="modal-google" onclick="googleAuth()">G &nbsp; Continue with Google</button>
+    <div class="modal-switch">No account? <button onclick="switchModal('modal-login','modal-signup')">Sign up free</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-signup" onclick="handleOverlayClick(event,'modal-signup')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-signup')">&times;</button>
+    <div class="modal-title">Create Account</div>
+    <div class="modal-error" id="signup-error"></div>
+    <div class="modal-field">
+      <label class="modal-label">Name</label>
+      <input type="text" class="modal-input" id="signup-name" placeholder="Your name" autocomplete="name" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Email</label>
+      <input type="email" class="modal-input" id="signup-email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Password (min 8 chars)</label>
+      <input type="password" class="modal-input" id="signup-password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" autocomplete="new-password" />
+    </div>
+    <button class="modal-submit" id="signup-submit" onclick="submitSignup()">Create Account</button>
+    <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
+    <button class="modal-google" onclick="googleAuth()">G &nbsp; Continue with Google</button>
+    <div class="modal-switch">Already have an account? <button onclick="switchModal('modal-signup','modal-login')">Log in</button></div>
+  </div>
+</div>
+
+<!-- ── DISCLAIMER BANNER ── -->
+<div class="disclaimer-banner" id="disclaimer-banner">
+  <span class="disclaimer-text">Parlay Killer is a math tool only — not betting advice. You must be 18+ to use this service.</span>
+  <button class="disclaimer-dismiss" onclick="dismissBanner()" aria-label="Dismiss">&times;</button>
+</div>
+
 <div class="wrap">
+
+  <!-- ── AUTH BAR ── -->
+  <div class="auth-bar" id="auth-bar">
+    <!-- populated by JS -->
+  </div>
 
   <!-- ── HEADER ── -->
   <header>
@@ -1030,191 +1580,320 @@
         <p class="tagline">The math the sportsbook doesn't want you to see</p>
       </div>
       <div class="header-right">
-        <div class="live-badge">
-          <span class="live-dot"></span>
-          DraftKings Live
+        <div class="header-controls">
+          <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">&#9788; LIGHT</button>
+          <div class="live-badge">
+            <span class="live-dot"></span>
+            DraftKings Live
+          </div>
         </div>
         <div class="last-updated" id="last-updated"></div>
       </div>
     </div>
   </header>
 
-  <!-- ── LIVE ODDS ── -->
-  <div class="panel">
-    <div class="section-label">
-      <span class="label-text">Live Odds — Click to add leg</span>
-      <span class="label-badge" id="odds-count"></span>
-    </div>
-    <div class="day-toggle">
-      <button class="day-tab active" data-day="today"    onclick="fetchOddsForDay('today')">Today</button>
-      <button class="day-tab"        data-day="tomorrow" onclick="fetchOddsForDay('tomorrow')">Tomorrow</button>
-    </div>
-    <div id="sport-tabs" class="sport-tabs"></div>
-    <div id="odds-scroll">
-      <div class="odds-loading">Loading odds&hellip;</div>
-    </div>
-  </div>
+  <!-- ── MAIN TABS ── -->
+  <nav class="main-tabs">
+    <button class="main-tab active" data-panel="odds" onclick="switchPanel('odds')">Odds</button>
+    <button class="main-tab" data-panel="vf" onclick="switchPanel('vf')">Value Finder</button>
+    <button class="main-tab" data-panel="lu" onclick="switchPanel('lu')">Live Unders <span class="red-dot"></span></button>
+  </nav>
 
-  <!-- ── PARLAY BUILDER ── -->
-  <div class="panel">
-    <div class="section-label">
-      <span class="label-text">Parlay Builder</span>
-      <span class="label-badge" id="leg-count-badge">0 Legs</span>
-    </div>
-    <div id="legs-container">
-      <div class="legs-empty" id="legs-empty">Click any odds above — or add a leg manually below</div>
-    </div>
-    <div class="builder-footer">
-      <button class="btn-add-leg" onclick="addLeg()">+ Add Leg</button>
-      <div class="wager-group">
-        <span class="wager-label">Wager</span>
-        <span class="wager-symbol">$</span>
-        <input type="number" id="wager" value="50" min="1" step="1" />
+  <!-- ══════════════════════════════════════════════════════════
+       PANEL: ODDS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="panel-odds">
+
+    <!-- Live Odds -->
+    <div class="panel">
+      <div class="section-label">
+        <span class="label-text">Live Odds — Click to add leg</span>
+        <span class="label-badge" id="odds-count"></span>
       </div>
-    </div>
-  </div>
-
-  <!-- ── ANALYZE ── -->
-  <button id="analyze-btn" onclick="analyze()">Analyze Parlay</button>
-  <div id="error-msg"></div>
-
-  <!-- ── RESULTS ── -->
-  <div id="results">
-    <hr class="results-divider" />
-
-    <!-- Brand watermark (visible in screenshot) -->
-    <div class="results-brand">
-      <span class="results-watermark">Parlay Killer</span>
-    </div>
-
-    <!-- How is this calculated -->
-    <details class="calc-explainer">
-      <summary>How is this calculated?</summary>
-      <div class="calc-body">Every odds line implies a probability. We convert each leg's odds to a true probability, strip out the 4.5% sportsbook hold, then multiply all legs together. A 3-leg parlay with true probabilities of 55%, 48%, and 51% has a combined win chance of 13.4%. The lower the number, the more the sportsbook is counting on you not to do this math.</div>
-    </details>
-
-    <!-- Hero metric -->
-    <div class="hero-metric">
-      <div class="hero-label-top">
-        True Win Probability
-        <span class="tip-wrap">
-          <span class="tip-icon">?</span>
-          <span class="tip-box">This is the real probability of your parlay hitting, calculated from market odds with the sportsbook's built-in profit margin (the 'vig') stripped out. It is not a prediction — it reflects what the market implies.</span>
-        </span>
+      <div class="day-toggle">
+        <button class="day-tab active" data-day="today"    onclick="fetchOddsForDay('today')">Today</button>
+        <button class="day-tab"        data-day="tomorrow" onclick="fetchOddsForDay('tomorrow')">Tomorrow</button>
       </div>
-      <div class="hero-number" id="hero-prob">—</div>
-      <div class="hero-label-bottom">After 4.5% Book Hold Applied</div>
-      <div class="hero-sub" id="hero-sub">—</div>
-    </div>
-
-    <!-- Metric row -->
-    <div class="metrics-row">
-      <div class="metric-card">
-        <div class="metric-value" id="m-ev">—</div>
-        <div class="metric-sub" id="m-evpct">—</div>
-        <div class="metric-label">Expected Value <span class="tip-wrap"><span class="tip-icon">?</span><span class="tip-box">EV tells you how much you win or lose on average per bet over time. Negative EV means the house has an edge. Positive EV means the odds are in your favor — rare for parlays.</span></span></div>
+      <div class="sport-tabs-wrap">
+        <div id="sport-tabs" class="sport-tabs"></div>
       </div>
-      <div class="metric-card">
-        <div class="metric-value" id="m-payout">—</div>
-        <div class="metric-sub" id="m-fair">—</div>
-        <div class="metric-label">Potential Payout <span class="tip-wrap"><span class="tip-icon">?</span><span class="tip-box">What the sportsbook pays if you win. 'Fair value' below it is what you'd be paid if there were zero house edge.</span></span></div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-value" id="m-edge">—</div>
-        <div class="metric-sub">Compounded hold</div>
-        <div class="metric-label">Book Edge</div>
+      <div id="odds-scroll">
+        <div class="skeleton-card"><div class="skel skel-badge"></div><div class="skel skel-team"></div><div class="skel skel-team2"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div></div>
+        <div class="skeleton-card"><div class="skel skel-badge"></div><div class="skel skel-team"></div><div class="skel skel-team2"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div></div>
+        <div class="skeleton-card"><div class="skel skel-badge"></div><div class="skel skel-team"></div><div class="skel skel-team2"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div></div>
+        <div class="skeleton-card"><div class="skel skel-badge"></div><div class="skel skel-team"></div><div class="skel skel-team2"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div></div>
       </div>
     </div>
 
-    <!-- Verdict -->
-    <div class="verdict" id="verdict-box">
-      <div class="verdict-eyebrow" id="verdict-eyebrow"></div>
-      <div class="verdict-title" id="verdict-title"></div>
-      <div class="verdict-body" id="verdict-body"></div>
+    <!-- Parlay Builder -->
+    <div class="panel">
+      <div class="section-label">
+        <span class="label-text">Parlay Builder</span>
+        <span class="label-badge" id="leg-count-badge">0 Legs</span>
+      </div>
+      <div id="legs-container">
+        <div class="legs-empty" id="legs-empty">Click any odds above — or add a leg manually below</div>
+      </div>
+      <div class="builder-footer">
+        <button class="btn-add-leg" onclick="addLeg()">+ Add Leg</button>
+        <div class="wager-group">
+          <span class="wager-label">Wager</span>
+          <span class="wager-symbol">$</span>
+          <input type="number" id="wager" value="50" min="1" step="1" />
+        </div>
+      </div>
     </div>
 
-    <div class="ev-explainer" id="ev-explainer"></div>
+    <!-- Analyze -->
+    <button id="analyze-btn" onclick="analyze()">Analyze Parlay</button>
+    <div id="error-msg"></div>
 
-    <!-- Warnings -->
-    <div id="warnings-panel">
+    <!-- Results -->
+    <div id="results">
+      <hr class="results-divider" />
+
+      <div class="results-brand">
+        <span class="results-watermark">Parlay Killer</span>
+      </div>
+
+      <!-- How is this calculated -->
+      <details class="calc-explainer">
+        <summary>How is this calculated?</summary>
+        <div class="calc-body">Every odds line implies a probability. We convert each leg's odds to a true probability, strip out the 4.5% sportsbook hold, then multiply all legs together. A 3-leg parlay with true probabilities of 55%, 48%, and 51% has a combined win chance of 13.4%. The lower the number, the more the sportsbook is counting on you not to do this math.</div>
+      </details>
+
+      <!-- HOW WE GOT HERE -->
+      <details class="math-breakdown" id="math-breakdown">
+        <summary>HOW WE GOT HERE — Show the Math</summary>
+        <div class="math-body" id="math-body"></div>
+      </details>
+
+      <!-- Hero -->
+      <div class="hero-metric">
+        <div class="hero-label-top">
+          True Win Probability
+          <span class="tip-wrap">
+            <span class="tip-icon">?</span>
+            <span class="tip-box">This is the real probability of your parlay hitting, calculated from market odds with the sportsbook's built-in profit margin (the 'vig') stripped out. It is not a prediction — it reflects what the market implies.</span>
+          </span>
+        </div>
+        <div class="hero-number" id="hero-prob">—</div>
+        <div class="hero-label-bottom">After 4.5% Book Hold Applied</div>
+        <div class="hero-sub" id="hero-sub">—</div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-value" id="m-ev">—</div>
+          <div class="metric-sub" id="m-evpct">—</div>
+          <div class="metric-label">Expected Value <span class="tip-wrap"><span class="tip-icon">?</span><span class="tip-box">EV tells you how much you win or lose on average per bet over time. Negative EV means the house has an edge. Positive EV means the odds are in your favor — rare for parlays.</span></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="m-payout">—</div>
+          <div class="metric-sub" id="m-fair">—</div>
+          <div class="metric-label">Potential Payout <span class="tip-wrap"><span class="tip-icon">?</span><span class="tip-box">What the sportsbook pays if you win. 'Fair value' below it is what you'd be paid if there were zero house edge.</span></span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="m-edge">—</div>
+          <div class="metric-sub">Compounded hold</div>
+          <div class="metric-label">Book Edge</div>
+        </div>
+      </div>
+
+      <!-- Verdict -->
+      <div class="verdict" id="verdict-box">
+        <div class="verdict-eyebrow" id="verdict-eyebrow"></div>
+        <div class="verdict-title" id="verdict-title"></div>
+        <div class="verdict-body" id="verdict-body"></div>
+      </div>
+
+      <div class="ev-explainer" id="ev-explainer"></div>
+
+      <!-- Warnings -->
+      <div id="warnings-panel">
+        <div class="section-label" style="margin-bottom:10px">
+          <span class="label-text">Warnings</span>
+        </div>
+        <div id="warnings-list"></div>
+      </div>
+
+      <!-- Leg table -->
       <div class="section-label" style="margin-bottom:10px">
-        <span class="label-text">Warnings</span>
+        <span class="label-text">Leg Breakdown</span>
       </div>
-      <div id="warnings-list"></div>
+      <div class="table-panel">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Odds</th>
+              <th>Book Implied</th>
+              <th>True Prob</th>
+            </tr>
+          </thead>
+          <tbody id="leg-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Suggestion -->
+      <div class="section-label" style="margin-bottom:10px">
+        <span class="label-text">Better Bet</span>
+      </div>
+      <div class="suggestion-panel">
+        <div class="suggestion-eyebrow">Lower-Edge Alternative</div>
+        <div class="suggestion-title" id="suggest-title"></div>
+        <div class="suggestion-body" id="suggest-body"></div>
+      </div>
+
+      <div class="results-footer" id="results-footer">parlarkiller.up.railway.app</div>
+      <button id="share-btn" onclick="shareResults()">SHARE THIS PARLAY &#x2197;</button>
     </div>
 
-    <!-- Leg table -->
-    <div class="section-label" style="margin-bottom:10px">
-      <span class="label-text">Leg Breakdown</span>
-    </div>
-    <div class="table-panel">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Description</th>
-            <th>Odds</th>
-            <th>Book Implied</th>
-            <th>True Prob</th>
-          </tr>
-        </thead>
-        <tbody id="leg-tbody"></tbody>
-      </table>
-    </div>
+  </div><!-- /panel-odds -->
 
-    <!-- Suggestion -->
-    <div class="section-label" style="margin-bottom:10px">
-      <span class="label-text">Better Bet</span>
+  <!-- ══════════════════════════════════════════════════════════
+       PANEL: VALUE FINDER
+  ══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-vf">
+    <div class="section-label">
+      <span class="label-text">Value Finder — Lowest-Juice Lines Today</span>
     </div>
-    <div class="suggestion-panel">
-      <div class="suggestion-eyebrow">Lower-Edge Alternative</div>
-      <div class="suggestion-title" id="suggest-title"></div>
-      <div class="suggestion-body" id="suggest-body"></div>
+    <div class="vf-disclaimer">
+      EV is calculated by comparing each side's book-implied probability against the no-vig (fair) probability derived from the DraftKings two-way market. Lines closest to 0 EV have the least juice. DraftKings lines only. Not a guarantee of profit.
+    </div>
+    <button class="vf-scan-btn" id="vf-scan-btn" onclick="loadValueFinder()">Scan Today's Odds</button>
+    <div id="vf-results"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PANEL: LIVE UNDERS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-lu">
+    <div class="section-label">
+      <span class="label-text">Live Unders &#x1F534; — Pace-Based Projection</span>
     </div>
 
-    <!-- Screenshot footer -->
-    <div class="results-footer" id="results-footer">parlarkiller.up.railway.app</div>
+    <div class="lu-form">
+      <div class="lu-grid">
 
-    <!-- Share button -->
-    <button id="share-btn" onclick="shareResults()">SHARE THIS PARLAY ↗</button>
+        <div class="lu-field full">
+          <label class="lu-label">Player Name</label>
+          <input type="text" class="lu-input" id="lu-player" placeholder="e.g. LeBron James" autocomplete="off" />
+        </div>
 
-  </div><!-- /results -->
+        <div class="lu-field">
+          <label class="lu-label">Current Stat</label>
+          <input type="number" class="lu-input" id="lu-current" placeholder="e.g. 14" min="0" step="0.5" />
+        </div>
+
+        <div class="lu-field">
+          <label class="lu-label">Prop Line</label>
+          <input type="number" class="lu-input" id="lu-line" placeholder="e.g. 21.5" min="0" step="0.5" />
+        </div>
+
+        <div class="lu-field">
+          <label class="lu-label">Quarter</label>
+          <select class="lu-select" id="lu-quarter">
+            <option value="Q1">Q1</option>
+            <option value="Q2">Q2</option>
+            <option value="Q3">Q3</option>
+            <option value="Q4">Q4</option>
+            <option value="OT">OT</option>
+          </select>
+        </div>
+
+        <div class="lu-field">
+          <label class="lu-label">Time Remaining</label>
+          <input type="text" class="lu-input" id="lu-time" placeholder="e.g. 2:30" />
+        </div>
+
+        <div class="lu-field full">
+          <label class="lu-label">Home Score / Away Score</label>
+          <div class="lu-score-row">
+            <input type="number" class="lu-input" id="lu-home-score" placeholder="Home" min="0" />
+            <span class="lu-score-sep">&#8211;</span>
+            <input type="number" class="lu-input" id="lu-away-score" placeholder="Away" min="0" />
+          </div>
+        </div>
+
+        <div class="lu-field full">
+          <label class="lu-label">Stat Type</label>
+          <select class="lu-select" id="lu-stat-type">
+            <option value="Points">Points</option>
+            <option value="Rebounds">Rebounds</option>
+            <option value="Assists">Assists</option>
+            <option value="3-Pointers">3-Pointers</option>
+          </select>
+        </div>
+
+      </div>
+      <button class="lu-submit" onclick="analyzeLiveUnder()">Calculate Projection</button>
+    </div>
+
+    <div id="lu-results">
+      <div class="lu-result-card" id="lu-result-card"></div>
+    </div>
+
+  </div><!-- /panel-lu -->
+
+  <!-- ── SITE FOOTER ── -->
+  <footer class="site-footer">
+    <span class="site-footer-copy">&copy; 2026 Parlay Killer. All rights reserved.</span>
+    <nav class="site-footer-links">
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Service</a>
+    </nav>
+    <p class="site-footer-legal">18+ only. For entertainment and mathematical analysis purposes only. Not betting advice. Gamble responsibly. If you have a gambling problem, call 1-800-522-4700.</p>
+  </footer>
+
 </div><!-- /wrap -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
   /* ─── State ──────────────────────────────────────────────── */
-  let legCounter    = 0;
-  const legBtnMap   = {};   // legId → bet button element
-  let allGames      = [];
-  let currentSport  = 'ALL';
-  let currentDay    = 'today';
-  let scoresMap     = new Map(); // "home|away" → score object
+  let legCounter  = 0;
+  const legBtnMap = {};
+  let allGames    = [];
+  let currentSport = 'ALL';
+  let currentDay  = 'today';
+  let scoresMap   = new Map();
+
+  /* ─── Theme ─────────────────────────────────────────────── */
+  function toggleTheme() {
+    const html  = document.documentElement;
+    const light = html.dataset.theme === 'light';
+    html.dataset.theme = light ? 'dark' : 'light';
+    document.getElementById('theme-btn').textContent = light ? '\u2600 LIGHT' : '\u263E DARK';
+  }
+
+  /* ─── Panel switcher ─────────────────────────────────────── */
+  function switchPanel(name) {
+    document.querySelectorAll('.main-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.panel === name));
+    document.querySelectorAll('.tab-panel').forEach(p =>
+      p.classList.toggle('active', p.id === 'panel-' + name));
+  }
 
   /* ─── Utilities ──────────────────────────────────────────── */
   function esc(s) {
     return String(s)
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;');
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
-  function fmtOdds(n) {
-    return n >= 0 ? `+${n}` : String(n);
-  }
-
-  function fmtSpread(n) {
-    return n >= 0 ? `+${n}` : String(n);
-  }
+  function fmtOdds(n)   { return n >= 0 ? `+${n}` : String(n); }
+  function fmtSpread(n) { return n >= 0 ? `+${n}` : String(n); }
 
   function dollar(v) {
-    const sign = v < 0 ? '−$' : '+$';
+    const sign = v < 0 ? '\u2212$' : '+$';
     return sign + Math.abs(v).toFixed(2);
   }
 
-  function pct(v, d = 1) {
-    return (v * 100).toFixed(d) + '%';
-  }
+  function pct(v, d = 1) { return (v * 100).toFixed(d) + '%'; }
 
   function oddsClass(oddsStr) {
     const n = parseFloat(oddsStr);
@@ -1242,11 +1921,9 @@
   function addLeg(desc = '', odds = '') {
     const empty = document.getElementById('legs-empty');
     if (empty) empty.remove();
-
     legCounter++;
     const legId = `leg-${legCounter}`;
-
-    const row = document.createElement('div');
+    const row   = document.createElement('div');
     row.className = 'leg-row';
     row.dataset.legId = legId;
     row.innerHTML = `
@@ -1263,8 +1940,6 @@
   function removeLeg(legId) {
     const row = document.querySelector(`.leg-row[data-leg-id="${legId}"]`);
     if (row) row.remove();
-
-    // restore empty state if no legs
     if (!document.querySelector('.leg-row')) {
       const empty = document.createElement('div');
       empty.className = 'legs-empty';
@@ -1272,8 +1947,6 @@
       empty.textContent = 'Click any odds above — or add a leg manually below';
       document.getElementById('legs-container').appendChild(empty);
     }
-
-    // deactivate the corresponding bet button if any
     const btn = legBtnMap[legId];
     if (btn) {
       btn.classList.remove('active');
@@ -1296,47 +1969,44 @@
   }
 
   /* ─── Live Odds ──────────────────────────────────────────── */
-  async function fetchOdds() {
-    return fetchOddsForDay('today');
+  function makeSkeleton() {
+    return `
+      <div class="skeleton-card"><div class="skel skel-badge"></div><div class="skel skel-team"></div><div class="skel skel-team2"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div></div>
+      <div class="skeleton-card"><div class="skel skel-badge"></div><div class="skel skel-team"></div><div class="skel skel-team2"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div></div>
+      <div class="skeleton-card"><div class="skel skel-badge"></div><div class="skel skel-team"></div><div class="skel skel-team2"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div></div>
+      <div class="skeleton-card"><div class="skel skel-badge"></div><div class="skel skel-team"></div><div class="skel skel-team2"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div><div class="skel skel-btn"></div></div>
+    `;
   }
+
+  async function fetchOdds() { return fetchOddsForDay('today'); }
 
   async function fetchOddsForDay(day) {
     currentDay = day;
-
-    // Update day toggle buttons
-    document.querySelectorAll('.day-tab').forEach(b => {
-      b.classList.toggle('active', b.dataset.day === day);
-    });
-
-    // Reset sport filter
+    document.querySelectorAll('.day-tab').forEach(b =>
+      b.classList.toggle('active', b.dataset.day === day));
     currentSport = 'ALL';
     document.getElementById('sport-tabs').innerHTML = '';
     const scroll = document.getElementById('odds-scroll');
-    scroll.innerHTML = '<div class="odds-loading">Loading odds\u2026</div>';
+    scroll.innerHTML = makeSkeleton();
 
     try {
       const endpoint = day === 'today' ? '/api/odds' : '/api/odds/tomorrow';
-
-      // Fetch odds and scores in parallel; scores only matter for today
       const [oddsRes] = await Promise.all([
         fetch(endpoint),
         day === 'today' ? fetchScores() : Promise.resolve(),
       ]);
-
       const data = await oddsRes.json();
       if (!oddsRes.ok || data.error) throw new Error(data.error || 'API error');
-
       if (!data.length) {
         scroll.innerHTML = '<div class="odds-error">No games found.</div>';
         return;
       }
-
       allGames = data;
       renderTabs(allGames);
       renderOddsScroll(allGames);
       document.getElementById('odds-count').textContent = `${data.length} Games`;
     } catch (e) {
-      scroll.innerHTML = `<div class="odds-error">Live odds unavailable — enter manually<br><span style="font-size:0.7rem;opacity:0.6;font-weight:400;letter-spacing:0">${e.message}</span></div>`;
+      scroll.innerHTML = `<div class="odds-error">Live odds unavailable — enter manually<br><span style="font-size:0.7rem;opacity:0.6;font-weight:400;letter-spacing:0">${esc(e.message)}</span></div>`;
     }
   }
 
@@ -1347,27 +2017,20 @@
       const data = await res.json();
       scoresMap = new Map();
       data.forEach(s => scoresMap.set(`${s.home}|${s.away}`, s));
-    } catch { /* scores are optional — fail silently */ }
+    } catch { /* silent */ }
   }
 
   function renderTabs(games) {
     const tabsEl = document.getElementById('sport-tabs');
     if (!tabsEl) return;
-
-    // Count games per sport
     const counts = { ALL: games.length };
     games.forEach(g => { counts[g.sport] = (counts[g.sport] || 0) + 1; });
-
-    // Build ordered list: ALL first, then sports sorted by count desc
-    const sports = ['ALL', ...Object.keys(counts)
-      .filter(s => s !== 'ALL')
-      .sort((a, b) => counts[b] - counts[a])];
-
+    const sports = ['ALL', ...Object.keys(counts).filter(s => s !== 'ALL').sort((a, b) => counts[b] - counts[a])];
     tabsEl.innerHTML = '';
     sports.forEach(sport => {
       const btn = document.createElement('button');
       btn.className = 'sport-tab' + (sport === currentSport ? ' active' : '');
-      btn.innerHTML = `${sport}<span class="tab-count">(${counts[sport]})</span>`;
+      btn.innerHTML = `${esc(sport)}<span class="tab-count">(${counts[sport]})</span>`;
       btn.onclick = () => setFilter(sport);
       tabsEl.appendChild(btn);
     });
@@ -1392,79 +2055,39 @@
 
   async function fetchStatus() {
     try {
-      const res  = await fetch('/api/odds/status');
+      const res = await fetch('/api/odds/status');
       if (!res.ok) return;
-      const s = await res.json();
-      const el = document.getElementById('last-updated');
+      const s   = await res.json();
+      const el  = document.getElementById('last-updated');
       if (!el) return;
-      if (!s.cached) {
-        el.textContent = 'Fetching live odds…';
-        return;
-      }
+      if (!s.cached) { el.textContent = 'Fetching live odds\u2026'; return; }
       const mins = Math.floor(s.age / 60);
-      el.textContent = mins < 1
-        ? 'Updated just now'
-        : `Updated ${mins} min${mins !== 1 ? 's' : ''} ago`;
+      el.textContent = mins < 1 ? 'Updated just now' : `Updated ${mins} min${mins !== 1 ? 's' : ''} ago`;
     } catch { /* silent */ }
-  }
-
-  async function shareResults() {
-    if (typeof html2canvas === 'undefined') {
-      alert('Screenshot library not loaded. Try refreshing the page.');
-      return;
-    }
-    const btn = document.getElementById('share-btn');
-    const target = document.getElementById('results');
-    btn.textContent = 'Generating…';
-    btn.disabled = true;
-    try {
-      const canvas = await html2canvas(target, {
-        backgroundColor: '#080808',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-      const link = document.createElement('a');
-      link.download = 'parlay-killer-results.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } catch (e) {
-      alert('Screenshot failed: ' + e.message);
-    } finally {
-      btn.textContent = 'SHARE THIS PARLAY ↗';
-      btn.disabled = false;
-    }
   }
 
   function renderGameCard(game) {
     const card = document.createElement('div');
     card.className = 'game-card';
-
     const { odds } = game;
-
-    // Build bet button rows
     let betRows = '';
 
     if (odds.moneyline) {
       const { home, away } = odds.moneyline;
-      const awayAb = abbrev(game.away);
-      const homeAb = abbrev(game.home);
+      const awayAb = abbrev(game.away), homeAb = abbrev(game.home);
       betRows += `<div class="bet-row">
         <button class="bet-btn" onclick="toggleBetBtn(this,'${esc(game.away)} ML','${fmtOdds(away)}')">${awayAb} ML<span class="btn-odds">${fmtOdds(away)}</span></button>
         <button class="bet-btn" onclick="toggleBetBtn(this,'${esc(game.home)} ML','${fmtOdds(home)}')">${homeAb} ML<span class="btn-odds">${fmtOdds(home)}</span></button>
       </div>`;
     }
-
     if (odds.spread) {
       const { away, awayOdds, home, homeOdds } = odds.spread;
-      const awayAb = abbrev(game.away);
-      const homeAb = abbrev(game.home);
+      const awayAb = abbrev(game.away), homeAb = abbrev(game.home);
       betRows += `<div class="bet-row">
         <button class="bet-btn" onclick="toggleBetBtn(this,'${esc(game.away)} ${fmtSpread(away)}','${fmtOdds(awayOdds)}')">${awayAb} ${fmtSpread(away)}<span class="btn-odds">${fmtOdds(awayOdds)}</span></button>
         <button class="bet-btn" onclick="toggleBetBtn(this,'${esc(game.home)} ${fmtSpread(home)}','${fmtOdds(homeOdds)}')">${homeAb} ${fmtSpread(home)}<span class="btn-odds">${fmtOdds(homeOdds)}</span></button>
       </div>`;
     }
-
     if (odds.total) {
       const { line, overOdds, underOdds } = odds.total;
       betRows += `<div class="bet-row">
@@ -1473,34 +2096,29 @@
       </div>`;
     }
 
-    // Score lookup
     const score = scoresMap.get(`${game.home}|${game.away}`);
-
     let statusHtml, teamsHtml;
 
     if (score && (score.status === 'live' || score.status === 'final')) {
-      const badgeCls  = score.status === 'live' ? 'live' : 'final';
-      const badgeTxt  = score.status === 'live' ? 'LIVE' : 'FINAL';
-      const awayScore = score.awayScore ?? '—';
-      const homeScore = score.homeScore ?? '—';
+      const badgeCls = score.status === 'live' ? 'live' : 'final';
+      const badgeTxt = score.status === 'live' ? 'LIVE' : 'FINAL';
       statusHtml = `<span class="score-badge ${badgeCls}">${badgeTxt}</span>`;
-      teamsHtml  = `
-        <div class="card-score">
-          <div class="score-team away">${esc(game.away)}</div>
-          <div class="score-pts">${awayScore}</div>
-          <div class="score-team home">${esc(game.home)}</div>
-          <div class="score-pts">${homeScore}</div>
-        </div>`;
+      teamsHtml  = `<div class="card-score">
+        <div class="score-team away">${esc(game.away)}</div>
+        <div class="score-pts">${score.awayScore ?? '\u2014'}</div>
+        <div class="score-team home">${esc(game.home)}</div>
+        <div class="score-pts">${score.homeScore ?? '\u2014'}</div>
+      </div>`;
     } else {
       statusHtml = `<span class="game-time">${esc(game.time)}</span>`;
-      teamsHtml  = `
-        <div class="team-names">
-          <div class="team-away">${esc(game.away)}</div>
-          <div class="vs-sep">@</div>
-          <div class="team-home">${esc(game.home)}</div>
-        </div>`;
+      teamsHtml  = `<div class="team-names">
+        <div class="team-away">${esc(game.away)}</div>
+        <div class="vs-sep">@</div>
+        <div class="team-home">${esc(game.home)}</div>
+      </div>`;
     }
 
+    const safeId = esc(game.id);
     card.innerHTML = `
       <div class="card-meta">
         <span class="sport-badge">${esc(game.sport)}</span>
@@ -1508,14 +2126,84 @@
       </div>
       ${teamsHtml}
       <div class="bet-grid">${betRows}</div>
+      <button class="props-btn" id="props-btn-${safeId}" onclick="toggleProps(this,'${esc(game.sport)}','${safeId}')">+ PROPS</button>
+      <div class="props-panel" id="props-panel-${safeId}">
+        <div class="props-loading">Loading props\u2026</div>
+      </div>
     `;
     return card;
+  }
+
+  /* ─── Props ──────────────────────────────────────────────── */
+  const sportKeyMap = {
+    NBA: 'basketball_nba', WNBA: 'basketball_wnba',
+    NFL: 'americanfootball_nfl', NCAAF: 'americanfootball_ncaaf',
+    MLB: 'baseball_mlb', NHL: 'icehockey_nhl',
+    NCAAB: 'basketball_ncaab', EPL: 'soccer_epl',
+    MLS: 'soccer_usa_mls', UCL: 'soccer_uefa_champs_league',
+    MMA: 'mma_mixed_martial_arts', ATP: 'tennis_atp_us_open',
+  };
+
+  const propLabels = {
+    player_points: 'Points', player_rebounds: 'Rebounds', player_assists: 'Assists',
+    player_threes: '3-Pointers', player_passing_yards: 'Pass Yds',
+    player_rushing_yards: 'Rush Yds', player_receiving_yards: 'Rec Yds',
+    player_touchdowns: 'TDs',
+  };
+
+  async function toggleProps(btn, sport, eventId) {
+    const panel = document.getElementById(`props-panel-${eventId}`);
+    if (!panel) return;
+    const isOpen = panel.classList.contains('open');
+
+    if (isOpen) {
+      panel.classList.remove('open');
+      btn.classList.remove('open');
+      btn.textContent = '+ PROPS';
+      return;
+    }
+    panel.classList.add('open');
+    btn.classList.add('open');
+    btn.textContent = '\u2212 PROPS';
+    if (panel.dataset.loaded) return;
+    panel.dataset.loaded = 'true';
+
+    const sportKey = sportKeyMap[sport] || sport.toLowerCase();
+    try {
+      const res  = await fetch(`/api/props/${sportKey}/${eventId}`);
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Props unavailable');
+      renderPropsPanel(panel, data);
+    } catch {
+      panel.innerHTML = '<div class="props-err-msg">Props unavailable for this game</div>';
+    }
+  }
+
+  function renderPropsPanel(panel, data) {
+    if (!data.players || !data.players.length) {
+      panel.innerHTML = '<div class="props-loading">No props available</div>';
+      return;
+    }
+    let html = '';
+    for (const player of data.players) {
+      html += `<div class="player-name">${esc(player.name)}</div>`;
+      for (const prop of player.props) {
+        const label = propLabels[prop.market] || prop.market.replace('player_', '');
+        const line  = prop.line !== null ? prop.line : '?';
+        const overBtn  = prop.over  !== null ? `<button class="prop-ou-btn" onclick="toggleBetBtn(this,'${esc(player.name)} ${label} Over ${line}','${fmtOdds(prop.over)}')">O ${fmtOdds(prop.over)}</button>` : '';
+        const underBtn = prop.under !== null ? `<button class="prop-ou-btn" onclick="toggleBetBtn(this,'${esc(player.name)} ${label} Under ${line}','${fmtOdds(prop.under)}')">U ${fmtOdds(prop.under)}</button>` : '';
+        html += `<div class="prop-row">
+          <span class="prop-label">${label} ${line}</span>
+          <div class="prop-ou-btns">${overBtn}${underBtn}</div>
+        </div>`;
+      }
+    }
+    panel.innerHTML = html;
   }
 
   /* ─── Analyze ────────────────────────────────────────────── */
   async function analyze() {
     clearError();
-
     const rows = document.querySelectorAll('.leg-row');
     if (!rows.length) { showError('Add at least one leg first.'); return; }
 
@@ -1525,7 +2213,7 @@
       const odds = row.querySelector('.leg-odds-input').value.trim();
       if (!desc || !odds) { showError('Every leg needs a description and odds.'); return; }
       if (!/^[+\-]?\d+(\.\d+)?$/.test(odds)) {
-        showError(`Invalid odds "${odds}" — use American format like +200 or -110.`);
+        showError(`Invalid odds "${odds}" \u2014 use American format like +200 or -110.`);
         return;
       }
       legs.push({ desc, odds });
@@ -1542,7 +2230,7 @@
         body: JSON.stringify({ legs, wager }),
       });
       data = await res.json();
-      if (res.status === 429) { showError("You've analyzed a lot of parlays — wait a moment and try again."); return; }
+      if (res.status === 429) { showError("You\u2019ve analyzed a lot of parlays \u2014 wait a moment and try again."); return; }
       if (!res.ok) { showError(data.error || 'Server error.'); return; }
     } catch {
       showError('Cannot reach server.');
@@ -1552,21 +2240,76 @@
     renderResults(data);
   }
 
+  /* ─── Math Breakdown ─────────────────────────────────────── */
+  function buildMathBreakdown(d) {
+    const HOLD = 0.045;
+    const { legs, trueParlay, impliedParlay, ev, wager, bookPayout } = d;
+
+    // Step 1
+    const step1Rows = legs.map(leg => {
+      const bookProb = leg.trueProb / (1 - HOLD);
+      const label    = leg.desc.length > 30 ? leg.desc.slice(0, 28) + '\u2026' : leg.desc.padEnd(30);
+      return `  ${label}  \u2192  <span class="mn">${(bookProb * 100).toFixed(1)}%</span> implied  \u2192  <span class="mn">${(leg.trueProb * 100).toFixed(1)}%</span> true  <span style="color:#555">(4.5% hold removed)</span>`;
+    }).join('\n');
+
+    // Step 2
+    const probParts = legs.map(l => `<span class="mn">${(l.trueProb * 100).toFixed(1)}%</span>`).join(' \xd7 ');
+
+    // Step 3
+    const bookImplied = (impliedParlay * 100).toFixed(1);
+    const trueProb    = (trueParlay * 100).toFixed(1);
+    const gap         = Math.abs((impliedParlay - trueParlay) * 100).toFixed(1);
+
+    // Step 4
+    const evWin  = (trueParlay * bookPayout).toFixed(2);
+    const evLose = ((1 - trueParlay) * wager).toFixed(2);
+    const evSign = ev >= 0 ? '+' : '\u2212';
+
+    return `
+      <div class="math-step">
+        <div class="math-step-label">Step 1 \u2014 Convert each leg to true probability:</div>
+        <div class="math-line">${step1Rows}</div>
+      </div>
+      <div class="math-step">
+        <div class="math-step-label">Step 2 \u2014 Multiply all true probabilities:</div>
+        <div class="math-line">${probParts} = <span class="mn">${(trueParlay * 100).toFixed(2)}%</span> true parlay probability</div>
+      </div>
+      <div class="math-step">
+        <div class="math-step-label">Step 3 \u2014 What the book implies:</div>
+        <div class="math-line">Book pays as if probability is <span class="mn">${bookImplied}%</span></div>
+        <div class="math-line">True probability is <span class="mn">${trueProb}%</span></div>
+        <div class="math-line"><span class="mred">That ${gap}% gap is pure profit for the sportsbook</span></div>
+      </div>
+      <div class="math-step">
+        <div class="math-step-label">Step 4 \u2014 Expected value:</div>
+        <div class="math-line">EV = (<span class="mn">${trueProb}%</span> \xd7 $${bookPayout.toFixed(2)}) \u2212 (<span class="mn">${((1 - trueParlay) * 100).toFixed(1)}%</span> \xd7 $${wager})</div>
+        <div class="math-line">EV = $${evWin} \u2212 $${evLose}</div>
+        <div class="math-result">${evSign}$${Math.abs(ev).toFixed(2)} per $${wager} wagered</div>
+      </div>
+    `;
+  }
+
   /* ─── Render results ─────────────────────────────────────── */
   function renderResults(d) {
     const edgePct = (1 - d.trueParlay / d.impliedParlay) * 100;
 
-    // Hero number
+    // Math breakdown
+    document.getElementById('math-body').innerHTML = buildMathBreakdown(d);
+    const breakdown = document.getElementById('math-breakdown');
+    if (window.innerWidth >= 640) breakdown.setAttribute('open', '');
+    else breakdown.removeAttribute('open');
+
+    // Hero
     const heroEl = document.getElementById('hero-prob');
     heroEl.textContent = pct(d.trueParlay, 2);
-    if (d.trueParlay > 0.2)      heroEl.className = 'hero-number col-green';
-    else if (d.trueParlay > 0.05) heroEl.className = 'hero-number col-yellow';
-    else                          heroEl.className = 'hero-number col-red';
+    heroEl.className = d.trueParlay > 0.2 ? 'hero-number col-green'
+                     : d.trueParlay > 0.05 ? 'hero-number col-yellow'
+                     : 'hero-number col-red';
 
     document.getElementById('hero-sub').textContent =
-      `Book's implied: ${pct(d.impliedParlay, 2)}  ·  ${d.legs.length}-leg parlay`;
+      `Book\u2019s implied: ${pct(d.impliedParlay, 2)}  \xb7  ${d.legs.length}-leg parlay`;
 
-    // EV metric
+    // EV
     const evEl = document.getElementById('m-ev');
     evEl.textContent = dollar(d.ev);
     evEl.className   = `metric-value ${d.ev >= 0 ? 'col-green' : 'col-red'}`;
@@ -1582,29 +2325,29 @@
     edgeEl.className   = `metric-value ${edgePct > 15 ? 'col-red' : edgePct > 8 ? 'col-yellow' : 'col-white'}`;
 
     // Verdict
-    const vBox    = document.getElementById('verdict-box');
-    const vEye    = document.getElementById('verdict-eyebrow');
-    const vTitle  = document.getElementById('verdict-title');
-    const vBody   = document.getElementById('verdict-body');
+    const vBox   = document.getElementById('verdict-box');
+    const vEye   = document.getElementById('verdict-eyebrow');
+    const vTitle = document.getElementById('verdict-title');
+    const vBody  = document.getElementById('verdict-body');
 
     if (d.evPct >= 0) {
-      vBox.className  = 'verdict good';
+      vBox.className   = 'verdict good';
       vEye.textContent  = 'Verdict';
-      vTitle.textContent = 'Positive EV — Rare but Real';
-      vBody.textContent  = `This parlay shows a positive expected value of ${dollar(d.ev)} (${(d.evPct*100).toFixed(1)}%). True win probability is ${pct(d.trueParlay,2)} vs the book's implied ${pct(d.impliedParlay,2)}. Proceed with caution — variance is extreme over any sample size.`;
+      vTitle.textContent = 'Positive EV \u2014 Rare but Real';
+      vBody.textContent  = `This parlay shows a positive expected value of ${dollar(d.ev)} (${(d.evPct*100).toFixed(1)}%). True win probability is ${pct(d.trueParlay,2)} vs the book\u2019s implied ${pct(d.impliedParlay,2)}. Proceed with caution \u2014 variance is extreme over any sample size.`;
     } else if (d.evPct >= -0.15) {
       vBox.className   = 'verdict caution';
-      vEye.textContent   = 'Verdict';
-      vTitle.textContent  = 'Moderate Negative EV';
-      vBody.textContent   = `Expected to lose ${dollar(Math.abs(d.ev))} per bet (${(d.evPct*100).toFixed(1)}%). The book's ${edgePct.toFixed(1)}% edge compounds across ${d.legs.length} legs. Fair payout would be $${d.fairPayout.toFixed(2)}, you're being offered $${d.bookPayout.toFixed(2)}.`;
+      vEye.textContent  = 'Verdict';
+      vTitle.textContent = 'Moderate Negative EV';
+      vBody.textContent  = `Expected to lose ${dollar(Math.abs(d.ev))} per bet (${(d.evPct*100).toFixed(1)}%). The book\u2019s ${edgePct.toFixed(1)}% edge compounds across ${d.legs.length} legs. Fair payout would be $${d.fairPayout.toFixed(2)}, you\u2019re being offered $${d.bookPayout.toFixed(2)}.`;
     } else {
       vBox.className   = 'verdict bad';
-      vEye.textContent   = 'Verdict';
-      vTitle.textContent  = 'Parlay Killer — Walk Away';
-      vBody.textContent   = `Severe negative EV of ${(d.evPct*100).toFixed(1)}%. For every $${d.wager} wagered, expect to lose ${dollar(Math.abs(d.ev))} on average. The book's edge has compounded to ${edgePct.toFixed(1)}% on this parlay — that's what the sportsbook keeps, on average, every time this bet is placed.`;
+      vEye.textContent  = 'Verdict';
+      vTitle.textContent = 'Parlay Killer \u2014 Walk Away';
+      vBody.textContent  = `Severe negative EV of ${(d.evPct*100).toFixed(1)}%. For every $${d.wager} wagered, expect to lose ${dollar(Math.abs(d.ev))} on average. The book\u2019s edge has compounded to ${edgePct.toFixed(1)}% \u2014 that\u2019s what the sportsbook keeps, on average, every time this bet is placed.`;
     }
 
-    // EV explainer line
+    // EV explainer
     const evPer = (d.evPct * d.wager).toFixed(2);
     document.getElementById('ev-explainer').textContent =
       `On average, this bet returns $${evPer} per $${d.wager} wagered over 100 attempts.`;
@@ -1629,25 +2372,21 @@
     const tbody = document.getElementById('leg-tbody');
     tbody.innerHTML = '';
     d.legs.forEach((leg, i) => {
-      const bookProb  = leg.trueProb / (1 - 0.045); // reverse hold to get implied
-      const barWidth  = Math.min(100, Math.round(leg.trueProb * 100));
+      const bookProb = leg.trueProb / (1 - 0.045);
+      const barWidth = Math.min(100, Math.round(leg.trueProb * 100));
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="td-num">${i + 1}</td>
         <td>${esc(leg.desc)}</td>
         <td class="${oddsClass(leg.odds)}">${fmtOdds(parseFloat(leg.odds))}</td>
         <td>${pct(bookProb, 1)}</td>
-        <td>
-          ${pct(leg.trueProb, 1)}
-          <span class="bar-wrap"><span class="bar-fill" style="width:${barWidth}%"></span></span>
-        </td>
+        <td>${pct(leg.trueProb, 1)}<span class="bar-wrap"><span class="bar-fill" style="width:${barWidth}%"></span></span></td>
       `;
       tbody.appendChild(tr);
     });
 
     // Suggestion
-    const top2 = d.suggestion.legs;
-    document.getElementById('suggest-title').textContent = top2.join(' + ');
+    document.getElementById('suggest-title').textContent = d.suggestion.legs.join(' + ');
     document.getElementById('suggest-body').textContent  = d.suggestion.note +
       ' This 2-leg parlay carries significantly less compounded house edge than the full parlay.';
 
@@ -1655,10 +2394,187 @@
     document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  /* ─── Value Finder ───────────────────────────────────────── */
+  async function loadValueFinder() {
+    const btn      = document.getElementById('vf-scan-btn');
+    const resultEl = document.getElementById('vf-results');
+    btn.textContent = 'Scanning\u2026';
+    btn.disabled    = true;
+    resultEl.innerHTML = '<div class="odds-loading">Scanning today\u2019s lines\u2026</div>';
+
+    try {
+      const res  = await fetch('/api/valuefinder');
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Failed');
+      renderValueFinder(data);
+    } catch (e) {
+      resultEl.innerHTML = `<div class="odds-error">Failed to load: ${esc(e.message)}</div>`;
+    } finally {
+      btn.textContent = 'Refresh Scan';
+      btn.disabled    = false;
+    }
+  }
+
+  function renderValueFinder(data) {
+    const el = document.getElementById('vf-results');
+    if (!data.results || !data.results.length) {
+      el.innerHTML = '<div class="odds-loading">No lines found.</div>';
+      return;
+    }
+
+    const rows = data.results.map(r => {
+      const evColor = r.ev >= 0 ? 'col-green' : r.ev >= -3 ? 'col-yellow' : 'col-red';
+      const evSign  = r.ev >= 0 ? '+' : '';
+      const odds    = r.odds >= 0 ? `+${r.odds}` : String(r.odds);
+      return `<div class="vf-row">
+        <div>
+          <div class="vf-pick">${esc(r.pick)} <span style="font-weight:600;color:var(--dim);font-size:0.82rem">${odds}</span></div>
+          <div class="vf-meta">${esc(r.game)} &middot; ${esc(r.market)} &middot; No-vig: ${(r.noVigProb*100).toFixed(1)}% vs Implied: ${(r.bookImplied*100).toFixed(1)}%</div>
+        </div>
+        <div>
+          <div class="vf-ev ${evColor}">${evSign}$${Math.abs(r.ev).toFixed(2)}</div>
+          <div class="vf-ev-sub">per $100</div>
+        </div>
+        <button class="vf-add-btn" onclick="addVFLeg('${esc(r.pick)}','${odds}')">+ ADD</button>
+      </div>`;
+    }).join('');
+
+    el.innerHTML = rows;
+  }
+
+  function addVFLeg(pick, odds) {
+    addLeg(pick, odds);
+    switchPanel('odds');
+  }
+
+  /* ─── Live Unders ────────────────────────────────────────── */
+  async function analyzeLiveUnder() {
+    const playerName  = document.getElementById('lu-player').value.trim();
+    const currentStat = parseFloat(document.getElementById('lu-current').value);
+    const propLine    = parseFloat(document.getElementById('lu-line').value);
+    const quarter     = document.getElementById('lu-quarter').value;
+    const timeRemaining = document.getElementById('lu-time').value.trim();
+    const homeScore   = parseFloat(document.getElementById('lu-home-score').value) || 0;
+    const awayScore   = parseFloat(document.getElementById('lu-away-score').value) || 0;
+    const statType    = document.getElementById('lu-stat-type').value;
+
+    if (!playerName)                          { alert('Enter a player name.'); return; }
+    if (isNaN(currentStat) || isNaN(propLine)) { alert('Enter current stat and prop line.'); return; }
+    if (!timeRemaining)                        { alert('Enter time remaining.'); return; }
+
+    try {
+      const res  = await fetch('/api/liveunder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerName, currentStat, propLine, quarter, timeRemaining, homeScore, awayScore, statType }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Server error');
+      renderLiveUnder(data, { playerName, propLine, statType });
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  function renderLiveUnder(data, ctx) {
+    const card = document.getElementById('lu-result-card');
+
+    // Badge CSS class
+    const badgeClass = data.recommendation.toLowerCase().replace(/ /g, '-');
+
+    // Projection bar: fill % = projected / propLine, capped at 100
+    const fillPct = Math.min(100, (data.projectedFinal / ctx.propLine) * 100);
+    // Marker at the line (100% of track) — we mark where prop line sits
+    // Bar fills up to projection. If proj < line, bar is short. If proj > line, bar overflows (capped).
+    const isOver   = data.projectedFinal >= ctx.propLine;
+    const barColor = isOver ? 'var(--green)' : 'var(--red)';
+    // Projected num color
+    const projColor = isOver ? 'var(--green)' : '#ff7f50';
+
+    // Signals
+    const iconMap = { over: '\u2191', under: '\u2193', neutral: '\u2014' };
+    const signalsHtml = data.signals.map(s => `
+      <div class="lu-signal ${s.type}">
+        <span class="lu-signal-icon">${iconMap[s.type] || '\u2014'}</span>
+        <span>${esc(s.text)}</span>
+      </div>
+    `).join('');
+
+    // Add-to-parlay side
+    const isOverRec = data.recommendation.includes('OVER');
+    const side      = isOverRec ? 'Over' : 'Under';
+    const propDesc  = `${ctx.playerName} ${ctx.statType} ${side} ${ctx.propLine}`;
+
+    card.innerHTML = `
+      <span class="lu-badge ${badgeClass}">${esc(data.recommendation)}</span>
+      <span class="lu-confidence-text">${data.confidence}% confidence</span>
+
+      <div class="lu-projection">
+        <div class="lu-proj-col">
+          <div class="lu-proj-num" style="color:${projColor}">${data.projectedFinal}</div>
+          <div class="lu-proj-label">Projected Finish</div>
+        </div>
+        <div class="lu-proj-vs">vs</div>
+        <div class="lu-proj-col">
+          <div class="lu-proj-num" style="color:var(--white)">${ctx.propLine}</div>
+          <div class="lu-proj-label">Prop Line</div>
+        </div>
+      </div>
+
+      <div class="lu-bar-wrap">
+        <div class="lu-bar-label">
+          <span>0</span>
+          <span>${data.minsRemaining} min remaining &middot; pace ${data.pace}/min</span>
+          <span>${ctx.propLine}</span>
+        </div>
+        <div class="lu-bar-track">
+          <div class="lu-bar-fill" style="width:${fillPct}%;background:${barColor}"></div>
+          <div class="lu-bar-marker" style="left:100%"></div>
+        </div>
+      </div>
+
+      <div class="lu-explanation">${esc(data.explanation)}</div>
+
+      <div class="lu-signals">${signalsHtml}</div>
+
+      <button class="lu-add-btn" onclick="addLeg('${esc(propDesc)}','');switchPanel('odds')">+ ADD TO PARLAY BUILDER</button>
+      <div class="lu-disclaimer">${esc(data.disclaimer)}</div>
+    `;
+
+    document.getElementById('lu-results').style.display = 'block';
+    document.getElementById('lu-results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* ─── Share ──────────────────────────────────────────────── */
+  async function shareResults() {
+    if (typeof html2canvas === 'undefined') { alert('Screenshot library not loaded.'); return; }
+    const btn    = document.getElementById('share-btn');
+    const target = document.getElementById('results');
+    btn.textContent = 'Generating\u2026';
+    btn.disabled    = true;
+    try {
+      const canvas = await html2canvas(target, {
+        backgroundColor: '#080808',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = 'parlay-killer-results.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (e) {
+      alert('Screenshot failed: ' + e.message);
+    } finally {
+      btn.textContent = 'SHARE THIS PARLAY \u2197';
+      btn.disabled    = false;
+    }
+  }
+
   /* ─── Error helpers ──────────────────────────────────────── */
   function showError(msg) {
     const el = document.getElementById('error-msg');
-    el.textContent = msg;
+    el.textContent  = msg;
     el.style.display = 'block';
   }
 
@@ -1668,7 +2584,167 @@
     el.textContent   = '';
   }
 
+  /* ─── Auth ──────────────────────────────────────────────── */
+  let currentUser = null;
+
+  function renderAuthBar() {
+    const bar = document.getElementById('auth-bar');
+    if (!bar) return;
+    if (currentUser) {
+      const display = currentUser.name || currentUser.email;
+      bar.innerHTML = `
+        <div class="auth-user">
+          <span class="auth-name">${esc(display)}</span>
+          <button class="auth-btn" onclick="submitLogout()">Sign Out</button>
+        </div>
+      `;
+    } else {
+      bar.innerHTML = `
+        <button class="auth-btn" onclick="openModal('modal-login')">Log In</button>
+        <button class="auth-btn primary" onclick="openModal('modal-signup')">Sign Up Free</button>
+      `;
+    }
+  }
+
+  async function checkAuth() {
+    try {
+      const res  = await fetch('/api/auth/me', { credentials: 'include' });
+      const data = await res.json();
+      currentUser = data.user || null;
+    } catch {
+      currentUser = null;
+    }
+    renderAuthBar();
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    // focus first input
+    const first = document.querySelector(`#${id} input`);
+    if (first) setTimeout(() => first.focus(), 60);
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    clearModalError(id === 'modal-login' ? 'login-error' : 'signup-error');
+  }
+
+  function handleOverlayClick(e, id) {
+    if (e.target === document.getElementById(id)) closeModal(id);
+  }
+
+  function switchModal(from, to) {
+    closeModal(from);
+    openModal(to);
+  }
+
+  function clearModalError(elId) {
+    const el = document.getElementById(elId);
+    if (el) { el.style.display = 'none'; el.textContent = ''; }
+  }
+
+  function showModalError(elId, msg) {
+    const el = document.getElementById(elId);
+    if (el) { el.textContent = msg; el.style.display = 'block'; }
+  }
+
+  function setSubmitLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    if (loading) btn.dataset.orig = btn.textContent;
+    btn.textContent = loading ? 'Please wait\u2026' : (btn.dataset.orig || btn.textContent);
+  }
+
+  async function submitLogin() {
+    clearModalError('login-error');
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) { showModalError('login-error', 'Email and password required.'); return; }
+
+    setSubmitLoading('login-submit', true);
+    try {
+      const res  = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showModalError('login-error', data.error || 'Login failed.'); return; }
+      currentUser = data.user;
+      closeModal('modal-login');
+      renderAuthBar();
+      document.getElementById('login-email').value    = '';
+      document.getElementById('login-password').value = '';
+    } catch {
+      showModalError('login-error', 'Network error. Try again.');
+    } finally {
+      setSubmitLoading('login-submit', false);
+    }
+  }
+
+  async function submitSignup() {
+    clearModalError('signup-error');
+    const name     = document.getElementById('signup-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    if (!email) { showModalError('signup-error', 'Email required.'); return; }
+    if (!password || password.length < 8) { showModalError('signup-error', 'Password must be at least 8 characters.'); return; }
+
+    setSubmitLoading('signup-submit', true);
+    try {
+      const res  = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showModalError('signup-error', data.error || 'Registration failed.'); return; }
+      currentUser = data.user;
+      closeModal('modal-signup');
+      renderAuthBar();
+      document.getElementById('signup-name').value     = '';
+      document.getElementById('signup-email').value    = '';
+      document.getElementById('signup-password').value = '';
+    } catch {
+      showModalError('signup-error', 'Network error. Try again.');
+    } finally {
+      setSubmitLoading('signup-submit', false);
+    }
+  }
+
+  async function submitLogout() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch { /* ignore */ }
+    currentUser = null;
+    renderAuthBar();
+  }
+
+  function googleAuth() {
+    alert('Google sign-in coming soon \u2014 add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env to enable.');
+  }
+
+  // Allow Enter key in modal inputs
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('modal-login').classList.contains('open'))  submitLogin();
+    if (document.getElementById('modal-signup').classList.contains('open')) submitSignup();
+  });
+
+  /* ─── Disclaimer banner ──────────────────────────────────── */
+  function dismissBanner() {
+    document.getElementById('disclaimer-banner').classList.add('hidden');
+    sessionStorage.setItem('disclaimer-dismissed', '1');
+  }
+  if (sessionStorage.getItem('disclaimer-dismissed')) {
+    document.getElementById('disclaimer-banner').classList.add('hidden');
+  }
+
   /* ─── Init ───────────────────────────────────────────────── */
+  checkAuth();
   fetchOdds();
   fetchStatus();
 </script>
