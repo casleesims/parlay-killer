@@ -274,32 +274,36 @@
       user-select: none;
     }
     .nav-signout {
+      display: inline-flex;
+      align-items: center;
       font-family: var(--font);
-      font-size: 0.8125rem;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--white);
       background: none;
-      border: 1px solid var(--border2);
-      color: rgba(255,255,255,0.7);
-      padding: 5px 12px;
-      min-height: 32px;
+      border: 1px solid #333;
+      padding: 6px 12px;
       cursor: pointer;
-      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      transition: border-color 0.15s, color 0.15s;
       white-space: nowrap;
-      border-radius: 4px;
+      flex-shrink: 0;
     }
-    .nav-signout:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,135,0.04); }
+    .nav-signout:hover { border-color: var(--green); color: var(--green); }
 
     .auth-btn {
+      display: inline-flex;
+      align-items: center;
       font-family: var(--font);
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      background: transparent;
-      border: 1px solid var(--border2);
       color: var(--white);
+      background: none;
+      border: 1px solid #333;
       padding: 6px 14px;
-      min-height: 34px;
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
       white-space: nowrap;
@@ -542,12 +546,8 @@
     }
     .signup-hint.show { display: block; }
 
-    .auth-btn.primary {
-      background: var(--green);
-      border-color: var(--green);
-      color: var(--bg);
-    }
-    .auth-btn.primary:hover { background: var(--green2); border-color: var(--green2); }
+    .auth-btn.primary { background: var(--green); color: #000; border-color: var(--green); }
+    .auth-btn.primary:hover { opacity: 0.9; }
 
     /* ── MODAL ── */
     .modal-overlay {
@@ -2327,7 +2327,7 @@
     <a class="top-nav-logo" href="/">PARLAY<span>KILLER</span></a>
     <div class="top-nav-right">
       <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">&#9788; LIGHT</button>
-      <div id="auth-bar" style="display:flex;align-items:center;gap:8px;"><!-- populated by JS --></div>
+      <div id="auth-bar"></div>
     </div>
   </div>
 </nav>
@@ -4011,48 +4011,49 @@
   function renderAuthBar() {
     const bar = document.getElementById('auth-bar');
     if (!bar) return;
-    if (currentUser) {
-      const display  = currentUser.name || currentUser.email || '';
-      const initial  = display.charAt(0).toUpperCase();
-      const isPro    = currentUser.plan === 'pro' || currentUser.usageLimit === null;
 
-      let badgeHtml = '';
-      if (currentUser.isOwner) {
-        badgeHtml = `<span class="auth-pro-badge">&#9889; OWNER</span>`;
-      } else if (isPro) {
-        badgeHtml = `<span class="auth-pro-badge">&#9889; PRO</span>`;
-      } else {
-        const used      = currentUser.todayUsage || 0;
-        const limit     = currentUser.usageLimit || 3;
-        const remaining = currentUser.remaining != null ? currentUser.remaining : (limit - used);
-        const fillPct   = Math.min(100, Math.round((used / limit) * 100));
-        const fillColor = remaining === 0 ? 'var(--red)' : remaining === 1 ? 'var(--yellow)' : 'var(--green)';
-        const upgradeLink = remaining === 0
-          ? `<a href="#" onclick="openUpgradeModal();return false;" style="color:var(--green);margin-left:5px;">Upgrade</a>`
-          : '';
-        badgeHtml = `
-          <div class="auth-usage">
-            <span class="auth-usage-text">${used}/${limit} analyses used${upgradeLink}</span>
-            <div class="auth-usage-bar"><div class="auth-usage-fill" style="width:${fillPct}%;background:${fillColor}"></div></div>
-          </div>`;
-      }
-
-      bar.innerHTML = `
-        <div class="nav-auth-user">
-          <span class="nav-avatar" title="${esc(display)}">${esc(initial)}</span>
-          <span class="nav-user-name">${esc(display)}</span>
-          ${badgeHtml}
-          <a class="nav-settings" href="/account.html">Settings</a>
-          <span class="nav-divider">·</span>
-          <button class="nav-signout" onclick="submitLogout()" style="display:inline-flex!important;visibility:visible!important;opacity:1!important;">Sign Out</button>
-        </div>
-      `;
-    } else {
+    if (!currentUser) {
       bar.innerHTML = `
         <button class="auth-btn" onclick="openModal('modal-login')">Log In</button>
         <button class="auth-btn primary" onclick="openModal('modal-signup')">Sign Up Free</button>
       `;
+      return;
     }
+
+    const display = currentUser.name || currentUser.email || '';
+    const initial = display.charAt(0).toUpperCase();
+    const isPro = currentUser.plan === 'pro' || currentUser.usageLimit === null;
+
+    let badgeHtml = '';
+    if (currentUser.isOwner) {
+      badgeHtml = `<span class="auth-pro-badge">⚡ OWNER</span>`;
+    } else if (isPro) {
+      badgeHtml = `<span class="auth-pro-badge">⚡ PRO</span>`;
+    } else {
+      const used = currentUser.todayUsage || 0;
+      const limit = currentUser.usageLimit || 3;
+      const remaining = currentUser.remaining != null ? currentUser.remaining : (limit - used);
+      const fillPct = Math.min(100, Math.round((used / limit) * 100));
+      const fillColor = remaining === 0 ? 'var(--red)' : remaining === 1 ? 'var(--yellow)' : 'var(--green)';
+      const upgradeLink = remaining === 0
+        ? `<a href="#" onclick="openUpgradeModal();return false;" style="color:var(--green);margin-left:5px;">Upgrade</a>`
+        : '';
+      badgeHtml = `
+        <div class="auth-usage">
+          <span class="auth-usage-text">${used}/${limit} analyses used${upgradeLink}</span>
+          <div class="auth-usage-bar"><div class="auth-usage-fill" style="width:${fillPct}%;background:${fillColor}"></div></div>
+        </div>`;
+    }
+
+    bar.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
+        <span class="nav-avatar">${esc(initial)}</span>
+        <span class="nav-user-name">${esc(display)}</span>
+        ${badgeHtml}
+        <a class="nav-settings" href="/account.html">Settings</a>
+        <button class="nav-signout" onclick="submitLogout()">Sign Out</button>
+      </div>
+    `;
   }
 
   async function checkAuth() {
