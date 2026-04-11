@@ -37,6 +37,7 @@
       font-size: 16px;
       line-height: 1.4;
       min-height: 100vh;
+      border-top: 3px solid #00ff87;
     }
 
     .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
@@ -72,7 +73,7 @@
       padding: 8px 18px;
       border: 1px solid var(--border2);
       background: transparent;
-      color: var(--dim);
+      color: var(--white);
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
     }
@@ -132,7 +133,7 @@
     .parlay-body {
       font-size: 1rem;
       font-weight: 400;
-      color: var(--dim);
+      color: #cccccc;
       line-height: 1.65;
     }
 
@@ -146,10 +147,12 @@
       background: var(--green);
       color: #000;
       border: none;
-      padding: 14px 28px;
+      padding: 16px 32px;
+      min-height: 56px;
       cursor: pointer;
       transition: background 0.15s, opacity 0.15s;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
     }
     .cta-primary:hover { background: var(--green2); }
     .cta-secondary {
@@ -159,12 +162,14 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       background: transparent;
-      color: var(--dim);
+      color: var(--white);
       border: 1px solid var(--border2);
-      padding: 14px 28px;
+      padding: 16px 32px;
+      min-height: 56px;
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
     }
     .cta-secondary:hover { border-color: var(--green); color: var(--green); }
 
@@ -269,7 +274,7 @@
     .section-sub {
       font-size: 0.95rem;
       font-weight: 400;
-      color: var(--dim);
+      color: #cccccc;
       line-height: 1.6;
       max-width: 520px;
       margin-bottom: 52px;
@@ -304,7 +309,7 @@
     .step-desc {
       font-size: 0.88rem;
       font-weight: 400;
-      color: var(--dim);
+      color: #cccccc;
       line-height: 1.6;
     }
 
@@ -335,7 +340,7 @@
     .feature-desc {
       font-size: 0.85rem;
       font-weight: 400;
-      color: var(--dim);
+      color: #cccccc;
       line-height: 1.6;
     }
 
@@ -405,7 +410,7 @@
     .pricing-features li {
       font-size: 0.88rem;
       font-weight: 600;
-      color: var(--dim);
+      color: #cccccc;
       display: flex;
       align-items: flex-start;
       gap: 8px;
@@ -724,7 +729,7 @@
     .live-callout-desc {
       font-size: 0.82rem;
       font-weight: 400;
-      color: var(--dim);
+      color: #cccccc;
       line-height: 1.55;
     }
 
@@ -755,7 +760,7 @@
       .wrap { padding: 0 16px; }
       .live-edge-headline { font-size: 2.6rem; }
       .live-ctas { flex-direction: column; }
-      .cta-primary, .cta-secondary { text-align: center; }
+      .cta-primary, .cta-secondary { text-align: center; justify-content: center; width: 100%; }
       .nav-brand { font-size: 1.3rem; }
       .ex-metrics { grid-template-columns: 1fr 1fr; }
       .hero-live { padding: 40px 0 48px; }
@@ -860,12 +865,16 @@
     </div>
 
     <h1 class="live-edge-headline">The Edge Bettors<br>Don't Know They're Missing</h1>
+    <p style="font-size:0.78rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#00ff87;margin:14px 0 18px;">Trusted math, not gut feelings</p>
     <p class="live-edge-sub">While the book adjusts lines in real time, you're guessing. Parlay Killer isn't.</p>
     <p class="live-edge-body">Our live betting engine pulls real game data — pace, score, time remaining — and runs binomial probability math to tell you if that live player prop or team total is actually worth it right now. Not yesterday's line. Not a gut feeling. The math, live.</p>
 
     <div class="live-ctas">
       <button class="cta-primary" onclick="openModal('modal-signup')">Create Free Account</button>
       <button class="cta-secondary" onclick="openModal('modal-login')">Sign In</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:16px;margin-bottom:12px;">
+      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,255,135,0.08);border:1px solid rgba(0,255,135,0.2);padding:5px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;color:#00ff87;">&#9733; Join 500+ bettors running smarter math</span>
     </div>
     <p class="live-hero-note">3 free analyses &mdash; no credit card required</p>
 
@@ -946,7 +955,7 @@
       <div class="step">
         <span class="step-num">01</span>
         <div class="step-title">Enter Your Parlay</div>
-        <p class="step-desc">Paste in your legs and the odds from any sportsbook. DraftKings, FanDuel, BetMGM — it all works the same.</p>
+        <p class="step-desc">Paste in your legs and the odds from any sportsbook. Works with any sportsbook — FanDuel, BetMGM, Caesars, and more.</p>
       </div>
       <div class="step">
         <span class="step-num">02</span>
@@ -976,8 +985,8 @@
       </div>
       <div class="feature">
         <span class="feature-icon">&#9889;</span>
-        <div class="feature-title">Live DraftKings Odds</div>
-        <p class="feature-desc">Real-time odds pulled directly from DraftKings across NBA, MLB, NFL, NHL, and more. Add any game line to your parlay in one click.</p>
+        <div class="feature-title">Live Sportsbook Odds</div>
+        <p class="feature-desc">Real-time odds pulled from major sportsbooks across NBA, MLB, NFL, NHL, and more. Add any game line to your parlay in one click.</p>
       </div>
       <div class="feature">
         <span class="feature-icon">&#127919;</span>
@@ -1007,7 +1016,7 @@
         <div class="pricing-cadence">Forever free</div>
         <ul class="pricing-features">
           <li>3 parlay analyses (lifetime)</li>
-          <li>Live DraftKings odds</li>
+          <li>Live sportsbook odds</li>
           <li>Full EV breakdown</li>
           <li>Value Finder access</li>
         </ul>
@@ -1021,7 +1030,7 @@
         <div class="pricing-cadence">per month &mdash; or $39.99/year (save 67%)</div>
         <ul class="pricing-features">
           <li>Unlimited parlay analyses</li>
-          <li>Live DraftKings odds</li>
+          <li>Live sportsbook odds</li>
           <li>Full EV breakdown</li>
           <li>Value Finder — all sports</li>
           <li>Live Bet Tracker (NBA + MLB)</li>

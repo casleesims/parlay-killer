@@ -57,13 +57,13 @@
     [data-theme="light"] .auth-pro-badge     { background: rgba(0,170,85,0.12); color: #00aa55; border-color: rgba(0,170,85,0.3); }
     /* Main tabs */
     [data-theme="light"] .main-tabs          { border-bottom-color: #e0e0e0; background: #ffffff; }
-    [data-theme="light"] .main-tab           { color: #444444; }
+    [data-theme="light"] .main-tab           { color: #555555; background: transparent; }
     [data-theme="light"] .main-tab:hover     { color: #111111; background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .main-tab.active    { color: #111111; border-bottom-color: #00aa55; }
+    [data-theme="light"] .main-tab.active    { color: #111111; border-bottom-color: #00aa55; background: transparent; }
     /* Sport filter tabs */
-    [data-theme="light"] .sport-tab          { color: #444444; border-bottom-color: transparent; }
+    [data-theme="light"] .sport-tab          { color: #555555; border-bottom-color: transparent; background: transparent; }
     [data-theme="light"] .sport-tab:hover    { color: #111111; background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .sport-tab.active   { color: #111111; border-bottom-color: #00aa55; }
+    [data-theme="light"] .sport-tab.active   { color: #111111; border-bottom-color: #00aa55; background: transparent; }
     /* Day tabs */
     [data-theme="light"] .day-tab            { color: #444444; border-color: #cccccc; }
     [data-theme="light"] .day-tab.active     { background: #00aa55; border-color: #00aa55; color: #ffffff; }
@@ -274,23 +274,25 @@
       user-select: none;
     }
     .nav-signout {
-      display: inline-flex;
+      display: inline-flex !important;
+      visibility: visible !important;
       align-items: center;
       font-family: var(--font);
       font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--white);
+      color: #ffffff;
       background: none;
-      border: 1px solid #333;
+      border: 1px solid #444;
       padding: 6px 12px;
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .nav-signout:hover { border-color: var(--green); color: var(--green); }
+    .nav-signout:hover { border-color: #00ff87; color: #00ff87; }
+    [data-theme="light"] .nav-signout { color: #111111; border-color: #cccccc; }
 
     .auth-btn {
       display: inline-flex;
@@ -884,6 +886,11 @@
       text-transform: uppercase;
     }
 
+    .game-card-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+    .game-network { font-size: 0.7rem; color: var(--dim); font-weight: 600; }
+    [data-theme="light"] .game-time { color: #777; }
+    [data-theme="light"] .game-network { color: #555; }
+
     .card-odds-note {
       font-size: 0.55rem;
       font-weight: 600;
@@ -1315,15 +1322,15 @@
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
-      color: rgba(255,255,255,0.6);
+      color: #999999;
       padding: 8px 16px 7px;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s, background 0.15s;
       margin-bottom: -1px;
       white-space: nowrap;
     }
-    .sport-tab:hover { color: var(--white); background: rgba(255,255,255,0.03); }
-    .sport-tab.active { color: var(--white); border-bottom-color: var(--green); }
+    .sport-tab:hover { color: #ffffff; background: rgba(255,255,255,0.03); }
+    .sport-tab.active { color: #ffffff; border-bottom-color: #00ff87; }
     .tab-count { font-weight: 600; margin-left: 2px; opacity: 0.5; font-size: 0.75rem; }
 
     /* ── DAY TOGGLE ── */
@@ -1463,8 +1470,12 @@
       margin-top: 3px;
     }
 
+    .vf-explainer { display: flex; align-items: flex-start; gap: 10px; background: rgba(0,255,135,0.06); border: 1px solid rgba(0,255,135,0.15); border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; font-size: 0.82rem; color: var(--dim); line-height: 1.5; }
+    .vf-explainer-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    [data-theme="light"] .vf-explainer { color: #555; }
+
     .vf-ev {
-      font-size: 0.88rem;
+      font-size: 1.6rem;
       font-weight: 900;
       letter-spacing: 0.02em;
       text-align: right;
@@ -2352,6 +2363,7 @@
     <button class="main-tab active" data-panel="lu" onclick="switchPanel('lu')">Live Bets <span class="red-dot"></span></button>
     <button class="main-tab" data-panel="odds" onclick="switchPanel('odds')">Odds</button>
     <button class="main-tab" data-panel="vf" onclick="switchPanel('vf')">Value Finder</button>
+    <button class="main-tab" data-panel="history" onclick="switchPanel('history')">History</button>
   </nav>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -2504,6 +2516,9 @@
 
       <div class="results-footer" id="results-footer">parlarkiller.up.railway.app</div>
       <button id="share-btn" onclick="shareResults()">SHARE THIS PARLAY &#x2197;</button>
+      <button onclick="shareResults()" style="width:100%;margin-top:16px;font-family:var(--font);font-size:0.85rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;background:none;border:2px solid #00ff87;color:#00ff87;padding:14px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='rgba(0,255,135,0.08)'" onmouseout="this.style.background='none'">
+        📤 Share This Analysis
+      </button>
     </div>
 
   </div><!-- /panel-odds -->
@@ -2518,8 +2533,24 @@
     <div class="vf-disclaimer">
       EV is calculated by comparing each side's book-implied probability against the no-vig (fair) probability derived from the two-way market. Lines closest to 0 EV have the least juice. Not a guarantee of profit.
     </div>
+    <div class="vf-explainer">
+      <span class="vf-explainer-icon">📊</span>
+      <span>These are bets where the math says the book is mispricing the line — you have a statistical edge. Positive EV means you win more than you lose over time.</span>
+    </div>
     <button class="vf-scan-btn" id="vf-scan-btn" onclick="loadValueFinder()">Scan Today's Odds</button>
     <div id="vf-results"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PANEL: HISTORY
+  ══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-history">
+    <div class="wrap">
+      <div class="section-label"><span class="label-text">Recent Analyses</span></div>
+      <div id="history-list" style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+        <div style="color:var(--dim);font-size:0.85rem;text-align:center;padding:40px 0;">Run a parlay analysis to see your history here.</div>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -2921,6 +2952,7 @@
     }
 
     const safeId = esc(game.id);
+    const networkStr = game.broadcast || '';
     card.innerHTML = `
       <div class="card-meta">
         <span class="sport-badge">${esc(game.sport)}</span>
@@ -2928,6 +2960,10 @@
       </div>
       ${teamsHtml}
       <div class="bet-grid">${betRows}</div>
+      <div class="game-card-meta">
+        <span class="game-time">${esc(game.time)}</span>
+        ${networkStr ? `<span class="game-network">${esc(networkStr)}</span>` : ''}
+      </div>
       <div class="card-odds-note">Odds may be delayed. Verify with your sportsbook.</div>
     `;
     return card;
@@ -2988,6 +3024,7 @@
     }
 
     renderResults(data);
+    saveToHistory(legs, data);
     if (typeof gtag !== 'undefined') {
       gtag('event', 'analyze_parlay', { legs: legs.length, ev: data.evPct });
     }
@@ -3189,6 +3226,7 @@
           <div class="vf-ev-sub">per $100</div>
         </div>
         <button class="vf-add-btn" onclick="addVFLeg('${esc(r.pick)}','${odds}')">+ ADD</button>
+        <button onclick="addLeg('${esc(r.pick)}','${odds}');switchPanel('odds');" style="margin-top:8px;width:100%;font-family:var(--font);font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;background:none;border:1px solid #333;color:#999;padding:8px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='#00ff87';this.style.color='#00ff87'" onmouseout="this.style.borderColor='#333';this.style.color='#999'">+ Add to Parlay</button>
       </div>`;
     }).join('');
 
@@ -4014,8 +4052,8 @@
 
     if (!currentUser) {
       bar.innerHTML = `
-        <button class="auth-btn" onclick="openModal('modal-login')">Log In</button>
-        <button class="auth-btn primary" onclick="openModal('modal-signup')">Sign Up Free</button>
+        <button onclick="openModal('modal-login')" style="display:inline-flex;align-items:center;font-family:var(--font);font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;background:none;border:1px solid #444;padding:6px 14px;cursor:pointer;white-space:nowrap;margin-right:8px;" onmouseover="this.style.borderColor='#00ff87';this.style.color='#00ff87'" onmouseout="this.style.borderColor='#444';this.style.color='#ffffff'">Log In</button>
+        <button onclick="openModal('modal-signup')" style="display:inline-flex;align-items:center;font-family:var(--font);font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#000;background:#00ff87;border:1px solid #00ff87;padding:6px 14px;cursor:pointer;white-space:nowrap;">Sign Up Free</button>
       `;
       return;
     }
@@ -4026,34 +4064,92 @@
 
     let badgeHtml = '';
     if (currentUser.isOwner) {
-      badgeHtml = `<span class="auth-pro-badge">⚡ OWNER</span>`;
+      badgeHtml = `<span style="background:rgba(0,255,135,0.15);color:#00ff87;font-size:0.65rem;font-weight:800;letter-spacing:0.1em;padding:3px 8px;border-radius:3px;">⚡ OWNER</span>`;
     } else if (isPro) {
-      badgeHtml = `<span class="auth-pro-badge">⚡ PRO</span>`;
+      badgeHtml = `<span style="background:rgba(0,255,135,0.15);color:#00ff87;font-size:0.65rem;font-weight:800;letter-spacing:0.1em;padding:3px 8px;border-radius:3px;">⚡ PRO</span>`;
     } else {
       const used = currentUser.todayUsage || 0;
       const limit = currentUser.usageLimit || 3;
       const remaining = currentUser.remaining != null ? currentUser.remaining : (limit - used);
-      const fillPct = Math.min(100, Math.round((used / limit) * 100));
-      const fillColor = remaining === 0 ? 'var(--red)' : remaining === 1 ? 'var(--yellow)' : 'var(--green)';
       const upgradeLink = remaining === 0
-        ? `<a href="#" onclick="openUpgradeModal();return false;" style="color:var(--green);margin-left:5px;">Upgrade</a>`
+        ? `<a href="#" onclick="openUpgradeModal();return false;" style="color:#00ff87;margin-left:6px;font-size:0.7rem;">Upgrade</a>`
         : '';
-      badgeHtml = `
-        <div class="auth-usage">
-          <span class="auth-usage-text">${used}/${limit} analyses used${upgradeLink}</span>
-          <div class="auth-usage-bar"><div class="auth-usage-fill" style="width:${fillPct}%;background:${fillColor}"></div></div>
-        </div>`;
+      badgeHtml = `<span style="font-size:0.7rem;color:#999;white-space:nowrap;">${used}/${limit} used${upgradeLink}</span>`;
     }
 
     bar.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
-        <span class="nav-avatar">${esc(initial)}</span>
-        <span class="nav-user-name">${esc(display)}</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#00ff87;color:#000;font-family:var(--font);font-size:0.8rem;font-weight:900;flex-shrink:0;">${esc(initial)}</span>
+        <span class="nav-user-name" style="font-size:0.8rem;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">${esc(display)}</span>
         ${badgeHtml}
-        <a class="nav-settings" href="/account.html">Settings</a>
+        <a href="/account.html" class="nav-settings" style="font-size:0.75rem;color:#999;white-space:nowrap;text-decoration:none;">Settings</a>
         <button class="nav-signout" onclick="submitLogout()">Sign Out</button>
       </div>
     `;
+  }
+
+  /* ─── Tour ──────────────────────────────────────────────── */
+  function showTourIfNeeded() {
+    if (!currentUser || localStorage.getItem('pk_tour_done')) return;
+    const steps = [
+      { el: '.main-tab[data-panel="lu"]', text: 'Start here — check live bets in real time' },
+      { el: '.main-tab[data-panel="odds"]', text: 'Browse live odds and add legs to your parlay' },
+      { el: '.main-tab[data-panel="vf"]', text: 'Find positive EV plays the book is mispricing' },
+      { el: '#analyze-btn', text: 'Run the math on your parlay — see true EV and win probability' },
+    ];
+    const tooltip = document.createElement('div');
+    tooltip.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#00ff87;color:#000;font-family:var(--font);font-size:0.85rem;font-weight:800;padding:14px 20px;border-radius:6px;z-index:9999;max-width:320px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+
+    function showStep(i) {
+      if (i >= steps.length) {
+        tooltip.remove();
+        localStorage.setItem('pk_tour_done', '1');
+        return;
+      }
+      tooltip.innerHTML = `<div style="margin-bottom:8px;">${steps[i].text}</div><div style="font-size:0.7rem;opacity:0.7;">${i+1} of ${steps.length}</div><button onclick="window.__tourStep(${i+1})" style="margin-top:10px;background:#000;color:#00ff87;border:none;font-family:var(--font);font-size:0.75rem;font-weight:800;padding:6px 16px;cursor:pointer;border-radius:3px;">${i === steps.length-1 ? 'Got it!' : 'Next →'}</button>`;
+      if (!document.body.contains(tooltip)) document.body.appendChild(tooltip);
+    }
+    window.__tourStep = showStep;
+    showStep(0);
+  }
+
+  /* ─── History ────────────────────────────────────────────── */
+  function saveToHistory(legs, result) {
+    const history = JSON.parse(localStorage.getItem('pk_history') || '[]');
+    history.unshift({
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
+      legs: legs.map(l => l.desc),
+      ev: result.evPct,
+      trueProb: result.trueParlay,
+      wager: result.wager,
+      payout: result.bookPayout,
+    });
+    localStorage.setItem('pk_history', JSON.stringify(history.slice(0, 10)));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    if (!list) return;
+    const history = JSON.parse(localStorage.getItem('pk_history') || '[]');
+    if (!history.length) {
+      list.innerHTML = '<div style="color:var(--dim);font-size:0.85rem;text-align:center;padding:40px 0;">Run a parlay analysis to see your history here.</div>';
+      return;
+    }
+    list.innerHTML = history.map(h => `
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:0.7rem;color:var(--dim);">${h.date}</span>
+          <span style="font-size:0.85rem;font-weight:800;color:${h.ev >= 0 ? 'var(--green)' : 'var(--red)'};">${h.ev >= 0 ? '+' : ''}${(h.ev * 100).toFixed(1)}% EV</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--dim);margin-bottom:6px;">${h.legs.join(' + ')}</div>
+        <div style="display:flex;gap:16px;font-size:0.75rem;color:var(--dim);">
+          <span>Win prob: ${(h.trueProb * 100).toFixed(1)}%</span>
+          <span>Wager: $${h.wager}</span>
+          <span>Payout: $${h.payout.toFixed(2)}</span>
+        </div>
+      </div>
+    `).join('');
   }
 
   async function checkAuth() {
@@ -4070,6 +4166,7 @@
     }
     renderAuthBar();
     updateVerifyBanner();
+    showTourIfNeeded();
   }
 
   function openModal(id) {
@@ -4329,6 +4426,7 @@
   checkAuth();
   fetchOdds();
   fetchStatus();
+  renderHistory();
 </script>
 
 <!-- ── COOKIE CONSENT BANNER ── -->
