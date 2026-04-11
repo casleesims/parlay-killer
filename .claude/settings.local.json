@@ -20,7 +20,10 @@
       "Bash(curl -s \"http://localhost:3000/api/playerstats/nba?name=lebron+james\")",
       "Bash(curl -s \"http://localhost:3000/api/playerstats/mlb?name=mookie+betts\")",
       "Bash(curl -s \"http://localhost:3000/api/playerstats/nba?name=wemby\")",
-      "Bash(curl -s \"http://localhost:3000/api/playerstats/mlb?name=jose+ramirez\")"
+      "Bash(curl -s \"http://localhost:3000/api/playerstats/mlb?name=jose+ramirez\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
