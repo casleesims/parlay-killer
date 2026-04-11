@@ -53,7 +53,7 @@
     }
 
     /* ── WRAP ── */
-    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px 0; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px 0; }
 
     /* ── DISCLAIMER BANNER ── */
     .disclaimer-banner {
@@ -137,18 +137,18 @@
       border-bottom: 1px solid #1a1a1a;
     }
     .top-nav-inner {
-      max-width: 1060px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 0 20px;
+      padding: 0 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       height: 56px;
-      gap: 12px;
+      gap: 16px;
     }
     .top-nav-logo {
       font-family: var(--font);
-      font-size: 1.55rem;
+      font-size: 1.75rem;
       font-weight: 900;
       letter-spacing: 0.02em;
       text-transform: uppercase;
@@ -156,12 +156,14 @@
       text-decoration: none;
       flex-shrink: 0;
       line-height: 1;
+      transition: opacity 0.15s;
     }
+    .top-nav-logo:hover { opacity: 0.85; }
     .top-nav-logo span { color: var(--green); }
     .top-nav-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: nowrap;
       overflow: hidden;
     }
@@ -186,43 +188,45 @@
       letter-spacing: 0;
     }
     .nav-user-name {
-      font-size: 0.75rem;
+      font-size: 0.875rem;
       font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+      letter-spacing: 0.04em;
       color: var(--white);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 120px;
+      max-width: 180px;
     }
     .nav-settings {
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.5);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
       text-decoration: none;
       white-space: nowrap;
+      padding: 4px 2px;
       transition: color 0.15s;
     }
     .nav-settings:hover { color: var(--green); }
+    .nav-divider {
+      color: var(--muted);
+      font-size: 0.7rem;
+      user-select: none;
+    }
     .nav-signout {
       font-family: var(--font);
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      font-size: 0.8125rem;
+      font-weight: 600;
       background: none;
       border: 1px solid var(--border2);
-      color: var(--white);
-      padding: 5px 10px;
-      min-height: 30px;
+      color: rgba(255,255,255,0.7);
+      padding: 5px 12px;
+      min-height: 32px;
       cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
       white-space: nowrap;
+      border-radius: 4px;
     }
-    .nav-signout:hover { border-color: var(--green); color: var(--green); }
+    .nav-signout:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,135,0.04); }
 
     .auth-btn {
       font-family: var(--font);
@@ -273,7 +277,7 @@
       font-size: 0.65rem;
       font-weight: 700;
       letter-spacing: 0.06em;
-      color: var(--dim);
+      color: rgba(255,255,255,0.7);
       white-space: nowrap;
     }
     .auth-usage-text a {
@@ -677,24 +681,24 @@
 
     .main-tab {
       font-family: var(--font);
-      font-size: 0.9rem;
+      font-size: 0.9375rem;
       font-weight: 800;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       background: transparent;
       border: none;
       border-bottom: 3px solid transparent;
-      color: rgba(255,255,255,0.55);
-      padding: 14px 22px 13px;
+      color: rgba(255,255,255,0.5);
+      padding: 14px 28px 13px;
       min-height: 48px;
       cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
       margin-bottom: -2px;
-      flex: 1;
+      flex: none;
       text-align: center;
     }
 
-    .main-tab:hover { color: var(--white); }
+    .main-tab:hover { color: var(--white); background: rgba(255,255,255,0.03); }
     .main-tab.active { color: var(--white); border-bottom-color: var(--green); }
 
     .red-dot {
@@ -740,18 +744,13 @@
     /* ── PANELS ── */
     .panel { margin-bottom: 28px; }
 
-    /* ── ODDS SCROLL ── */
+    /* ── ODDS GRID ── */
     #odds-scroll {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
       padding-bottom: 8px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border2) transparent;
     }
-    #odds-scroll::-webkit-scrollbar { height: 4px; }
-    #odds-scroll::-webkit-scrollbar-track { background: transparent; }
-    #odds-scroll::-webkit-scrollbar-thumb { background: var(--border2); }
 
     .odds-loading, .odds-error {
       font-size: 0.8rem;
@@ -774,9 +773,7 @@
     .skeleton-card {
       background: var(--s1);
       border: 1px solid var(--border);
-      padding: 14px 16px;
-      min-width: 284px;
-      flex-shrink: 0;
+      padding: 16px 18px;
     }
 
     .skel {
@@ -795,12 +792,11 @@
     .game-card {
       background: var(--s1);
       border: 1px solid var(--border);
-      padding: 14px 16px;
-      min-width: 284px;
-      flex-shrink: 0;
-      transition: border-color 0.15s;
+      padding: 16px 18px;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      cursor: default;
     }
-    .game-card:hover { border-color: var(--border2); }
+    .game-card:hover { border-color: var(--green); background: var(--s2); }
 
     .card-meta {
       display: flex;
@@ -871,24 +867,26 @@
 
     .bet-btn {
       font-family: var(--font);
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       background: transparent;
       border: 1px solid var(--border2);
-      color: var(--dim);
-      padding: 6px 8px;
+      color: rgba(255,255,255,0.75);
+      padding: 7px 10px;
+      min-height: 36px;
       cursor: pointer;
       text-align: left;
-      transition: border-color 0.1s, color 0.1s, background 0.1s;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      width: 100%;
     }
-    .bet-btn:hover  { border-color: var(--green); color: var(--green); }
+    .bet-btn:hover  { border-color: var(--green); color: var(--green); background: rgba(0,255,135,0.04); }
     .bet-btn.active { background: var(--green); border-color: var(--green); color: var(--bg); }
-    .bet-btn .btn-odds { font-weight: 900; margin-left: 4px; }
+    .bet-btn .btn-odds { font-weight: 900; margin-left: 6px; opacity: 0.85; }
 
     /* ── PARLAY BUILDER ── */
     #legs-container { display: flex; flex-direction: column; }
@@ -1249,21 +1247,21 @@
 
     .sport-tab {
       font-family: var(--font);
-      font-size: 0.83rem;
+      font-size: 0.875rem;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
-      color: var(--white);
-      padding: 7px 14px 6px;
+      color: rgba(255,255,255,0.6);
+      padding: 8px 16px 7px;
       cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
       margin-bottom: -1px;
       white-space: nowrap;
     }
-    .sport-tab:hover { color: var(--white); }
+    .sport-tab:hover { color: var(--white); background: rgba(255,255,255,0.03); }
     .sport-tab.active { color: var(--white); border-bottom-color: var(--green); }
     .tab-count { font-weight: 600; margin-left: 2px; opacity: 0.5; font-size: 0.75rem; }
 
@@ -1452,17 +1450,17 @@
       text-transform: uppercase;
       background: var(--s1);
       border: 2px solid var(--border2);
-      color: var(--dim);
+      color: rgba(255,255,255,0.6);
       height: 60px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
     }
     .lu-pill.active { background: var(--green); border-color: var(--green); color: #000; }
-    .lu-pill:not(.active):hover { border-color: var(--green); color: var(--green); }
+    .lu-pill:not(.active):hover { border-color: var(--green); color: var(--white); background: rgba(0,255,135,0.04); }
 
     /* Stat type pills */
     .lu-stat-pills {
@@ -2013,6 +2011,27 @@
       padding: 20px 0 8px;
     }
 
+    /* ── DESKTOP (1024px+) ─────────────────────────────────── */
+    @media (min-width: 1024px) {
+      /* Nav — full row, no hiding */
+      .nav-user-name { display: block; max-width: 200px; }
+      .nav-settings  { display: inline; }
+
+      /* Logo larger on desktop */
+      .top-nav-logo { font-size: 2rem; }
+
+      /* Live Bets — two-column desktop layout */
+      .lu-desktop-wrap {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .lu-desktop-left  { /* sport pills + stat pills + player */ }
+      .lu-desktop-right { /* game state inputs */ }
+      .lu-form { margin-bottom: 0; }
+    }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
       /* Metrics */
@@ -2022,20 +2041,19 @@
       /* Parlay builder */
       .leg-row { grid-template-columns: 18px 1fr 78px 24px; }
 
-      /* Nav — hide user name on small screens, show avatar only */
+      /* Nav — hide user name and settings on mobile */
       .nav-user-name { display: none; }
-      .nav-settings { display: none; }
+      .nav-settings  { display: none; }
       .auth-usage-text { font-size: 0.6rem; }
 
       /* Main tabs — full width, easy tap */
-      .main-tab { padding: 14px 8px 13px; font-size: 0.78rem; }
+      .main-tab { padding: 14px 10px 13px; font-size: 0.8125rem; flex: 1; text-align: center; }
 
       /* Inputs — 16px prevents iOS zoom */
       input, select, textarea { font-size: 16px !important; }
 
-      /* Game cards — stack vertically, full width */
-      #odds-scroll { flex-direction: column; overflow-x: visible; padding-bottom: 0; }
-      .game-card { min-width: 0; width: 100%; flex-shrink: 1; }
+      /* Game cards — single column on mobile */
+      #odds-scroll { grid-template-columns: 1fr; }
 
       /* Live Bets form */
       .lu-grid { grid-template-columns: 1fr; }
@@ -2046,13 +2064,13 @@
       .lu-prob-row { grid-template-columns: 1fr 46px auto; }
 
       /* Wrap padding */
-      .wrap { padding: 0 14px; }
+      .wrap { padding: 0 16px; }
     }
 
     @media (max-width: 420px) {
       .metrics-row { grid-template-columns: 1fr; }
       .metrics-row .metric-card:last-child { grid-column: span 1; }
-      .main-tab { padding: 10px 10px 9px; font-size: 0.78rem; }
+      .main-tab { padding: 12px 8px 11px; font-size: 0.75rem; }
     }
 
     /* ── Live Scores Strip ──────────────────────────────── */
@@ -3960,6 +3978,7 @@
           <span class="nav-user-name">${esc(display)}</span>
           ${badgeHtml}
           <a class="nav-settings" href="/account.html">Settings</a>
+          <span class="nav-divider">·</span>
           <button class="nav-signout" onclick="submitLogout()">Sign Out</button>
         </div>
       `;
