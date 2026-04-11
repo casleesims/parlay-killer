@@ -39,6 +39,21 @@
       --dim:     #555555;
       --muted:   #aaaaaa;
     }
+    [data-theme="light"] .top-nav           { background: #ffffff; border-bottom: 1px solid #e0e0e0; }
+    [data-theme="light"] .top-nav-logo      { color: #111111; }
+    [data-theme="light"] .top-nav-logo span { color: #00aa55; }
+    [data-theme="light"] .nav-signout       { color: #111111; border-color: #cccccc; }
+    [data-theme="light"] .nav-signout:hover { border-color: #00aa55; color: #00aa55; }
+    [data-theme="light"] .nav-user-name     { color: #111111; }
+    [data-theme="light"] .nav-avatar        { background: #00aa55; color: #ffffff; border-color: #00aa55; }
+    [data-theme="light"] .main-tab          { color: #555555; }
+    [data-theme="light"] .main-tab.active   { color: #111111; }
+    [data-theme="light"] .auth-usage-text   { color: #333333; }
+    [data-theme="light"] .nav-settings      { color: #777777; }
+    [data-theme="light"] .nav-settings:hover { color: #00aa55; }
+    [data-theme="light"] .auth-btn          { color: #111111; border-color: #cccccc; }
+    [data-theme="light"] .auth-btn:hover    { border-color: #00aa55; color: #00aa55; }
+    [data-theme="light"] .theme-toggle      { color: #555555; border-color: #cccccc; }
 
     html { scroll-behavior: smooth; }
 
@@ -165,7 +180,7 @@
       align-items: center;
       gap: 12px;
       flex-wrap: nowrap;
-      overflow: hidden;
+      overflow: visible;
     }
     .nav-auth-user {
       display: flex;
@@ -2041,10 +2056,14 @@
       /* Parlay builder */
       .leg-row { grid-template-columns: 18px 1fr 78px 24px; }
 
-      /* Nav — hide user name and settings on mobile */
+      /* Nav — mobile: show only avatar + sign out */
       .nav-user-name { display: none; }
       .nav-settings  { display: none; }
-      .auth-usage-text { font-size: 0.6rem; }
+      .nav-divider   { display: none; }
+      .auth-usage    { display: none; }
+      .nav-avatar    { flex-shrink: 0; }
+      .nav-signout   { display: inline-flex !important; flex-shrink: 0; font-size: 0.7rem; padding: 5px 10px; }
+      .top-nav-right { gap: 8px; min-width: 0; overflow: visible; }
 
       /* Main tabs — full width, easy tap */
       .main-tab { padding: 14px 10px 13px; font-size: 0.8125rem; flex: 1; text-align: center; }
