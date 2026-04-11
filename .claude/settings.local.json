@@ -7,7 +7,20 @@
       "Bash(curl -s http://localhost:3000/api/valuefinder)",
       "Bash(kill %1)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(curl -s 'https://api.balldontlie.io/v1/players?search=lebron+james&per_page=1' -H 'Authorization: ad0d00a3-35da-4547-a7d2-88a2cbf7c8fb')",
+      "Bash(curl -s 'https://api.balldontlie.io/v1/players?search=lebron&per_page=3' -H 'Authorization: ad0d00a3-35da-4547-a7d2-88a2cbf7c8fb')",
+      "Bash(curl -s 'https://api.balldontlie.io/v1/season_averages?season=2024&player_ids[]=237' -H 'Authorization: ad0d00a3-35da-4547-a7d2-88a2cbf7c8fb')",
+      "Bash(curl -s 'https://api.balldontlie.io/v1/stats?player_ids[]=237&seasons[]=2024&per_page=5' -H 'Authorization: ad0d00a3-35da-4547-a7d2-88a2cbf7c8fb')",
+      "Bash(curl -s \"https://statsapi.mlb.com/api/v1/people/search?names=mookie+betts&sportId=1\")",
+      "Bash(curl -s \"https://statsapi.mlb.com/api/v1/people/605141/stats?stats=season&season=2025&group=hitting\")",
+      "Bash(curl -s \"https://statsapi.mlb.com/api/v1/teams/119\")",
+      "Bash(curl -s \"https://statsapi.mlb.com/api/v1/people/605141?hydrate=currentTeam\")",
+      "Bash(curl -s \"https://statsapi.mlb.com/api/v1/people/605141\")",
+      "Bash(curl -s \"http://localhost:3000/api/playerstats/nba?name=lebron+james\")",
+      "Bash(curl -s \"http://localhost:3000/api/playerstats/mlb?name=mookie+betts\")",
+      "Bash(curl -s \"http://localhost:3000/api/playerstats/nba?name=wemby\")",
+      "Bash(curl -s \"http://localhost:3000/api/playerstats/mlb?name=jose+ramirez\")"
     ]
   }
 }

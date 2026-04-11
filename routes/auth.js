@@ -129,6 +129,14 @@ router.get('/me', async (req, res) => {
     }
 
     const user = result.rows[0];
+    const safe = safeUser(user);
+
+    // Owner gets unlimited everything
+    if (user.email === 'simscaslee@gmail.com') {
+      return res.json({
+        user: { ...safe, plan: 'pro', todayUsage: 0, usageLimit: null, remaining: null, isOwner: true },
+      });
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -140,7 +148,6 @@ router.get('/me', async (req, res) => {
     const todayUsage = parseInt(usageResult.rows[0].count);
     const isPro = user.plan === 'pro' || user.subscription_status === 'active';
 
-    const safe = safeUser(user);
     res.json({
       user: {
         ...safe,

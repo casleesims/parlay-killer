@@ -36,26 +36,22 @@ async function checkUsage(req, res, next) {
       return next();
     }
 
-    // Count today's analyses for free users
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    // Count all-time analyses for free users (lifetime limit)
     const usageResult = await pool.query(
       `SELECT COUNT(*) as count FROM usage
        WHERE user_id = $1
-       AND action = 'analyze'
-       AND created_at >= $2`,
-      [userId, today]
+       AND action = 'analyze'`,
+      [userId]
     );
 
-    const todayCount = parseInt(usageResult.rows[0].count);
+    const totalCount = parseInt(usageResult.rows[0].count);
     const FREE_LIMIT = 3;
 
-    if (todayCount >= FREE_LIMIT) {
+    if (totalCount >= FREE_LIMIT) {
       return res.status(429).json({
-        error: 'Daily limit reached',
-        message: `You've used all ${FREE_LIMIT} free analyses today. Upgrade to Pro for unlimited.`,
-        usageCount: todayCount,
+        error: 'Free limit reached',
+        message: `You've used all ${FREE_LIMIT} free analyses. Upgrade to Pro for unlimited.`,
+        usageCount: totalCount,
         limit: FREE_LIMIT,
         requiresUpgrade: true,
       });
@@ -67,7 +63,7 @@ async function checkUsage(req, res, next) {
       [userId, 'analyze']
     );
 
-    req.usageCount = todayCount + 1;
+    req.usageCount = totalCount + 1;
     req.usageLimit = FREE_LIMIT;
 
     next();

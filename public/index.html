@@ -895,88 +895,6 @@
     .bet-btn.active { background: var(--green); border-color: var(--green); color: var(--bg); }
     .bet-btn .btn-odds { font-weight: 900; margin-left: 4px; }
 
-    /* Props button */
-    .props-btn {
-      font-family: var(--font);
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      background: transparent;
-      border: 1px solid var(--border2);
-      color: var(--dim);
-      padding: 5px 10px;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 6px;
-      transition: border-color 0.1s, color 0.1s;
-    }
-    .props-btn:hover { border-color: var(--yellow); color: var(--yellow); }
-    .props-btn.open  { border-color: var(--yellow); color: var(--yellow); background: rgba(244,162,97,0.05); }
-
-    /* Props panel */
-    .props-panel {
-      display: none;
-      margin-top: 8px;
-      border-top: 1px solid var(--border);
-      padding-top: 8px;
-      max-height: 260px;
-      overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border2) transparent;
-    }
-    .props-panel.open { display: block; }
-
-    .props-loading  { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 0; color: var(--muted); }
-    .props-err-msg  { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; padding: 8px 0; color: var(--red); }
-
-    .player-name {
-      font-size: 0.62rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--dim);
-      padding: 6px 0 3px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 4px;
-      margin-top: 6px;
-    }
-    .player-name:first-child { margin-top: 0; }
-
-    .prop-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 3px 0;
-      gap: 6px;
-    }
-
-    .prop-label {
-      font-size: 0.65rem;
-      font-weight: 600;
-      color: var(--dim);
-      flex: 1;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .prop-ou-btns { display: flex; gap: 3px; }
-
-    .prop-ou-btn {
-      font-family: var(--font);
-      font-size: 0.62rem;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      background: transparent;
-      border: 1px solid var(--border2);
-      color: var(--dim);
-      padding: 2px 6px;
-      cursor: pointer;
-      transition: all 0.1s;
-    }
-    .prop-ou-btn:hover  { border-color: var(--green); color: var(--green); }
-    .prop-ou-btn.active { background: var(--green); border-color: var(--green); color: var(--bg); }
-
     /* ── PARLAY BUILDER ── */
     #legs-container { display: flex; flex-direction: column; }
 
@@ -1522,21 +1440,77 @@
     }
     .vf-add-btn:hover { border-color: var(--green); color: var(--green); }
 
-    /* ── LIVE UNDERS ── */
+    /* ── LIVE BETS (redesigned) ── */
+
+    /* Sport pills — full-width 2-column grid */
+    .lu-sport-pills {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .lu-pill {
+      font-family: var(--font);
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: var(--s1);
+      border: 2px solid var(--border2);
+      color: var(--dim);
+      height: 60px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .lu-pill.active { background: var(--green); border-color: var(--green); color: #000; }
+    .lu-pill:not(.active):hover { border-color: var(--green); color: var(--green); }
+
+    /* Stat type pills */
+    .lu-stat-pills {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+      animation: lu-fadein 0.2s ease;
+    }
+    @keyframes lu-fadein { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .lu-stat-pill {
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--s1);
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      height: 44px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lu-stat-pill.active { border-color: var(--green); color: var(--green); background: rgba(0,255,135,0.06); }
+    .lu-stat-pill:not(.active):hover { border-color: var(--green); color: var(--green); }
+
+    /* Form card */
     .lu-form {
       background: var(--s1);
       border: 1px solid var(--border);
-      padding: 22px;
+      padding: 20px;
       margin-bottom: 16px;
     }
-
     .lu-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
+      margin-top: 16px;
     }
-
-    .lu-field { display: flex; flex-direction: column; gap: 5px; }
+    .lu-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
     .lu-field.full { grid-column: span 2; }
 
     .lu-label {
@@ -1546,7 +1520,6 @@
       text-transform: uppercase;
       color: var(--muted);
     }
-
     .lu-input, .lu-select {
       font-family: var(--font);
       font-size: 1rem;
@@ -1554,58 +1527,256 @@
       background: var(--s3);
       border: 1px solid var(--border2);
       color: var(--white);
-      padding: 10px 12px;
+      padding: 11px 12px;
       outline: none;
       transition: border-color 0.15s;
       width: 100%;
       letter-spacing: 0.02em;
       -webkit-appearance: none;
+      min-height: 44px;
     }
     .lu-input:focus, .lu-select:focus { border-color: var(--green); }
     .lu-input::placeholder { color: var(--muted); font-weight: 400; }
 
+    /* Stepper number input */
+    .lu-stepper {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid var(--border2);
+      background: var(--s3);
+      min-height: 58px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .lu-stepper:focus-within { border-color: var(--green); }
+    .lu-stepper-btn {
+      font-family: var(--font);
+      font-size: 1.5rem;
+      font-weight: 300;
+      width: 52px;
+      flex-shrink: 0;
+      background: var(--s2);
+      border: none;
+      color: var(--dim);
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .lu-stepper-btn:hover  { background: rgba(0,255,135,0.08); color: var(--green); }
+    .lu-stepper-btn:active { background: rgba(0,255,135,0.15); }
+    .lu-stepper-input {
+      font-family: var(--font);
+      font-size: 1.6rem;
+      font-weight: 900;
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--white);
+      text-align: center;
+      outline: none;
+      min-width: 0;
+      letter-spacing: -0.01em;
+      -moz-appearance: textfield;
+    }
+    .lu-stepper-input::-webkit-inner-spin-button,
+    .lu-stepper-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .lu-stepper-input::placeholder { color: var(--muted); font-weight: 400; font-size: 1.1rem; }
+
+    /* Period pills */
+    .lu-period-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .lu-period-pill {
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: var(--s3);
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      min-width: 40px;
+      height: 40px;
+      padding: 0 10px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .lu-period-pill.active { border-color: var(--green); color: var(--green); background: rgba(0,255,135,0.06); }
+    .lu-period-pill:not(.active):hover { border-color: var(--green); color: var(--green); }
+
+    /* Half inning pills */
+    .lu-half-pills { display: flex; gap: 8px; }
+    .lu-half-pill {
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex: 1;
+      height: 44px;
+      background: var(--s3);
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .lu-half-pill.active { border-color: var(--green); color: var(--green); background: rgba(0,255,135,0.06); }
+    .lu-half-pill:not(.active):hover { border-color: var(--green); color: var(--green); }
+
+    /* Score row */
     .lu-score-row {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       gap: 8px;
       align-items: center;
     }
-    .lu-score-sep { font-size: 0.75rem; color: var(--muted); text-align: center; font-weight: 700; }
+    .lu-score-sep { font-size: 0.9rem; color: var(--muted); text-align: center; font-weight: 700; }
 
+    /* Error banner */
+    .lu-error {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--red);
+      background: rgba(255,59,59,0.06);
+      border: 1px solid rgba(255,59,59,0.35);
+      border-left: 3px solid var(--red);
+      padding: 11px 14px;
+      margin-top: 14px;
+      line-height: 1.4;
+    }
+
+    /* Submit button */
+    @keyframes lu-btn-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(0,255,135,0.45); }
+      50%      { box-shadow: 0 0 0 10px rgba(0,255,135,0); }
+    }
     .lu-submit {
       font-family: var(--font);
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       background: var(--green);
       border: none;
-      color: var(--bg);
+      color: #000;
       width: 100%;
-      padding: 18px;
+      height: 56px;
       cursor: pointer;
-      margin-top: 18px;
-      transition: background 0.15s;
+      margin-top: 20px;
+      transition: background 0.15s, opacity 0.15s;
     }
-    .lu-submit:hover { background: var(--green2); }
+    .lu-submit:hover:not(:disabled) { background: var(--green2); }
+    .lu-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+    .lu-submit.lu-ready { animation: lu-btn-pulse 2.2s ease-in-out infinite; }
 
+    /* Player detect */
+    .lu-player-detect {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--green);
+      min-height: 18px;
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+    .lu-player-detect.not-found { color: var(--dim); }
+    .lu-player-detect.loading   { color: var(--dim); }
+
+    /* Spinner */
+    @keyframes lu-spin { to { transform: rotate(360deg); } }
+    .lu-spinner {
+      display: inline-block;
+      width: 9px; height: 9px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: lu-spin 0.6s linear infinite;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    /* Autocomplete */
+    .lu-autocomplete {
+      position: absolute;
+      top: calc(100% - 5px);
+      left: 0; right: 0;
+      background: #1c1c1c;
+      border: 1px solid var(--border2);
+      z-index: 200;
+      display: none;
+      overflow: hidden;
+    }
+    .lu-autocomplete.open { display: block; }
+    .lu-ac-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #111;
+      transition: background 0.1s;
+      min-height: 48px;
+    }
+    .lu-ac-item:last-child { border-bottom: none; }
+    .lu-ac-item:hover, .lu-ac-item.ac-focused { background: rgba(0,255,135,0.07); }
+    .lu-ac-name { font-size: 0.95rem; font-weight: 700; flex: 1; color: var(--white); }
+    .lu-ac-item:hover .lu-ac-name, .lu-ac-item.ac-focused .lu-ac-name { color: var(--green); }
+    .lu-ac-badge {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      flex-shrink: 0;
+    }
+    .lu-ac-badge.badge-nba  { color: var(--green);  background: rgba(0,255,135,0.1);   border: 1px solid rgba(0,255,135,0.22); }
+    .lu-ac-badge.badge-mlb  { color: var(--yellow); background: rgba(244,162,97,0.1);  border: 1px solid rgba(244,162,97,0.22); }
+    .lu-ac-badge.badge-live { color: var(--dim);    background: rgba(255,255,255,0.04); border: 1px solid var(--border2); }
+    .lu-ac-stat { font-size: 0.75rem; color: var(--dim); flex-shrink: 0; }
+
+    /* ── RESULTS CARD ── */
     #lu-results { display: none; margin-top: 0; }
 
     .lu-result-card {
       background: var(--s1);
       border: 1px solid var(--border);
-      padding: 24px;
+      overflow: hidden;
     }
 
-    /* Recommendation badge */
+    /* Loading skeleton */
+    .lu-skeleton-card { padding: 28px 24px; }
+    .lu-skel {
+      background: linear-gradient(90deg, var(--s3) 25%, var(--s2) 50%, var(--s3) 75%);
+      background-size: 600px 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 3px;
+      margin-bottom: 12px;
+    }
+    .lu-skel-h1     { height: 48px; width: 60%; margin: 0 auto 16px; }
+    .lu-skel-bar    { height: 8px;  width: 44%; margin: 0 auto 28px; }
+    .lu-skel-nums   { display: flex; gap: 24px; justify-content: center; margin-bottom: 24px; }
+    .lu-skel-num    { height: 64px; width: 100px; }
+    .lu-skel-line   { height: 10px; width: 92%; }
+    .lu-skel-line.short   { width: 72%; }
+    .lu-skel-line.shorter { width: 55%; }
+
+    /* Recommendation header */
+    .lu-rec-header {
+      text-align: center;
+      padding: 28px 24px 22px;
+      border-bottom: 1px solid var(--border);
+    }
     .lu-badge {
       display: inline-block;
-      font-size: 1.05rem;
+      font-size: 1.45rem;
       font-weight: 900;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      padding: 7px 18px;
-      margin-bottom: 6px;
+      padding: 10px 28px;
+      margin-bottom: 16px;
     }
     .lu-badge.strong-over  { background: var(--green); color: #000; }
     .lu-badge.lean-over    { background: transparent; border: 2px solid var(--green); color: var(--green); }
@@ -1613,166 +1784,281 @@
     .lu-badge.lean-under   { background: transparent; border: 2px solid #ff7f50; color: #ff7f50; }
     .lu-badge.strong-under { background: var(--red); color: #fff; }
 
-    .lu-confidence-text {
-      display: block;
-      font-size: 0.7rem;
+    /* Confidence meter */
+    .lu-conf-wrap { max-width: 260px; margin: 0 auto; }
+    .lu-conf-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.62rem;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 20px;
+      margin-bottom: 5px;
     }
+    .lu-conf-track { height: 6px; background: var(--s3); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+    .lu-conf-fill  { height: 100%; border-radius: 3px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
 
-    /* Projection vs line */
-    .lu-projection {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 12px;
+    /* Projection section */
+    .lu-proj-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--s2);
+    }
+    .lu-proj-display {
+      display: flex;
       align-items: center;
-      margin-bottom: 16px;
-      padding: 16px;
-      background: var(--s3);
-      border: 1px solid var(--border);
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 18px;
     }
-
-    .lu-proj-col { text-align: center; }
-
+    .lu-proj-stat { text-align: center; }
     .lu-proj-num {
-      font-size: clamp(2rem, 6vw, 3rem);
+      font-size: clamp(2.8rem, 8vw, 4rem);
       font-weight: 900;
       line-height: 1;
       letter-spacing: -0.02em;
     }
-
     .lu-proj-label {
       font-size: 0.58rem;
       font-weight: 700;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-top: 5px;
+      margin-top: 6px;
     }
-
-    .lu-proj-vs {
-      font-size: 0.7rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      text-align: center;
-    }
+    .lu-proj-arrow { font-size: 2.4rem; font-weight: 900; line-height: 1; }
 
     /* Pace bar */
-    .lu-bar-wrap { margin-bottom: 20px; }
-
-    .lu-bar-label {
+    .lu-pace-bar-label {
       display: flex;
       justify-content: space-between;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
+    .lu-bar-track { height: 6px; background: var(--s3); position: relative; overflow: hidden; }
+    .lu-bar-fill  { position: absolute; left: 0; top: 0; bottom: 0; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+    .lu-bar-marker { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--white); opacity: 0.7; }
 
-    .lu-bar-track {
-      height: 6px;
-      background: var(--s3);
-      position: relative;
-      overflow: hidden;
+    /* Meta row */
+    .lu-meta-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
     }
-
-    .lu-bar-fill {
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+    .lu-player-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--green);
+      background: rgba(0,255,135,0.07);
+      border: 1px solid rgba(0,255,135,0.2);
+      padding: 4px 10px;
     }
-
-    .lu-bar-marker {
-      position: absolute;
-      top: -3px;
-      bottom: -3px;
-      width: 2px;
-      background: var(--white);
-      opacity: 0.7;
+    .lu-player-tag--unknown { color: var(--dim); background: rgba(255,255,255,0.04); border-color: var(--border2); }
+    .lu-source-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 3px 9px;
+      border-radius: 3px;
     }
+    .lu-source-badge.source-live { color: var(--green);  background: rgba(0,255,135,0.08); border: 1px solid rgba(0,255,135,0.2); }
+    .lu-source-badge.source-db   { color: var(--yellow); background: rgba(244,162,97,0.08); border: 1px solid rgba(244,162,97,0.2); }
+    .lu-source-badge.source-est  { color: var(--dim);    background: rgba(255,255,255,0.04); border: 1px solid var(--border2); }
 
-    /* Explanation */
-    .lu-explanation {
-      font-size: 0.98rem;
-      font-weight: 400;
-      color: var(--dim);
-      line-height: 1.65;
-      margin-bottom: 20px;
-      padding: 14px 16px;
-      border-left: 3px solid var(--border2);
+    /* Signals section */
+    .lu-signals-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .lu-signals-title {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
     }
-
-    /* Signals */
-    .lu-signals { margin-bottom: 20px; }
-
     .lu-signal {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 7px 0;
+      gap: 12px;
+      padding: 11px 13px;
+      border-left: 3px solid;
+      margin-bottom: 6px;
+      background: var(--s2);
       font-size: 0.86rem;
       font-weight: 600;
-      line-height: 1.4;
+      line-height: 1.45;
       color: var(--dim);
-      border-bottom: 1px solid var(--border);
+      min-height: 44px;
     }
-    .lu-signal:last-child { border-bottom: none; }
-
-    .lu-signal-icon {
-      font-size: 0.85rem;
-      flex-shrink: 0;
-      margin-top: 1px;
-      font-weight: 900;
-    }
+    .lu-signal:last-child { margin-bottom: 0; }
+    .lu-signal.over    { border-left-color: var(--green); }
+    .lu-signal.under   { border-left-color: var(--red); }
+    .lu-signal.neutral { border-left-color: var(--muted); }
+    .lu-signal-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
     .lu-signal.over    .lu-signal-icon { color: var(--green); }
     .lu-signal.under   .lu-signal-icon { color: var(--red); }
     .lu-signal.neutral .lu-signal-icon { color: var(--muted); }
 
+    /* MLB probability panel */
+    .lu-prob-panel { background: var(--s2); padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .lu-prob-title {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 12px;
+    }
+    .lu-prob-row {
+      display: grid;
+      grid-template-columns: 1fr 46px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .lu-prob-row:last-child { margin-bottom: 0; }
+    .lu-prob-label { font-size: 0.78rem; font-weight: 600; color: var(--dim); }
+    .lu-prob-pct   { font-size: 0.88rem; font-weight: 800; text-align: right; color: var(--white); }
+    .lu-prob-bar-track { height: 8px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .lu-prob-bar-fill  { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+
+    /* Collapsible breakdown */
+    .lu-breakdown { border-top: 1px solid var(--border); }
+    .lu-breakdown summary {
+      font-family: var(--font);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--green);
+      padding: 13px 20px;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      min-height: 44px;
+    }
+    .lu-breakdown summary::-webkit-details-marker { display: none; }
+    .lu-breakdown summary:focus { outline: none; }
+    .lu-breakdown summary::after { content: '+'; font-size: 1rem; font-weight: 300; margin-left: 10px; flex-shrink: 0; }
+    .lu-breakdown[open] summary::after { content: '\2212'; }
+    .lu-breakdown-body {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--dim);
+      line-height: 1.7;
+      padding: 0 20px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Action buttons */
+    .lu-actions { padding: 16px 20px 0; }
+    .lu-run-another {
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      width: 100%;
+      height: 48px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.15s;
+    }
+    .lu-run-another:hover { border-color: var(--green); color: var(--green); }
     .lu-add-btn {
       font-family: var(--font);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 800;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       background: transparent;
       border: 1px solid var(--green);
       color: var(--green);
-      padding: 14px 20px;
-      cursor: pointer;
       width: 100%;
-      margin-bottom: 14px;
+      height: 48px;
+      cursor: pointer;
+      margin-bottom: 10px;
       transition: all 0.15s;
     }
     .lu-add-btn:hover { background: var(--green); color: var(--bg); }
 
     .lu-disclaimer {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 500;
       color: var(--muted);
       font-style: italic;
       text-align: center;
       line-height: 1.5;
+      padding: 10px 20px 16px;
+    }
+
+    /* Coming soon note */
+    .lu-coming-soon {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-align: center;
+      padding: 20px 0 8px;
     }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
+      /* Metrics */
       .metrics-row { grid-template-columns: 1fr 1fr; }
       .metrics-row .metric-card:last-child { grid-column: span 2; }
+
+      /* Parlay builder */
       .leg-row { grid-template-columns: 18px 1fr 78px 24px; }
+
+      /* Header */
       h1 { font-size: 3.2rem; }
+      .header-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .header-right { align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+
+      /* Auth bar — compact */
+      .auth-bar { flex-wrap: wrap; gap: 6px; padding: 6px 0; }
+      .auth-name { display: none; }
+
+      /* Main tabs — smaller touch targets still fine, just reduce padding */
+      .main-tab { padding: 10px 14px 9px; font-size: 0.82rem; }
+
+      /* Game cards — stack vertically, full width */
+      #odds-scroll { flex-direction: column; overflow-x: visible; padding-bottom: 0; }
+      .game-card { min-width: 0; width: 100%; flex-shrink: 1; }
+
+      /* Live Bets form */
       .lu-grid { grid-template-columns: 1fr; }
       .lu-field.full { grid-column: span 1; }
+      .lu-stat-pills { grid-template-columns: repeat(2, 1fr); }
+      .lu-stepper-input { font-size: 1.4rem; }
+      .lu-proj-num { font-size: 2.8rem; }
+      .lu-prob-row { grid-template-columns: 1fr 46px auto; }
+
+      /* Wrap padding */
+      .wrap { padding: 0 14px; }
     }
 
     @media (max-width: 420px) {
       .metrics-row { grid-template-columns: 1fr; }
       .metrics-row .metric-card:last-child { grid-column: span 1; }
+      .main-tab { padding: 10px 10px 9px; font-size: 0.78rem; }
     }
   </style>
 </head>
@@ -1834,11 +2120,10 @@
   <div class="upgrade-modal">
     <button class="upgrade-modal-close" onclick="closeUpgradeModal()">&times;</button>
     <div class="upgrade-modal-icon">&#9888;</div>
-    <div class="upgrade-modal-title">Daily Limit Reached</div>
-    <div class="upgrade-modal-sub">You've used your 3 free analyses today. Upgrade to Pro for unlimited analyses every day.</div>
+    <div class="upgrade-modal-title">Free Limit Reached</div>
+    <div class="upgrade-modal-sub">You've used all 3 of your free analyses. Upgrade to Pro for unlimited analyses.</div>
     <button class="upgrade-btn upgrade-btn-primary" id="upgrade-monthly-btn" onclick="startCheckout('monthly')">Upgrade to Pro &mdash; $9.99/month</button>
     <button class="upgrade-btn upgrade-btn-secondary" id="upgrade-annual-btn" onclick="startCheckout('annual')">Get Annual &mdash; $39.99/year</button>
-    <div class="upgrade-modal-wait">Or wait until midnight for 3 more free analyses</div>
     <div class="upgrade-modal-refund">7-day refund policy. Cancel anytime. No questions asked.<br>Contact <a href="mailto:simscaslee@gmail.com">simscaslee@gmail.com</a> for refund requests.</div>
   </div>
 </div>
@@ -1885,7 +2170,7 @@
   <nav class="main-tabs">
     <button class="main-tab active" data-panel="odds" onclick="switchPanel('odds')">Odds</button>
     <button class="main-tab" data-panel="vf" onclick="switchPanel('vf')">Value Finder</button>
-    <button class="main-tab" data-panel="lu" onclick="switchPanel('lu')">Live Unders <span class="red-dot"></span></button>
+    <button class="main-tab" data-panel="lu" onclick="switchPanel('lu')">Live Bets <span class="red-dot"></span></button>
   </nav>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -2057,73 +2342,106 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════════
-       PANEL: LIVE UNDERS
+       PANEL: LIVE BETS
   ══════════════════════════════════════════════════════════ -->
   <div class="tab-panel" id="panel-lu">
     <div class="section-label">
-      <span class="label-text">Live Unders &#x1F534; — Pace-Based Projection</span>
+      <span class="label-text">Live Bets &#x1F534; &mdash; Real-Time Pace Analysis</span>
     </div>
 
+    <!-- Sport selector — large pill buttons -->
+    <div class="lu-sport-pills">
+      <button class="lu-pill active" id="pill-nba" onclick="selectSport('NBA')">&#x1F3C0; NBA</button>
+      <button class="lu-pill"        id="pill-mlb" onclick="selectSport('MLB')">&#x26BE; MLB</button>
+    </div>
+
+    <!-- Stat type pills — populated by JS, animate in -->
+    <div class="lu-stat-pills" id="lu-stat-pills"></div>
+
     <div class="lu-form">
+
+      <!-- Player name: full-width, large -->
+      <div class="lu-field">
+        <label class="lu-label">Player Name</label>
+        <input type="text" class="lu-input" id="lu-player"
+               placeholder="e.g. Victor Wembanyama"
+               autocomplete="off" oninput="onPlayerInput()"
+               style="font-size:1.1rem;min-height:52px;" />
+        <div id="lu-autocomplete" class="lu-autocomplete" role="listbox"></div>
+        <div class="lu-player-detect" id="lu-player-detect"></div>
+      </div>
+
       <div class="lu-grid">
 
-        <div class="lu-field full">
-          <label class="lu-label">Player Name</label>
-          <input type="text" class="lu-input" id="lu-player" placeholder="e.g. LeBron James" autocomplete="off" />
-        </div>
-
+        <!-- Current stat — stepper -->
         <div class="lu-field">
-          <label class="lu-label">Current Stat</label>
-          <input type="number" class="lu-input" id="lu-current" placeholder="e.g. 14" min="0" step="0.5" />
+          <label class="lu-label" id="lu-current-label">Current Points</label>
+          <div class="lu-stepper">
+            <button class="lu-stepper-btn" onclick="stepField('lu-current',-1)" aria-label="Decrease">&minus;</button>
+            <input type="number" class="lu-stepper-input" id="lu-current" placeholder="0" min="0" step="0.5" />
+            <button class="lu-stepper-btn" onclick="stepField('lu-current',1)"  aria-label="Increase">+</button>
+          </div>
         </div>
 
+        <!-- Prop line — stepper with 0.5 increments -->
         <div class="lu-field">
           <label class="lu-label">Prop Line</label>
-          <input type="number" class="lu-input" id="lu-line" placeholder="e.g. 21.5" min="0" step="0.5" />
+          <div class="lu-stepper">
+            <button class="lu-stepper-btn" onclick="stepField('lu-line',-0.5)" aria-label="Decrease">&minus;</button>
+            <input type="number" class="lu-stepper-input" id="lu-line" placeholder="24.5" min="0" step="0.5" />
+            <button class="lu-stepper-btn" onclick="stepField('lu-line',0.5)"  aria-label="Increase">+</button>
+          </div>
         </div>
 
-        <div class="lu-field">
-          <label class="lu-label">Quarter</label>
-          <select class="lu-select" id="lu-quarter">
-            <option value="Q1">Q1</option>
-            <option value="Q2">Q2</option>
-            <option value="Q3">Q3</option>
-            <option value="Q4">Q4</option>
-            <option value="OT">OT</option>
-          </select>
+        <!-- Period — pill buttons (NBA: Q1–OT, MLB: 1st–Extra) -->
+        <div class="lu-field" id="lu-field-period">
+          <label class="lu-label" id="lu-period-label">Quarter</label>
+          <div class="lu-period-pills" id="lu-period-pills"></div>
+          <input type="hidden" id="lu-period" value="Q3" />
         </div>
 
-        <div class="lu-field">
+        <!-- Time remaining (NBA only) -->
+        <div class="lu-field" id="lu-field-time">
           <label class="lu-label">Time Remaining</label>
-          <input type="text" class="lu-input" id="lu-time" placeholder="e.g. 2:30" />
+          <input type="text" class="lu-input" id="lu-time" placeholder="12:00" style="min-height:44px;" />
         </div>
 
+        <!-- Half inning (MLB only) -->
+        <div class="lu-field" id="lu-field-half" style="display:none">
+          <label class="lu-label">Half Inning</label>
+          <div class="lu-half-pills">
+            <button class="lu-half-pill active" data-half="Top"    onclick="selectHalf('Top')">Top</button>
+            <button class="lu-half-pill"        data-half="Bottom" onclick="selectHalf('Bottom')">Bottom</button>
+          </div>
+          <input type="hidden" id="lu-half" value="Top" />
+        </div>
+
+        <!-- Scores -->
         <div class="lu-field full">
-          <label class="lu-label">Home Score / Away Score</label>
+          <label class="lu-label">Score &mdash; Home / Away</label>
           <div class="lu-score-row">
             <input type="number" class="lu-input" id="lu-home-score" placeholder="Home" min="0" />
-            <span class="lu-score-sep">&#8211;</span>
+            <span class="lu-score-sep">&ndash;</span>
             <input type="number" class="lu-input" id="lu-away-score" placeholder="Away" min="0" />
           </div>
         </div>
 
-        <div class="lu-field full">
-          <label class="lu-label">Stat Type</label>
-          <select class="lu-select" id="lu-stat-type">
-            <option value="Points">Points</option>
-            <option value="Rebounds">Rebounds</option>
-            <option value="Assists">Assists</option>
-            <option value="3-Pointers">3-Pointers</option>
-          </select>
-        </div>
+      </div><!-- /lu-grid -->
 
-      </div>
-      <button class="lu-submit" onclick="analyzeLiveUnder()">Calculate Projection</button>
-    </div>
+      <!-- Error banner -->
+      <div class="lu-error" id="lu-error" style="display:none"></div>
 
+      <!-- Calculate button -->
+      <button class="lu-submit" id="lu-submit-btn" onclick="analyzeLiveBet()">RUN THE MATH</button>
+
+    </div><!-- /lu-form -->
+
+    <!-- Results -->
     <div id="lu-results">
       <div class="lu-result-card" id="lu-result-card"></div>
     </div>
+
+    <div class="lu-coming-soon">NFL live bets coming soon for the 2026 season &#x1F3C8;</div>
 
   </div><!-- /panel-lu -->
 
@@ -2415,80 +2733,9 @@
       </div>
       ${teamsHtml}
       <div class="bet-grid">${betRows}</div>
-      <button class="props-btn" id="props-btn-${safeId}" onclick="toggleProps(this,'${esc(game.sport)}','${safeId}')">+ PROPS</button>
-      <div class="props-panel" id="props-panel-${safeId}">
-        <div class="props-loading">Loading props\u2026</div>
-      </div>
       <div class="card-odds-note">Odds may be delayed. Verify with your sportsbook.</div>
     `;
     return card;
-  }
-
-  /* ─── Props ──────────────────────────────────────────────── */
-  const sportKeyMap = {
-    NBA: 'basketball_nba', WNBA: 'basketball_wnba',
-    NFL: 'americanfootball_nfl', NCAAF: 'americanfootball_ncaaf',
-    MLB: 'baseball_mlb', NHL: 'icehockey_nhl',
-    NCAAB: 'basketball_ncaab', EPL: 'soccer_epl',
-    MLS: 'soccer_usa_mls', UCL: 'soccer_uefa_champs_league',
-    MMA: 'mma_mixed_martial_arts', ATP: 'tennis_atp_us_open',
-  };
-
-  const propLabels = {
-    player_points: 'Points', player_rebounds: 'Rebounds', player_assists: 'Assists',
-    player_threes: '3-Pointers', player_passing_yards: 'Pass Yds',
-    player_rushing_yards: 'Rush Yds', player_receiving_yards: 'Rec Yds',
-    player_touchdowns: 'TDs',
-  };
-
-  async function toggleProps(btn, sport, eventId) {
-    const panel = document.getElementById(`props-panel-${eventId}`);
-    if (!panel) return;
-    const isOpen = panel.classList.contains('open');
-
-    if (isOpen) {
-      panel.classList.remove('open');
-      btn.classList.remove('open');
-      btn.textContent = '+ PROPS';
-      return;
-    }
-    panel.classList.add('open');
-    btn.classList.add('open');
-    btn.textContent = '\u2212 PROPS';
-    if (panel.dataset.loaded) return;
-    panel.dataset.loaded = 'true';
-
-    const sportKey = sportKeyMap[sport] || sport.toLowerCase();
-    try {
-      const res  = await fetch(`/api/props/${sportKey}/${eventId}`);
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Props unavailable');
-      renderPropsPanel(panel, data);
-    } catch {
-      panel.innerHTML = '<div class="props-err-msg">Props unavailable for this game</div>';
-    }
-  }
-
-  function renderPropsPanel(panel, data) {
-    if (!data.players || !data.players.length) {
-      panel.innerHTML = '<div class="props-loading">No props available</div>';
-      return;
-    }
-    let html = '';
-    for (const player of data.players) {
-      html += `<div class="player-name">${esc(player.name)}</div>`;
-      for (const prop of player.props) {
-        const label = propLabels[prop.market] || prop.market.replace('player_', '');
-        const line  = prop.line !== null ? prop.line : '?';
-        const overBtn  = prop.over  !== null ? `<button class="prop-ou-btn" onclick="toggleBetBtn(this,'${esc(player.name)} ${label} Over ${line}','${fmtOdds(prop.over)}')">O ${fmtOdds(prop.over)}</button>` : '';
-        const underBtn = prop.under !== null ? `<button class="prop-ou-btn" onclick="toggleBetBtn(this,'${esc(player.name)} ${label} Under ${line}','${fmtOdds(prop.under)}')">U ${fmtOdds(prop.under)}</button>` : '';
-        html += `<div class="prop-row">
-          <span class="prop-label">${label} ${line}</span>
-          <div class="prop-ou-btns">${overBtn}${underBtn}</div>
-        </div>`;
-      }
-    }
-    panel.innerHTML = html;
   }
 
   /* ─── Analyze ────────────────────────────────────────────── */
@@ -2758,49 +3005,554 @@
     switchPanel('odds');
   }
 
-  /* ─── Live Unders ────────────────────────────────────────── */
-  async function analyzeLiveUnder() {
-    const playerName  = document.getElementById('lu-player').value.trim();
+  /* ─── Live Bets — state & setup ─────────────────────────── */
+  let luSport    = 'NBA';
+  let luStatType = 'Points';
+
+  const luStatOptions = {
+    NBA: ['Points', 'Rebounds', 'Assists', 'PRA'],
+    MLB: ['Hits', 'Total Bases', 'RBIs', 'Strikeouts (P)'],
+  };
+
+  const luPeriodOptions = {
+    NBA: ['Q1','Q2','Q3','Q4','OT'],
+    MLB: ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','Extra'],
+  };
+
+  const knownPlayers = {
+    // NBA
+    'victor wembanyama':       { sport: 'NBA', ppg: 24.5, usage: '29.8%', label: '24.5 PPG, 29.8% usage' },
+    'paolo banchero':          { sport: 'NBA', ppg: 25.6, usage: '29.5%', label: '25.6 PPG, 29.5% usage' },
+    'ja morant':               { sport: 'NBA', ppg: 25.1, usage: '31.2%', label: '25.1 PPG, 31.2% usage' },
+    'damian lillard':          { sport: 'NBA', ppg: 24.3, usage: '31.8%', label: '24.3 PPG, 31.8% usage' },
+    'donovan mitchell':        { sport: 'NBA', ppg: 26.6, usage: '30.5%', label: '26.6 PPG, 30.5% usage' },
+    'trae young':              { sport: 'NBA', ppg: 23.0, usage: '32.2%', label: '23.0 PPG, 32.2% usage' },
+    'zion williamson':         { sport: 'NBA', ppg: 22.9, usage: '31.8%', label: '22.9 PPG, 31.8% usage' },
+    'lamelo ball':             { sport: 'NBA', ppg: 23.4, usage: '29.5%', label: '23.4 PPG, 29.5% usage' },
+    'karl-anthony towns':      { sport: 'NBA', ppg: 24.0, usage: '26.8%', label: '24.0 PPG, 26.8% usage' },
+    'jalen brunson':           { sport: 'NBA', ppg: 29.0, usage: '31.8%', label: '29.0 PPG, 31.8% usage' },
+    'demar derozan':           { sport: 'NBA', ppg: 24.5, usage: '28.5%', label: '24.5 PPG, 28.5% usage' },
+    'pascal siakam':           { sport: 'NBA', ppg: 21.3, usage: '27.2%', label: '21.3 PPG, 27.2% usage' },
+    'og anunoby':              { sport: 'NBA', ppg: 15.7, usage: '19.5%', label: '15.7 PPG, 19.5% usage' },
+    'mikal bridges':           { sport: 'NBA', ppg: 19.6, usage: '24.8%', label: '19.6 PPG, 24.8% usage' },
+    'brandon ingram':          { sport: 'NBA', ppg: 22.0, usage: '27.8%', label: '22.0 PPG, 27.8% usage' },
+    'desmond bane':            { sport: 'NBA', ppg: 21.5, usage: '24.5%', label: '21.5 PPG, 24.5% usage' },
+    'darius garland':          { sport: 'NBA', ppg: 19.5, usage: '26.8%', label: '19.5 PPG, 26.8% usage' },
+    'evan mobley':             { sport: 'NBA', ppg: 18.6, usage: '21.5%', label: '18.6 PPG, 21.5% usage' },
+    'jarrett allen':           { sport: 'NBA', ppg: 13.8, usage: '17.8%', label: '13.8 PPG, 17.8% usage' },
+    'tyrese maxey':            { sport: 'NBA', ppg: 25.9, usage: '29.2%', label: '25.9 PPG, 29.2% usage' },
+    'nikola jokic':            { sport: 'NBA', ppg: 26.4, usage: '31.2%', label: '26.4 PPG, 31.2% usage' },
+    'shai gilgeous-alexander': { sport: 'NBA', ppg: 31.4, usage: '32.8%', label: '31.4 PPG, 32.8% usage' },
+    'giannis antetokounmpo':   { sport: 'NBA', ppg: 32.7, usage: '31.8%', label: '32.7 PPG, 31.8% usage' },
+    'luka doncic':             { sport: 'NBA', ppg: 28.6, usage: '33.4%', label: '28.6 PPG, 33.4% usage' },
+    'lebron james':            { sport: 'NBA', ppg: 24.5, usage: '29.8%', label: '24.5 PPG, 29.8% usage' },
+    'jayson tatum':            { sport: 'NBA', ppg: 26.9, usage: '30.6%', label: '26.9 PPG, 30.6% usage' },
+    'anthony edwards':         { sport: 'NBA', ppg: 27.5, usage: '31.5%', label: '27.5 PPG, 31.5% usage' },
+    'kevin durant':            { sport: 'NBA', ppg: 27.1, usage: '29.8%', label: '27.1 PPG, 29.8% usage' },
+    'stephen curry':           { sport: 'NBA', ppg: 26.4, usage: '29.5%', label: '26.4 PPG, 29.5% usage' },
+    'devin booker':            { sport: 'NBA', ppg: 25.6, usage: '30.2%', label: '25.6 PPG, 30.2% usage' },
+    'tyrese haliburton':       { sport: 'NBA', ppg: 20.1, usage: '24.8%', label: '20.1 PPG, 24.8% usage' },
+    'cade cunningham':         { sport: 'NBA', ppg: 26.0, usage: '29.8%', label: '26.0 PPG, 29.8% usage' },
+    'draymond green':          { sport: 'NBA', ppg: 9.1,  usage: '15.8%', label: '9.1 PPG, 15.8% usage' },
+    'alperen sengun':          { sport: 'NBA', ppg: 21.1, usage: '24.2%', label: '21.1 PPG, 24.2% usage' },
+    'bam adebayo':             { sport: 'NBA', ppg: 19.3, usage: '22.5%', label: '19.3 PPG, 22.5% usage' },
+    'rudy gobert':             { sport: 'NBA', ppg: 14.0, usage: '14.8%', label: '14.0 PPG, 14.8% usage' },
+    'lu dort':                 { sport: 'NBA', ppg: 13.2, usage: '16.2%', label: '13.2 PPG, 16.2% usage' },
+    'jaylen brown':            { sport: 'NBA', ppg: 23.0, usage: '28.5%', label: '23.0 PPG, 28.5% usage' },
+    'kawhi leonard':           { sport: 'NBA', ppg: 23.7, usage: '27.8%', label: '23.7 PPG, 27.8% usage' },
+    'franz wagner':            { sport: 'NBA', ppg: 25.6, usage: '26.8%', label: '25.6 PPG, 26.8% usage' },
+    'james harden':            { sport: 'NBA', ppg: 20.6, usage: '28.5%', label: '20.6 PPG, 28.5% usage' },
+    'joel embiid':             { sport: 'NBA', ppg: 34.7, usage: '33.5%', label: '34.7 PPG, 33.5% usage' },
+    'julius randle':           { sport: 'NBA', ppg: 24.0, usage: '29.8%', label: '24.0 PPG, 29.8% usage' },
+    // MLB
+    'mookie betts':            { sport: 'MLB', avg: '.289', ops: '.882', order: '1st', label: '.289 AVG, .882 OPS, bats 1st' },
+    'freddie freeman':         { sport: 'MLB', avg: '.302', ops: '.912', order: '3rd', label: '.302 AVG, .912 OPS, bats 3rd' },
+    'shohei ohtani':           { sport: 'MLB', avg: '.310', ops: '.965', order: '2nd', label: '.310 AVG, .965 OPS, bats 2nd' },
+    'juan soto':               { sport: 'MLB', avg: '.288', ops: '.948', order: '3rd', label: '.288 AVG, .948 OPS, bats 3rd' },
+    'rafael devers':           { sport: 'MLB', avg: '.278', ops: '.845', order: '3rd', label: '.278 AVG, .845 OPS, bats 3rd' },
+    'pete alonso':             { sport: 'MLB', avg: '.252', ops: '.812', order: '4th', label: '.252 AVG, .812 OPS, bats 4th' },
+    'yordan alvarez':          { sport: 'MLB', avg: '.298', ops: '.978', order: '3rd', label: '.298 AVG, .978 OPS, bats 3rd' },
+    'corey seager':            { sport: 'MLB', avg: '.281', ops: '.862', order: '2nd', label: '.281 AVG, .862 OPS, bats 2nd' },
+    'vladimir guerrero jr':    { sport: 'MLB', avg: '.285', ops: '.852', order: '3rd', label: '.285 AVG, .852 OPS, bats 3rd' },
+    'ronald acuna jr':         { sport: 'MLB', avg: '.295', ops: '.918', order: '1st', label: '.295 AVG, .918 OPS, bats 1st' },
+    'jose altuve':             { sport: 'MLB', avg: '.298', ops: '.845', order: '1st', label: '.298 AVG, .845 OPS, bats 1st' },
+    'trea turner':             { sport: 'MLB', avg: '.285', ops: '.802', order: '1st', label: '.285 AVG, .802 OPS, bats 1st' },
+    'paul goldschmidt':        { sport: 'MLB', avg: '.268', ops: '.842', order: '3rd', label: '.268 AVG, .842 OPS, bats 3rd' },
+    'nolan arenado':           { sport: 'MLB', avg: '.272', ops: '.832', order: '4th', label: '.272 AVG, .832 OPS, bats 4th' },
+    'austin riley':            { sport: 'MLB', avg: '.268', ops: '.845', order: '4th', label: '.268 AVG, .845 OPS, bats 4th' },
+    'kyle tucker':             { sport: 'MLB', avg: '.278', ops: '.868', order: '3rd', label: '.278 AVG, .868 OPS, bats 3rd' },
+    'bo bichette':             { sport: 'MLB', avg: '.275', ops: '.792', order: '2nd', label: '.275 AVG, .792 OPS, bats 2nd' },
+    'marcus semien':           { sport: 'MLB', avg: '.262', ops: '.782', order: '1st', label: '.262 AVG, .782 OPS, bats 1st' },
+    'xander bogaerts':         { sport: 'MLB', avg: '.272', ops: '.798', order: '3rd', label: '.272 AVG, .798 OPS, bats 3rd' },
+    'julio rodriguez':         { sport: 'MLB', avg: '.275', ops: '.812', order: '2nd', label: '.275 AVG, .812 OPS, bats 2nd' },
+    'paul skenes':             { sport: 'MLB', avg: '.120', ops: '.380', order: '9th', label: '.120 AVG, .380 OPS, bats 9th (pitcher)' },
+    'fernando tatis jr':       { sport: 'MLB', avg: '.282', ops: '.898', order: '2nd', label: '.282 AVG, .898 OPS, bats 2nd' },
+    'mike trout':              { sport: 'MLB', avg: '.278', ops: '.918', order: '2nd', label: '.278 AVG, .918 OPS, bats 2nd' },
+    'bryce harper':            { sport: 'MLB', avg: '.285', ops: '.942', order: '3rd', label: '.285 AVG, .942 OPS, bats 3rd' },
+    'cody bellinger':          { sport: 'MLB', avg: '.272', ops: '.818', order: '3rd', label: '.272 AVG, .818 OPS, bats 3rd' },
+    'ha-seong kim':            { sport: 'MLB', avg: '.258', ops: '.752', order: '6th', label: '.258 AVG, .752 OPS, bats 6th' },
+    'gunnar henderson':        { sport: 'MLB', avg: '.281', ops: '.892', order: '2nd', label: '.281 AVG, .892 OPS, bats 2nd' },
+    'jackson holliday':        { sport: 'MLB', avg: '.255', ops: '.758', order: '1st', label: '.255 AVG, .758 OPS, bats 1st' },
+    'adley rutschman':         { sport: 'MLB', avg: '.272', ops: '.832', order: '2nd', label: '.272 AVG, .832 OPS, bats 2nd' },
+    'jazz chisholm jr':        { sport: 'MLB', avg: '.265', ops: '.832', order: '2nd', label: '.265 AVG, .832 OPS, bats 2nd' },
+    'jose ramirez':            { sport: 'MLB', avg: '.282', ops: '.878', order: '3rd', label: '.282 AVG, .878 OPS, bats 3rd' },
+    'matt olson':              { sport: 'MLB', avg: '.258', ops: '.852', order: '4th', label: '.258 AVG, .852 OPS, bats 4th' },
+    'william contreras':       { sport: 'MLB', avg: '.268', ops: '.798', order: '5th', label: '.268 AVG, .798 OPS, bats 5th' },
+    'michael harris ii':       { sport: 'MLB', avg: '.272', ops: '.798', order: '2nd', label: '.272 AVG, .798 OPS, bats 2nd' },
+    'kyle schwarber':          { sport: 'MLB', avg: '.245', ops: '.862', order: '1st', label: '.245 AVG, .862 OPS, bats 1st' },
+    'tanner bibee':            { sport: 'MLB', avg: '.000', ops: '.000', order: '9th', label: '.000 AVG, .000 OPS, bats 9th (pitcher)' },
+  };
+
+  // ── Name aliases ──────────────────────────────────────────
+  const playerAliases = {
+    'wemby':  'victor wembanyama',
+    'bron':   'lebron james',
+    'steph':  'stephen curry',
+    'dame':   'damian lillard',
+    'ant':    'anthony edwards',
+    'sga':    'shai gilgeous-alexander',
+    'kt':     'karl-anthony towns',
+    'zion':   'zion williamson',
+    'ja':     'ja morant',
+    'melo':   'lamelo ball',
+    'trae':   'trae young',
+    'obi':    'og anunoby',
+  };
+
+  function resolveAlias(name) {
+    const lower = name.toLowerCase().trim();
+    return playerAliases[lower] || lower;
+  }
+
+  function clearLiveBetsResults() {
+    const res = document.getElementById('lu-results');
+    res.style.display = 'none';
+    document.getElementById('lu-result-card').innerHTML = '';
+  }
+
+  function clearLiveBetsForm() {
+    document.getElementById('lu-player').value     = '';
+    document.getElementById('lu-current').value    = '';
+    document.getElementById('lu-line').value       = '';
+    document.getElementById('lu-time').value       = '';
+    document.getElementById('lu-home-score').value = '';
+    document.getElementById('lu-away-score').value = '';
+    document.getElementById('lu-player-detect').textContent = '';
+    const errEl = document.getElementById('lu-error');
+    if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+    hideAutocomplete();
+    renderPeriodDropdown();          // resets period pills to default
+    selectHalf('Top');               // reset half inning pills
+    clearLiveBetsResults();
+  }
+
+  function selectSport(sport) {
+    luSport = sport;
+    luStatType = luStatOptions[sport][0];
+
+    document.getElementById('pill-nba').classList.toggle('active', sport === 'NBA');
+    document.getElementById('pill-mlb').classList.toggle('active', sport === 'MLB');
+
+    renderStatPills();
+    renderPeriodDropdown();
+
+    // Toggle time/half-inning fields
+    document.getElementById('lu-field-time').style.display = sport === 'NBA' ? '' : 'none';
+    document.getElementById('lu-field-half').style.display = sport === 'MLB' ? '' : 'none';
+
+    // Update labels and placeholders
+    updateCurrentLabel();
+    updateStatPlaceholders();
+    updateNamePlaceholder();
+
+    // Clear everything
+    clearLiveBetsForm();
+  }
+
+  const luPlaceholders = {
+    NBA: { current: '14', line: '24.5' },
+    MLB: {
+      'Hits':            { current: '1', line: '1.5' },
+      'Total Bases':     { current: '1', line: '1.5' },
+      'RBIs':            { current: '1', line: '1.5' },
+      'Strikeouts (P)':  { current: '3', line: '5.5' },
+    },
+  };
+
+  function updateStatPlaceholders() {
+    const curr = document.getElementById('lu-current');
+    const line = document.getElementById('lu-line');
+    if (luSport === 'NBA') {
+      curr.placeholder = luPlaceholders.NBA.current;
+      line.placeholder = luPlaceholders.NBA.line;
+    } else {
+      const p = luPlaceholders.MLB[luStatType] || { current: '1', line: '1.5' };
+      curr.placeholder = p.current;
+      line.placeholder = p.line;
+    }
+  }
+
+  const luNamePlaceholders = {
+    NBA: 'e.g. Victor Wembanyama',
+    MLB: {
+      default:           'e.g. Shohei Ohtani',
+      'Strikeouts (P)':  'e.g. Paul Skenes',
+    },
+  };
+
+  function updateNamePlaceholder() {
+    const input = document.getElementById('lu-player');
+    if (luSport === 'NBA') {
+      input.placeholder = luNamePlaceholders.NBA;
+    } else {
+      input.placeholder = luNamePlaceholders.MLB[luStatType] || luNamePlaceholders.MLB.default;
+    }
+  }
+
+  function selectStatType(type) {
+    luStatType = type;
+    document.querySelectorAll('.lu-stat-pill').forEach(p =>
+      p.classList.toggle('active', p.dataset.type === type)
+    );
+    document.getElementById('lu-current').value = '';
+    document.getElementById('lu-line').value    = '';
+    updateCurrentLabel();
+    updateStatPlaceholders();
+    updateNamePlaceholder();
+    clearLiveBetsResults();
+  }
+
+  function updateCurrentLabel() {
+    document.getElementById('lu-current-label').textContent = 'Current ' + luStatType;
+  }
+
+  function renderStatPills() {
+    const wrap = document.getElementById('lu-stat-pills');
+    wrap.innerHTML = luStatOptions[luSport].map(t => `
+      <button class="lu-stat-pill${t === luStatType ? ' active' : ''}" data-type="${esc(t)}" onclick="selectStatType('${esc(t)}')">${esc(t)}</button>
+    `).join('');
+  }
+
+  function renderPeriodDropdown() {
+    const label    = document.getElementById('lu-period-label');
+    const hidden   = document.getElementById('lu-period');
+    const pillsWrap = document.getElementById('lu-period-pills');
+    label.textContent = luSport === 'NBA' ? 'Quarter' : 'Inning';
+    const defaultVal  = luSport === 'NBA' ? 'Q3' : '5th';
+    hidden.value = defaultVal;
+    pillsWrap.innerHTML = luPeriodOptions[luSport].map(p => `
+      <button class="lu-period-pill${p === defaultVal ? ' active' : ''}" data-period="${esc(p)}" onclick="selectPeriod('${esc(p)}')">${esc(p)}</button>
+    `).join('');
+  }
+
+  function selectPeriod(val) {
+    document.getElementById('lu-period').value = val;
+    document.querySelectorAll('.lu-period-pill').forEach(p =>
+      p.classList.toggle('active', p.dataset.period === val)
+    );
+  }
+
+  function selectHalf(val) {
+    document.getElementById('lu-half').value = val;
+    document.querySelectorAll('.lu-half-pill').forEach(p =>
+      p.classList.toggle('active', p.dataset.half === val)
+    );
+  }
+
+  function stepField(id, delta) {
+    const input = document.getElementById(id);
+    const curr  = parseFloat(input.value) || 0;
+    const next  = Math.max(0, +(curr + delta).toFixed(1));
+    input.value = next % 1 === 0 ? String(next) : next.toFixed(1);
+  }
+
+  let luPlayerTimer = null;
+  let acFocusIdx    = -1;
+
+  /* ── Autocomplete: build candidate list ──────────────────── */
+  function getAcCandidates(raw) {
+    const q = raw.toLowerCase().trim();
+    if (!q || q.length < 2) return [];
+
+    const results = [];
+    const seen    = new Set();
+
+    // Alias exact match — add the resolved player first
+    const aliasKey = playerAliases[q];
+    if (aliasKey && knownPlayers[aliasKey]) {
+      const info = knownPlayers[aliasKey];
+      if (info.sport === luSport) { results.push({ key: aliasKey, ...info }); seen.add(aliasKey); }
+    }
+
+    // Substring match on canonical player names (filtered by sport)
+    for (const [key, info] of Object.entries(knownPlayers)) {
+      if (seen.has(key)) continue;
+      if (info.sport !== luSport) continue;
+      if (key.includes(q)) { results.push({ key, ...info }); seen.add(key); }
+      if (results.length >= 6) break;
+    }
+
+    return results.slice(0, 6);
+  }
+
+  function acStatLabel(info) {
+    if (info.sport === 'NBA') return `${info.ppg} PPG`;
+    return `${info.avg} AVG`;
+  }
+
+  function renderAutocomplete(candidates) {
+    const drop = document.getElementById('lu-autocomplete');
+    if (!candidates.length) { drop.classList.remove('open'); drop.innerHTML = ''; return; }
+
+    drop.innerHTML = candidates.map((c, i) => {
+      const displayName = c.key.replace(/\b\w/g, l => l.toUpperCase());
+      const badgeCls    = c.sport === 'NBA' ? 'badge-nba' : 'badge-mlb';
+      const stat        = acStatLabel(c);
+      return `<div class="lu-ac-item" data-key="${c.key}" data-idx="${i}" onmousedown="selectAcPlayer('${c.key}')">
+        <span class="lu-ac-name">${displayName}</span>
+        <span class="lu-ac-badge ${badgeCls}">${c.sport}</span>
+        <span class="lu-ac-stat">${stat}</span>
+      </div>`;
+    }).join('');
+    acFocusIdx = -1;
+    drop.classList.add('open');
+  }
+
+  function hideAutocomplete() {
+    const drop = document.getElementById('lu-autocomplete');
+    if (drop) { drop.classList.remove('open'); drop.innerHTML = ''; }
+    acFocusIdx = -1;
+  }
+
+  function selectAcPlayer(key) {
+    const info = knownPlayers[key];
+    if (!info) return;
+    const displayName = key.replace(/\b\w/g, l => l.toUpperCase());
+    document.getElementById('lu-player').value = displayName;
+    hideAutocomplete();
+    // Trigger the player detect banner
+    const detect = document.getElementById('lu-player-detect');
+    detect.className  = 'lu-player-detect';
+    detect.textContent = `Auto-detected: ${info.label}`;
+  }
+
+  function onPlayerInput() {
+    const raw    = document.getElementById('lu-player').value;
+    const q      = raw.trim().toLowerCase();
+    const name   = resolveAlias(q);
+    const detect = document.getElementById('lu-player-detect');
+
+    // Show autocomplete immediately (no debounce for local)
+    const candidates = getAcCandidates(raw);
+    renderAutocomplete(candidates);
+
+    // Update detect banner from local DB
+    const match = knownPlayers[name];
+    if (match) {
+      detect.className  = 'lu-player-detect';
+      detect.textContent = `Auto-detected: ${match.label}`;
+    } else {
+      detect.className  = 'lu-player-detect';
+      detect.textContent = '';
+    }
+
+    // Debounced live API lookup (300ms, min 3 chars)
+    clearTimeout(luPlayerTimer);
+    if (name.length >= 3) {
+      luPlayerTimer = setTimeout(() => lookupLiveStats(name), 300);
+    }
+  }
+
+  // Keyboard nav for autocomplete
+  document.addEventListener('keydown', function(e) {
+    const drop = document.getElementById('lu-autocomplete');
+    if (!drop || !drop.classList.contains('open')) return;
+    const items = drop.querySelectorAll('.lu-ac-item');
+    if (!items.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      acFocusIdx = Math.min(acFocusIdx + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      acFocusIdx = Math.max(acFocusIdx - 1, -1);
+    } else if (e.key === 'Enter' && acFocusIdx >= 0) {
+      e.preventDefault();
+      const key = items[acFocusIdx].dataset.key;
+      if (key) selectAcPlayer(key);
+      return;
+    } else if (e.key === 'Escape') {
+      hideAutocomplete();
+      return;
+    } else { return; }
+
+    items.forEach((el, i) => el.classList.toggle('ac-focused', i === acFocusIdx));
+  });
+
+  // Close when clicking outside
+  document.addEventListener('mousedown', function(e) {
+    const drop  = document.getElementById('lu-autocomplete');
+    const input = document.getElementById('lu-player');
+    if (drop && !drop.contains(e.target) && e.target !== input) hideAutocomplete();
+  });
+
+  // Alias used by selectSport / selectStatType calls
+  function detectPlayer() { onPlayerInput(); }
+
+  async function lookupLiveStats(name) {
+    // Guard: make sure the input still matches (user may have kept typing)
+    const currentName = resolveAlias(document.getElementById('lu-player').value.trim().toLowerCase());
+    if (currentName !== name) return;
+
+    const detect   = document.getElementById('lu-player-detect');
+    detect.className  = 'lu-player-detect loading';
+    detect.innerHTML  = '<span class="lu-spinner"></span>Looking up live stats\u2026';
+
+    try {
+      const endpoint = luSport === 'NBA' ? 'nba' : 'mlb';
+      const res  = await fetch(`/api/playerstats/${endpoint}?name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+
+      if (data.found) {
+        detect.className = 'lu-player-detect';
+        if (luSport === 'NBA') {
+          const team = data.teamAbbr || '';
+          const ppg  = data.ptsPerGame?.toFixed(1);
+          const rpg  = data.rebPerGame?.toFixed(1);
+          const apg  = data.astPerGame?.toFixed(1);
+          detect.textContent = `${data.name}${team ? ' \u2014 ' + team : ''} | ${ppg} PPG / ${rpg} RPG / ${apg} APG`;
+        } else {
+          const team = data.teamAbbr || '';
+          const avg  = data.avg?.toFixed(3).replace('0.', '.') || '---';
+          const ops  = data.ops?.toFixed(3).replace('0.', '.') || '---';
+          const pag  = data.paPerGame?.toFixed(1) || '---';
+          detect.textContent = `${data.name}${team ? ' \u2014 ' + team : ''} | ${avg} AVG / ${ops} OPS | ${pag} PA/game`;
+        }
+      } else {
+        // API returned not-found — fall back to local knownPlayers
+        const match = knownPlayers[name];
+        if (match) {
+          detect.className  = 'lu-player-detect';
+          detect.textContent = `Auto-detected: ${match.label}`;
+        } else {
+          detect.className  = 'lu-player-detect not-found';
+          detect.textContent = data.message || 'Player not found — using league average estimates';
+        }
+      }
+    } catch (_e) {
+      // Network error — silently fall back to local match
+      const match = knownPlayers[name];
+      detect.className  = 'lu-player-detect';
+      detect.textContent = match ? `Auto-detected: ${match.label}` : '';
+    }
+  }
+
+  // Initialize on page load
+  (function initLiveBets() {
+    renderStatPills();
+    renderPeriodDropdown();
+    updateCurrentLabel();
+    updateStatPlaceholders();
+    updateNamePlaceholder();
+  })();
+
+  async function analyzeLiveBet() {
+    const luErrEl   = document.getElementById('lu-error');
+    const submitBtn = document.getElementById('lu-submit-btn');
+
+    function showLuError(msg) {
+      luErrEl.textContent  = '\u26a0 ' + msg;
+      luErrEl.style.display = 'block';
+    }
+    luErrEl.style.display = 'none';
+
+    const playerName  = resolveAlias(document.getElementById('lu-player').value.trim());
     const currentStat = parseFloat(document.getElementById('lu-current').value);
     const propLine    = parseFloat(document.getElementById('lu-line').value);
-    const quarter     = document.getElementById('lu-quarter').value;
-    const timeRemaining = document.getElementById('lu-time').value.trim();
+    const period      = document.getElementById('lu-period').value;
     const homeScore   = parseFloat(document.getElementById('lu-home-score').value) || 0;
     const awayScore   = parseFloat(document.getElementById('lu-away-score').value) || 0;
-    const statType    = document.getElementById('lu-stat-type').value;
 
-    if (!playerName)                          { alert('Enter a player name.'); return; }
-    if (isNaN(currentStat) || isNaN(propLine)) { alert('Enter current stat and prop line.'); return; }
-    if (!timeRemaining)                        { alert('Enter time remaining.'); return; }
+    if (!playerName)                           { showLuError('Enter a player name.'); return; }
+    if (isNaN(currentStat) || isNaN(propLine)) { showLuError('Enter current stat and prop line.'); return; }
+    if (!period)                               { showLuError('Select a period.'); return; }
+
+    const body = { playerName, sport: luSport, statType: luStatType, currentStat, propLine, period, homeScore, awayScore };
+
+    if (luSport === 'NBA') {
+      const timeRemaining = document.getElementById('lu-time').value.trim();
+      if (!timeRemaining) { showLuError('Enter time remaining (e.g. 4:30).'); return; }
+      body.timeRemaining = timeRemaining;
+    }
+    if (luSport === 'MLB') {
+      body.halfInning = document.getElementById('lu-half').value;
+    }
+
+    // Show pulsing skeleton while waiting
+    const resultsEl = document.getElementById('lu-results');
+    const cardEl    = document.getElementById('lu-result-card');
+    resultsEl.style.display = 'block';
+    cardEl.innerHTML = `
+      <div class="lu-skeleton-card">
+        <div class="lu-skel lu-skel-h1"></div>
+        <div class="lu-skel lu-skel-bar"></div>
+        <div class="lu-skel-nums">
+          <div class="lu-skel lu-skel-num"></div>
+          <div class="lu-skel lu-skel-num"></div>
+        </div>
+        <div class="lu-skel lu-skel-line"></div>
+        <div class="lu-skel lu-skel-line short"></div>
+        <div class="lu-skel lu-skel-line"></div>
+        <div class="lu-skel lu-skel-line shorter"></div>
+      </div>`;
+    resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    submitBtn.disabled = true;
 
     try {
       const res  = await fetch('/api/liveunder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerName, currentStat, propLine, quarter, timeRemaining, homeScore, awayScore, statType }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Server error');
-      renderLiveUnder(data, { playerName, propLine, statType });
+      renderLiveBet(data, { playerName, propLine, statType: luStatType });
     } catch (e) {
-      alert('Error: ' + e.message);
+      cardEl.innerHTML    = '';
+      resultsEl.style.display = 'none';
+      showLuError(e.message);
+    } finally {
+      submitBtn.disabled = false;
     }
   }
 
-  function renderLiveUnder(data, ctx) {
-    const card = document.getElementById('lu-result-card');
+  function runAnother() {
+    // Keep sport + stat type, clear the game-state inputs only
+    document.getElementById('lu-current').value    = '';
+    document.getElementById('lu-line').value       = '';
+    document.getElementById('lu-time').value       = '';
+    document.getElementById('lu-home-score').value = '';
+    document.getElementById('lu-away-score').value = '';
+    clearLiveBetsResults();
+    document.getElementById('lu-player').focus();
+    document.getElementById('lu-submit-btn').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 
-    // Badge CSS class
+  function renderLiveBet(data, ctx) {
+    const card       = document.getElementById('lu-result-card');
+    const isOver     = data.projectedFinal >= ctx.propLine;
     const badgeClass = data.recommendation.toLowerCase().replace(/ /g, '-');
+    const projColor  = isOver ? 'var(--green)' : '#ff7f50';
+    const barColor   = isOver ? 'var(--green)' : 'var(--red)';
+    const fillPct    = Math.min(100, (data.projectedFinal / (ctx.propLine || 1)) * 100);
+    const isOverRec  = data.recommendation.includes('OVER');
+    const side       = isOverRec ? 'Over' : 'Under';
+    const propDesc   = `${ctx.playerName} ${ctx.statType} ${side} ${ctx.propLine}`;
+    const arrow      = isOver ? '\u2191' : '\u2193';
+    const arrowColor = isOver ? 'var(--green)' : '#ff7f50';
 
-    // Projection bar: fill % = projected / propLine, capped at 100
-    const fillPct = Math.min(100, (data.projectedFinal / ctx.propLine) * 100);
-    // Marker at the line (100% of track) — we mark where prop line sits
-    // Bar fills up to projection. If proj < line, bar is short. If proj > line, bar overflows (capped).
-    const isOver   = data.projectedFinal >= ctx.propLine;
-    const barColor = isOver ? 'var(--green)' : 'var(--red)';
-    // Projected num color
-    const projColor = isOver ? 'var(--green)' : '#ff7f50';
+    const conf      = data.confidence;
+    const confColor = conf >= 75 ? 'var(--green)' : conf >= 55 ? 'var(--yellow)' : '#ff7f50';
 
     // Signals
     const iconMap = { over: '\u2191', under: '\u2193', neutral: '\u2014' };
@@ -2811,44 +3563,101 @@
       </div>
     `).join('');
 
-    // Add-to-parlay side
-    const isOverRec = data.recommendation.includes('OVER');
-    const side      = isOverRec ? 'Over' : 'Under';
-    const propDesc  = `${ctx.playerName} ${ctx.statType} ${side} ${ctx.propLine}`;
+    // Pace info
+    const paceLabel = data.sport === 'NBA'
+      ? `${data.minsRemaining} min left \u00b7 ${data.pace}/min pace`
+      : `~${data.estimatedPARemaining} PA left \u00b7 ${data.inningsRemaining} inn`;
+
+    // MLB probability panel
+    let probHtml = '';
+    if (data.sport === 'MLB' && data.probabilities) {
+      const p        = data.probabilities;
+      const statWord = ctx.statType.toLowerCase().split(' ')[0];
+      probHtml = `
+        <div class="lu-prob-panel">
+          <div class="lu-prob-title">Probability Breakdown</div>
+          <div class="lu-prob-row">
+            <span class="lu-prob-label">Gets 0 more ${esc(statWord)}</span>
+            <span class="lu-prob-pct">${p.zero}%</span>
+            <div class="lu-prob-bar-track"><div class="lu-prob-bar-fill" style="width:${p.zero}%;background:var(--red)"></div></div>
+          </div>
+          <div class="lu-prob-row">
+            <span class="lu-prob-label">Gets exactly 1 more</span>
+            <span class="lu-prob-pct">${p.one}%</span>
+            <div class="lu-prob-bar-track"><div class="lu-prob-bar-fill" style="width:${p.one}%;background:var(--yellow)"></div></div>
+          </div>
+          <div class="lu-prob-row">
+            <span class="lu-prob-label">Gets 2+ more</span>
+            <span class="lu-prob-pct">${p.twoPlus}%</span>
+            <div class="lu-prob-bar-track"><div class="lu-prob-bar-fill" style="width:${p.twoPlus}%;background:var(--green)"></div></div>
+          </div>
+        </div>`;
+    }
+
+    // Data source badge
+    const srcCfg = {
+      live:     { icon: '\uD83D\uDCE1', label: 'Live Stats',      cls: 'source-live' },
+      database: { icon: '\uD83D\uDCCA', label: 'Season Stats',     cls: 'source-db'   },
+      estimate: { icon: '\uD83D\uDCCB', label: 'League Estimates', cls: 'source-est'  },
+    };
+    const src = srcCfg[data.dataSource] || srcCfg.estimate;
 
     card.innerHTML = `
-      <span class="lu-badge ${badgeClass}">${esc(data.recommendation)}</span>
-      <span class="lu-confidence-text">${data.confidence}% confidence</span>
-
-      <div class="lu-projection">
-        <div class="lu-proj-col">
-          <div class="lu-proj-num" style="color:${projColor}">${data.projectedFinal}</div>
-          <div class="lu-proj-label">Projected Finish</div>
-        </div>
-        <div class="lu-proj-vs">vs</div>
-        <div class="lu-proj-col">
-          <div class="lu-proj-num" style="color:var(--white)">${ctx.propLine}</div>
-          <div class="lu-proj-label">Prop Line</div>
+      <div class="lu-rec-header">
+        <div class="lu-badge ${badgeClass}">${esc(data.recommendation)}</div>
+        <div class="lu-conf-wrap">
+          <div class="lu-conf-label-row"><span>Confidence</span><span>${conf}%</span></div>
+          <div class="lu-conf-track"><div class="lu-conf-fill" style="width:${conf}%;background:${confColor}"></div></div>
         </div>
       </div>
 
-      <div class="lu-bar-wrap">
-        <div class="lu-bar-label">
-          <span>0</span>
-          <span>${data.minsRemaining} min remaining &middot; pace ${data.pace}/min</span>
-          <span>${ctx.propLine}</span>
+      <div class="lu-proj-section">
+        <div class="lu-proj-display">
+          <div class="lu-proj-stat">
+            <div class="lu-proj-num" style="color:${projColor}">${data.projectedFinal}</div>
+            <div class="lu-proj-label">Projected Finish</div>
+          </div>
+          <div class="lu-proj-arrow" style="color:${arrowColor}">${arrow}</div>
+          <div class="lu-proj-stat">
+            <div class="lu-proj-num" style="color:var(--dim)">${ctx.propLine}</div>
+            <div class="lu-proj-label">Prop Line</div>
+          </div>
         </div>
-        <div class="lu-bar-track">
-          <div class="lu-bar-fill" style="width:${fillPct}%;background:${barColor}"></div>
-          <div class="lu-bar-marker" style="left:100%"></div>
+        <div>
+          <div class="lu-pace-bar-label">
+            <span>0</span>
+            <span>${paceLabel}</span>
+            <span>${ctx.propLine}</span>
+          </div>
+          <div class="lu-bar-track">
+            <div class="lu-bar-fill" style="width:${fillPct}%;background:${barColor}"></div>
+            <div class="lu-bar-marker" style="left:100%"></div>
+          </div>
         </div>
       </div>
 
-      <div class="lu-explanation">${esc(data.explanation)}</div>
+      <div class="lu-meta-row">
+        ${data.playerDbInfo ? `<span class="lu-player-tag${data.playerDbInfo.found ? '' : ' lu-player-tag--unknown'}">${esc(data.playerDbInfo.display)}</span>` : ''}
+        <span class="lu-source-badge ${src.cls}">${src.icon} ${src.label}</span>
+      </div>
 
-      <div class="lu-signals">${signalsHtml}</div>
+      <div class="lu-signals-section">
+        <div class="lu-signals-title">Signals</div>
+        ${signalsHtml}
+      </div>
 
-      <button class="lu-add-btn" onclick="addLeg('${esc(propDesc)}','');switchPanel('odds')">+ ADD TO PARLAY BUILDER</button>
+      ${probHtml}
+
+      <details class="lu-breakdown">
+        <summary>See Full Breakdown</summary>
+        <div class="lu-breakdown-body">${esc(data.explanation)}</div>
+      </details>
+
+      <div class="lu-actions">
+        <button class="lu-run-another" onclick="runAnother()">\u21a9 Run Another</button>
+        <button class="lu-add-btn" onclick="addLeg('${esc(propDesc)}','');switchPanel('odds')">+ Add to Parlay Builder</button>
+      </div>
+
       <div class="lu-disclaimer">${esc(data.disclaimer)}</div>
     `;
 
@@ -2906,7 +3715,9 @@
       const isPro   = currentUser.plan === 'pro' || currentUser.usageLimit === null;
 
       let usageHtml = '';
-      if (isPro) {
+      if (currentUser.isOwner) {
+        usageHtml = `<span class="auth-pro-badge">&#9889; OWNER</span>`;
+      } else if (isPro) {
         usageHtml = `<span class="auth-pro-badge">&#9889; PRO</span><a class="auth-manage-link" href="#" onclick="manageSubscription();return false;">Manage Subscription</a>`;
       } else {
         const used      = currentUser.todayUsage || 0;
