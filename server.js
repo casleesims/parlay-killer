@@ -145,7 +145,107 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something went wrong. We've been notified." });
 });
 
+// ── Reset password page ────────────────────────────────────
+app.get('/reset-password', (req, res) => {
+  const token = req.query.token || '';
+  // Validate token looks like a hex string before embedding in HTML
+  const safeToken = /^[a-f0-9]{64}$/.test(token) ? token : '';
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reset Password — Parlay Killer</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#080808;color:#fff;font-family:Arial,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:#111;border:1px solid #222;border-radius:12px;padding:40px 32px;width:100%;max-width:420px}
+    .logo{font-size:20px;font-weight:900;letter-spacing:0.06em;margin-bottom:28px}
+    .logo span{color:#00ff87}
+    h1{font-size:22px;font-weight:900;margin-bottom:8px}
+    p{font-size:14px;color:#888;margin-bottom:24px;line-height:1.6}
+    label{display:block;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#aaa;margin-bottom:6px}
+    input{width:100%;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:15px;padding:12px 14px;margin-bottom:16px;outline:none}
+    input:focus{border-color:#00ff87}
+    button{width:100%;background:#00ff87;color:#000;font-size:15px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;border:none;border-radius:6px;padding:14px;cursor:pointer;margin-top:4px}
+    button:disabled{opacity:0.5;cursor:default}
+    .msg{font-size:14px;margin-top:16px;text-align:center;min-height:20px}
+    .msg.error{color:#ff4444}
+    .msg.ok{color:#00ff87}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><span>PARLAY</span> KILLER</div>
+    <h1>Set new password</h1>
+    <p>Enter a new password for your account. Minimum 8 characters.</p>
+    <form id="form" onsubmit="submit(event)">
+      <label>New Password</label>
+      <input type="password" id="pw" placeholder="New password" minlength="8" required autocomplete="new-password" />
+      <label>Confirm Password</label>
+      <input type="password" id="pw2" placeholder="Confirm password" minlength="8" required autocomplete="new-password" />
+      <button type="submit" id="btn">Reset Password</button>
+    </form>
+    <div class="msg" id="msg"></div>
+  </div>
+  <script>
+    const TOKEN = ${JSON.stringify(safeToken)};
+    async function submit(e) {
+      e.preventDefault();
+      const pw = document.getElementById('pw').value;
+      const pw2 = document.getElementById('pw2').value;
+      const msg = document.getElementById('msg');
+      const btn = document.getElementById('btn');
+      msg.className = 'msg';
+      if (pw !== pw2) { msg.textContent = 'Passwords do not match'; msg.className = 'msg error'; return; }
+      if (!TOKEN) { msg.textContent = 'Invalid reset link'; msg.className = 'msg error'; return; }
+      btn.disabled = true;
+      btn.textContent = 'Resetting...';
+      try {
+        const r = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: TOKEN, newPassword: pw }),
+        });
+        const data = await r.json();
+        if (r.ok) {
+          msg.textContent = 'Password reset! Redirecting to login...';
+          msg.className = 'msg ok';
+          document.getElementById('form').reset();
+          setTimeout(() => { window.location.href = '/'; }, 2000);
+        } else {
+          msg.textContent = data.error || 'Reset failed';
+          msg.className = 'msg error';
+          btn.disabled = false;
+          btn.textContent = 'Reset Password';
+        }
+      } catch (err) {
+        msg.textContent = 'Something went wrong';
+        msg.className = 'msg error';
+        btn.disabled = false;
+        btn.textContent = 'Reset Password';
+      }
+    }
+  </script>
+</body>
+</html>`);
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Parlay Killer running on port ${PORT}`);
+  // Create password_resets table if it doesn't exist
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        token VARCHAR(255) NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+  } catch (err) {
+    console.error('Failed to create password_resets table:', err.message);
+  }
 });

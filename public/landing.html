@@ -784,7 +784,26 @@
       <input type="password" class="modal-input" id="login-password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" autocomplete="current-password" />
     </div>
     <button class="modal-submit" id="login-submit" onclick="submitLogin()">Log In</button>
+    <div style="text-align:center;margin-top:10px;">
+      <button onclick="switchModal('modal-login','modal-forgot')" style="background:none;border:none;color:#555;font-size:13px;cursor:pointer;padding:4px;">Forgot password?</button>
+    </div>
     <div class="modal-switch">No account? <button onclick="switchModal('modal-login','modal-signup')">Sign up free</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-forgot" onclick="handleOverlayClick(event,'modal-forgot')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-forgot')">&times;</button>
+    <div class="modal-title">Reset Password</div>
+    <div class="modal-error" id="forgot-error"></div>
+    <div id="forgot-success" style="display:none;background:#0a2e1a;border:1px solid #00ff87;border-radius:6px;padding:14px;font-size:14px;color:#00ff87;margin-bottom:16px;text-align:center;"></div>
+    <p style="font-size:14px;color:#888;margin-bottom:16px;line-height:1.6;">Enter your email and we'll send you a link to reset your password.</p>
+    <div class="modal-field">
+      <label class="modal-label">Email</label>
+      <input type="email" class="modal-input" id="forgot-email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <button class="modal-submit" id="forgot-submit" onclick="submitForgotPassword()">Send Reset Link</button>
+    <div class="modal-switch"><button onclick="switchModal('modal-forgot','modal-login')">Back to login</button></div>
   </div>
 </div>
 
@@ -1123,11 +1142,34 @@
     }
   }
 
+  async function submitForgotPassword() {
+    document.getElementById('forgot-error').textContent = '';
+    document.getElementById('forgot-success').style.display = 'none';
+    const email = document.getElementById('forgot-email').value.trim();
+    if (!email) { document.getElementById('forgot-error').textContent = 'Email required.'; return; }
+    setSubmitLoading('forgot-submit', true);
+    try {
+      await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      document.getElementById('forgot-success').textContent = 'Check your email for a reset link.';
+      document.getElementById('forgot-success').style.display = 'block';
+      document.getElementById('forgot-email').value = '';
+    } catch {
+      document.getElementById('forgot-error').textContent = 'Network error. Try again.';
+    } finally {
+      setSubmitLoading('forgot-submit', false);
+    }
+  }
+
   // Enter key in modals
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
     if (document.getElementById('modal-login').classList.contains('open'))  submitLogin();
     if (document.getElementById('modal-signup').classList.contains('open')) submitSignup();
+    if (document.getElementById('modal-forgot').classList.contains('open')) submitForgotPassword();
   });
 
   // If user is already logged in, send them to the app

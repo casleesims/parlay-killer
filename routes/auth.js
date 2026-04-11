@@ -1,9 +1,11 @@
 const express    = require('express');
 const bcrypt     = require('bcryptjs');
+const crypto     = require('crypto');
 const rateLimit  = require('express-rate-limit');
 const pool       = require('../db/index');
 const passport   = require('../config/passport');
 const { requireAuth } = require('../middleware/auth');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
 const router     = express.Router();
 
 // ── Helpers ────────────────────────────────────────────────
@@ -66,6 +68,8 @@ router.post('/register', registerLimiter, async (req, res) => {
     req.session.userId = user.id;
     req.session.save(err => {
       if (err) return res.status(500).json({ error: 'Session error' });
+      // Fire-and-forget welcome email
+      sendWelcomeEmail(user.email, user.name);
       res.status(201).json({ user });
     });
   } catch (err) {
@@ -268,6 +272,66 @@ router.post('/reset-password-admin', requireAuth, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Admin reset error:', err);
+    res.status(500).json({ error: 'Reset failed' });
+  }
+});
+
+// ── POST /api/auth/forgot-password ────────────────────────
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  // Always return ok — never reveal whether the email exists
+  res.json({ ok: true });
+
+  if (!email || !isValidEmail(email)) return;
+
+  try {
+    const result = await pool.query('SELECT id, name FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (!result.rows.length) return;
+
+    const { name } = result.rows[0];
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await pool.query(
+      `INSERT INTO password_resets (email, token, expires_at)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (token) DO NOTHING`,
+      [email.toLowerCase(), token, expires]
+    );
+
+    sendPasswordResetEmail(email.toLowerCase(), name, token);
+  } catch (err) {
+    console.error('Forgot password error:', err);
+  }
+});
+
+// ── POST /api/auth/reset-password ─────────────────────────
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword || newPassword.length < 8) {
+    return res.status(400).json({ error: 'Token and new password (min 8 chars) required' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT email FROM password_resets WHERE token = $1 AND expires_at > NOW()',
+      [token]
+    );
+
+    if (!result.rows.length) {
+      return res.status(400).json({ error: 'Reset link is invalid or has expired' });
+    }
+
+    const { email } = result.rows[0];
+    const hash = await bcrypt.hash(newPassword, 10);
+
+    await pool.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE email = $2', [hash, email]);
+    await pool.query('DELETE FROM password_resets WHERE token = $1', [token]);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Reset password error:', err);
     res.status(500).json({ error: 'Reset failed' });
   }
 });

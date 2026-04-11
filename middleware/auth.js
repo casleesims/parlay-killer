@@ -1,4 +1,5 @@
 const pool = require('../db/index');
+const { sendUsageWarningEmail, sendLimitReachedEmail } = require('../utils/email');
 
 function requireAuth(req, res, next) {
   if (!req.session.userId) {
@@ -63,8 +64,21 @@ async function checkUsage(req, res, next) {
       [userId, 'analyze']
     );
 
-    req.usageCount = totalCount + 1;
+    const newCount = totalCount + 1;
+    req.usageCount = newCount;
     req.usageLimit = FREE_LIMIT;
+
+    // Fire usage emails (fire-and-forget)
+    if (newCount === 2 || newCount === 3) {
+      pool.query('SELECT email, name FROM users WHERE id = $1', [userId])
+        .then(r => {
+          if (!r.rows.length) return;
+          const { email, name } = r.rows[0];
+          if (newCount === 2) sendUsageWarningEmail(email, name);
+          else sendLimitReachedEmail(email, name);
+        })
+        .catch(err => console.error('Usage email lookup error:', err));
+    }
 
     next();
   } catch (err) {
