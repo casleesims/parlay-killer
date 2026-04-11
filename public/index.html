@@ -39,21 +39,65 @@
       --dim:     #555555;
       --muted:   #aaaaaa;
     }
-    [data-theme="light"] .top-nav           { background: #ffffff; border-bottom: 1px solid #e0e0e0; }
-    [data-theme="light"] .top-nav-logo      { color: #111111; }
-    [data-theme="light"] .top-nav-logo span { color: #00aa55; }
-    [data-theme="light"] .nav-signout       { color: #111111; border-color: #cccccc; }
-    [data-theme="light"] .nav-signout:hover { border-color: #00aa55; color: #00aa55; }
-    [data-theme="light"] .nav-user-name     { color: #111111; }
-    [data-theme="light"] .nav-avatar        { background: #00aa55; color: #ffffff; border-color: #00aa55; }
-    [data-theme="light"] .main-tab          { color: #555555; }
-    [data-theme="light"] .main-tab.active   { color: #111111; }
-    [data-theme="light"] .auth-usage-text   { color: #333333; }
-    [data-theme="light"] .nav-settings      { color: #777777; }
+    /* ── Light mode overrides ── */
+    [data-theme="light"] .top-nav            { background: #ffffff; border-bottom: 1px solid #e0e0e0; }
+    [data-theme="light"] .top-nav-logo       { color: #111111; }
+    [data-theme="light"] .top-nav-logo span  { color: #00aa55; }
+    [data-theme="light"] .nav-signout        { color: #111111; border-color: #cccccc; }
+    [data-theme="light"] .nav-signout:hover  { border-color: #00aa55; color: #00aa55; background: rgba(0,170,85,0.04); }
+    [data-theme="light"] .nav-user-name      { color: #111111; }
+    [data-theme="light"] .nav-avatar         { background: #00aa55; color: #ffffff; border-color: #00aa55; }
+    [data-theme="light"] .nav-settings       { color: #777777; }
     [data-theme="light"] .nav-settings:hover { color: #00aa55; }
-    [data-theme="light"] .auth-btn          { color: #111111; border-color: #cccccc; }
-    [data-theme="light"] .auth-btn:hover    { border-color: #00aa55; color: #00aa55; }
-    [data-theme="light"] .theme-toggle      { color: #555555; border-color: #cccccc; }
+    [data-theme="light"] .nav-divider        { color: #cccccc; }
+    [data-theme="light"] .auth-btn           { color: #111111; border-color: #cccccc; }
+    [data-theme="light"] .auth-btn:hover     { border-color: #00aa55; color: #00aa55; }
+    [data-theme="light"] .theme-toggle       { color: #555555; border-color: #cccccc; }
+    [data-theme="light"] .auth-usage-text    { color: #333333; }
+    [data-theme="light"] .auth-pro-badge     { background: rgba(0,170,85,0.12); color: #00aa55; border-color: rgba(0,170,85,0.3); }
+    /* Main tabs */
+    [data-theme="light"] .main-tabs          { border-bottom-color: #e0e0e0; background: #ffffff; }
+    [data-theme="light"] .main-tab           { color: #444444; }
+    [data-theme="light"] .main-tab:hover     { color: #111111; background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .main-tab.active    { color: #111111; border-bottom-color: #00aa55; }
+    /* Sport filter tabs */
+    [data-theme="light"] .sport-tab          { color: #444444; border-bottom-color: transparent; }
+    [data-theme="light"] .sport-tab:hover    { color: #111111; background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .sport-tab.active   { color: #111111; border-bottom-color: #00aa55; }
+    /* Day tabs */
+    [data-theme="light"] .day-tab            { color: #444444; border-color: #cccccc; }
+    [data-theme="light"] .day-tab.active     { background: #00aa55; border-color: #00aa55; color: #ffffff; }
+    /* Game cards */
+    [data-theme="light"] .game-card          { background: #ffffff; border-color: #e0e0e0; }
+    [data-theme="light"] .game-card:hover    { border-color: #00aa55; background: #f8f8f8; }
+    /* Wrap and panels */
+    [data-theme="light"] .tab-panel          { background: transparent; }
+    /* Live bets pills */
+    [data-theme="light"] .lu-pill            { color: #444444; border-color: #cccccc; background: #f5f5f5; }
+    [data-theme="light"] .lu-pill.active     { background: #00aa55; border-color: #00aa55; color: #ffffff; }
+    [data-theme="light"] .lu-stat-pill       { color: #444444; border-color: #cccccc; background: #ffffff; }
+    [data-theme="light"] .lu-stat-pill.active { border-color: #00aa55; color: #00aa55; background: rgba(0,170,85,0.08); }
+    [data-theme="light"] .lu-period-pill     { color: #444444; border-color: #cccccc; background: #f5f5f5; }
+    [data-theme="light"] .lu-period-pill.active { border-color: #00aa55; color: #00aa55; background: rgba(0,170,85,0.08); }
+    [data-theme="light"] .lu-half-pill       { color: #444444; border-color: #cccccc; background: #f5f5f5; }
+    [data-theme="light"] .lu-half-pill.active { border-color: #00aa55; color: #00aa55; background: rgba(0,170,85,0.08); }
+    [data-theme="light"] .lu-stepper-btn     { background: #f0f0f0; border-color: #cccccc; color: #111111; }
+    [data-theme="light"] .lu-stepper-input   { color: #111111; }
+    [data-theme="light"] .lu-submit          { background: #00aa55; color: #ffffff; }
+    /* Footer */
+    [data-theme="light"] .site-footer        { border-top-color: #e0e0e0; }
+    [data-theme="light"] .site-footer-copy   { color: #666666; }
+    [data-theme="light"] .site-footer-links a { color: #555555; }
+    /* Banners */
+    [data-theme="light"] .disclaimer-banner  { background: #f5f5f5; border-bottom-color: #e0e0e0; }
+    [data-theme="light"] .disclaimer-text    { color: #666666; }
+    [data-theme="light"] .verify-banner      { background: #fff8e1; color: #666600; border-color: #ffe082; }
+    /* Section labels */
+    [data-theme="light"] .label-text         { color: #333333; }
+    [data-theme="light"] .last-updated       { color: #888888; }
+    /* Modals */
+    [data-theme="light"] .modal input        { background: #f5f5f5; border-color: #cccccc; color: #111111; }
+    [data-theme="light"] .modal-label        { color: #555555; }
 
     html { scroll-behavior: smooth; }
 
@@ -150,6 +194,7 @@
       z-index: 100;
       background: #0d0d0d;
       border-bottom: 1px solid #1a1a1a;
+      overflow: visible;
     }
     .top-nav-inner {
       max-width: 1200px;
@@ -160,6 +205,7 @@
       justify-content: space-between;
       height: 56px;
       gap: 16px;
+      overflow: visible;
     }
     .top-nav-logo {
       font-family: var(--font);
@@ -853,7 +899,7 @@
       font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: var(--dim);
+      color: var(--white);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -996,7 +1042,7 @@
       text-transform: uppercase;
       background: transparent;
       border: 1px solid var(--border2);
-      color: var(--dim);
+      color: var(--white);
       padding: 8px 16px;
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
@@ -1005,7 +1051,7 @@
 
     .wager-group { display: flex; align-items: center; gap: 8px; }
     .wager-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
-    .wager-symbol { font-size: 1rem; font-weight: 700; color: var(--dim); }
+    .wager-symbol { font-size: 1rem; font-weight: 700; color: var(--white); }
 
     #wager {
       font-family: var(--font);
@@ -1440,7 +1486,7 @@
       text-transform: uppercase;
       background: transparent;
       border: 1px solid var(--border2);
-      color: var(--dim);
+      color: var(--white);
       padding: 6px 12px;
       cursor: pointer;
       white-space: nowrap;
@@ -1494,7 +1540,7 @@
       text-transform: uppercase;
       background: var(--s1);
       border: 1px solid var(--border2);
-      color: var(--dim);
+      color: var(--white);
       height: 44px;
       cursor: pointer;
       transition: all 0.15s;
@@ -1565,7 +1611,7 @@
       flex-shrink: 0;
       background: var(--s2);
       border: none;
-      color: var(--dim);
+      color: var(--white);
       cursor: pointer;
       transition: background 0.1s, color 0.1s;
       display: flex;
@@ -1604,7 +1650,7 @@
       text-transform: uppercase;
       background: var(--s3);
       border: 1px solid var(--border2);
-      color: var(--dim);
+      color: var(--white);
       min-width: 40px;
       height: 40px;
       padding: 0 10px;
@@ -1626,7 +1672,7 @@
       height: 44px;
       background: var(--s3);
       border: 1px solid var(--border2);
-      color: var(--dim);
+      color: var(--white);
       cursor: pointer;
       transition: all 0.12s;
     }
@@ -1981,7 +2027,7 @@
       text-transform: uppercase;
       background: transparent;
       border: 1px solid var(--border2);
-      color: var(--dim);
+      color: var(--white);
       width: 100%;
       height: 48px;
       cursor: pointer;
@@ -3998,7 +4044,7 @@
           ${badgeHtml}
           <a class="nav-settings" href="/account.html">Settings</a>
           <span class="nav-divider">·</span>
-          <button class="nav-signout" onclick="submitLogout()">Sign Out</button>
+          <button class="nav-signout" onclick="submitLogout()" style="display:inline-flex!important;visibility:visible!important;opacity:1!important;">Sign Out</button>
         </div>
       `;
     } else {
