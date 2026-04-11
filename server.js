@@ -19,6 +19,25 @@ const session    = require('express-session');
 const PgSession  = require('connect-pg-simple')(session);
 const pool       = require('./db/index');
 
+// Auto-create tables if they don't exist
+async function initDb() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        token VARCHAR(255) NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log('[DB] Tables initialized');
+  } catch (err) {
+    console.error('[DB] Table init error:', err.message);
+  }
+}
+initDb();
+
 const analyzeRouter     = require('./routes/analyze');
 const oddsRouter        = require('./routes/odds');
 const scoresRouter      = require('./routes/scores');
@@ -232,20 +251,6 @@ app.get('/reset-password', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`Parlay Killer running on port ${PORT}`);
-  // Create password_resets table if it doesn't exist
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS password_resets (
-        id SERIAL PRIMARY KEY,
-        email VARCHAR(255) NOT NULL,
-        token VARCHAR(255) NOT NULL UNIQUE,
-        expires_at TIMESTAMP NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-  } catch (err) {
-    console.error('Failed to create password_resets table:', err.message);
-  }
 });
