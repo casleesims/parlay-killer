@@ -128,17 +128,101 @@
       border-top: 1px solid var(--border);
     }
 
-    /* ── AUTH BAR ── */
-    .auth-bar {
+    /* ── TOP NAV ── */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #0d0d0d;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .top-nav-inner {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 20px;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 0;
-      min-height: 38px;
+      justify-content: space-between;
+      height: 56px;
+      gap: 12px;
     }
+    .top-nav-logo {
+      font-family: var(--font);
+      font-size: 1.55rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--white);
+      text-decoration: none;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .top-nav-logo span { color: var(--green); }
+    .top-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+    .nav-auth-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0,255,135,0.1);
+      border: 1px solid rgba(0,255,135,0.3);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 900;
+      color: var(--green);
+      flex-shrink: 0;
+      letter-spacing: 0;
+    }
+    .nav-user-name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+    .nav-settings {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+    .nav-settings:hover { color: var(--green); }
+    .nav-signout {
+      font-family: var(--font);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--white);
+      padding: 5px 10px;
+      min-height: 30px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .nav-signout:hover { border-color: var(--green); color: var(--green); }
 
     .auth-btn {
       font-family: var(--font);
@@ -148,26 +232,15 @@
       text-transform: uppercase;
       background: transparent;
       border: 1px solid var(--border2);
-      color: var(--dim);
-      padding: 5px 14px;
+      color: var(--white);
+      padding: 6px 14px;
+      min-height: 34px;
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
     }
     .auth-btn:hover { border-color: var(--green); color: var(--green); }
 
-    /* ── Usage counter in auth bar ── */
-    .auth-user {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .auth-name {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--dim);
-    }
     .auth-pro-badge {
       font-size: 0.65rem;
       font-weight: 800;
@@ -411,30 +484,6 @@
     }
     .auth-btn.primary:hover { background: var(--green2); border-color: var(--green2); }
 
-    .auth-user {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .auth-name {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--dim);
-    }
-
-    .auth-usage {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      border: 1px solid var(--border2);
-      padding: 3px 9px;
-    }
-
     /* ── MODAL ── */
     .modal-overlay {
       display: none;
@@ -597,65 +646,6 @@
       display: none;
     }
 
-    /* ── HEADER ── */
-    header {
-      padding: 44px 0 36px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 32px;
-    }
-
-    .header-inner {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    h1 {
-      font-size: clamp(3.5rem, 9vw, 6.5rem);
-      font-weight: 900;
-      line-height: 0.9;
-      letter-spacing: -0.01em;
-      text-transform: uppercase;
-      color: var(--white);
-    }
-
-    h1 span { color: var(--green); }
-
-    .tagline {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--green);
-      margin-top: 10px;
-    }
-
-    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-
-    .header-controls { display: flex; align-items: center; gap: 10px; }
-
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--green);
-      border: 1px solid var(--green);
-      padding: 4px 10px;
-    }
-
-    .live-dot {
-      width: 6px; height: 6px;
-      background: var(--green);
-      border-radius: 50%;
-      animation: pulse 1.4s ease-in-out infinite;
-    }
-
     @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.2} }
     @keyframes pulsered { 0%,100%{opacity:1} 50%{opacity:.3} }
 
@@ -668,10 +658,12 @@
       text-transform: uppercase;
       background: transparent;
       border: 1px solid var(--border2);
-      color: var(--dim);
+      color: rgba(255,255,255,0.6);
       padding: 4px 10px;
+      min-height: 30px;
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
     }
     .theme-toggle:hover { border-color: var(--green); color: var(--green); }
 
@@ -692,11 +684,14 @@
       background: transparent;
       border: none;
       border-bottom: 3px solid transparent;
-      color: var(--dim);
-      padding: 10px 22px 9px;
+      color: rgba(255,255,255,0.55);
+      padding: 14px 22px 13px;
+      min-height: 48px;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s;
       margin-bottom: -2px;
+      flex: 1;
+      text-align: center;
     }
 
     .main-tab:hover { color: var(--white); }
@@ -2027,17 +2022,16 @@
       /* Parlay builder */
       .leg-row { grid-template-columns: 18px 1fr 78px 24px; }
 
-      /* Header */
-      h1 { font-size: 3.2rem; }
-      .header-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .header-right { align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+      /* Nav — hide user name on small screens, show avatar only */
+      .nav-user-name { display: none; }
+      .nav-settings { display: none; }
+      .auth-usage-text { font-size: 0.6rem; }
 
-      /* Auth bar — compact */
-      .auth-bar { flex-wrap: wrap; gap: 6px; padding: 6px 0; }
-      .auth-name { display: none; }
+      /* Main tabs — full width, easy tap */
+      .main-tab { padding: 14px 8px 13px; font-size: 0.78rem; }
 
-      /* Main tabs — smaller touch targets still fine, just reduce padding */
-      .main-tab { padding: 10px 14px 9px; font-size: 0.82rem; }
+      /* Inputs — 16px prevents iOS zoom */
+      input, select, textarea { font-size: 16px !important; }
 
       /* Game cards — stack vertically, full width */
       #odds-scroll { flex-direction: column; overflow-x: visible; padding-bottom: 0; }
@@ -2244,6 +2238,17 @@
   </div>
 </div>
 
+<!-- ── STICKY TOP NAV ── -->
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a class="top-nav-logo" href="/">PARLAY<span>KILLER</span></a>
+    <div class="top-nav-right">
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">&#9788; LIGHT</button>
+      <div id="auth-bar" style="display:flex;align-items:center;gap:8px;"><!-- populated by JS --></div>
+    </div>
+  </div>
+</nav>
+
 <!-- ── DISCLAIMER BANNER ── -->
 <div class="disclaimer-banner" id="disclaimer-banner">
   <span class="disclaimer-text">Parlay Killer is a mathematical analysis tool only. We do NOT facilitate, encourage, or provide gambling services of any kind. We do not accept bets or wagers. All analysis is based on publicly available odds data for informational and educational purposes only. Sports betting may be illegal in your jurisdiction. You must be 18+ to use this service. Always verify odds directly with your sportsbook before placing any bet.</span>
@@ -2252,35 +2257,12 @@
 
 <div class="wrap">
 
-  <!-- ── AUTH BAR ── -->
-  <div class="auth-bar" id="auth-bar">
-    <!-- populated by JS -->
-  </div>
-
   <!-- ── EMAIL VERIFICATION BANNER ── -->
   <div class="verify-banner" id="verify-banner">
     Welcome! Please verify your email to ensure account security. Email verification coming soon &mdash; your account is active now.
   </div>
 
-  <!-- ── HEADER ── -->
-  <header>
-    <div class="header-inner">
-      <div>
-        <h1>PARLAY<span>KILLER</span></h1>
-        <p class="tagline">The math the sportsbook doesn't want you to see</p>
-      </div>
-      <div class="header-right">
-        <div class="header-controls">
-          <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">&#9788; LIGHT</button>
-          <div class="live-badge">
-            <span class="live-dot"></span>
-            Live Odds
-          </div>
-        </div>
-        <div class="last-updated" id="last-updated"></div>
-      </div>
-    </div>
-  </header>
+  <div class="last-updated" id="last-updated" style="text-align:right;padding:10px 0 4px;"></div>
 
   <!-- ── MAIN TABS ── -->
   <nav class="main-tabs">
@@ -2474,8 +2456,8 @@
 
     <!-- Sport selector — large pill buttons -->
     <div class="lu-sport-pills">
-      <button class="lu-pill active" id="pill-nba" onclick="selectSport('NBA')">&#x1F3C0; NBA</button>
-      <button class="lu-pill"        id="pill-mlb" onclick="selectSport('MLB')">&#x26BE; MLB</button>
+      <button class="lu-pill active" id="pill-nba" onclick="selectSport('NBA')">NBA</button>
+      <button class="lu-pill"        id="pill-mlb" onclick="selectSport('MLB')">MLB</button>
     </div>
 
     <!-- Stat type pills — populated by JS, animate in -->
@@ -3947,14 +3929,15 @@
     const bar = document.getElementById('auth-bar');
     if (!bar) return;
     if (currentUser) {
-      const display = currentUser.name || currentUser.email;
-      const isPro   = currentUser.plan === 'pro' || currentUser.usageLimit === null;
+      const display  = currentUser.name || currentUser.email || '';
+      const initial  = display.charAt(0).toUpperCase();
+      const isPro    = currentUser.plan === 'pro' || currentUser.usageLimit === null;
 
-      let usageHtml = '';
+      let badgeHtml = '';
       if (currentUser.isOwner) {
-        usageHtml = `<span class="auth-pro-badge">&#9889; OWNER</span>`;
+        badgeHtml = `<span class="auth-pro-badge">&#9889; OWNER</span>`;
       } else if (isPro) {
-        usageHtml = `<span class="auth-pro-badge">&#9889; PRO</span><a class="auth-manage-link" href="#" onclick="manageSubscription();return false;">Manage Subscription</a>`;
+        badgeHtml = `<span class="auth-pro-badge">&#9889; PRO</span>`;
       } else {
         const used      = currentUser.todayUsage || 0;
         const limit     = currentUser.usageLimit || 3;
@@ -3962,23 +3945,22 @@
         const fillPct   = Math.min(100, Math.round((used / limit) * 100));
         const fillColor = remaining === 0 ? 'var(--red)' : remaining === 1 ? 'var(--yellow)' : 'var(--green)';
         const upgradeLink = remaining === 0
-          ? `<a href="#" onclick="openUpgradeModal();return false;">Upgrade for unlimited</a>`
+          ? `<a href="#" onclick="openUpgradeModal();return false;" style="color:var(--green);margin-left:5px;">Upgrade</a>`
           : '';
-        usageHtml = `
+        badgeHtml = `
           <div class="auth-usage">
-            <span class="auth-usage-text">${used} of ${limit} free analyses used today ${upgradeLink}</span>
+            <span class="auth-usage-text">${used}/${limit} analyses used${upgradeLink}</span>
             <div class="auth-usage-bar"><div class="auth-usage-fill" style="width:${fillPct}%;background:${fillColor}"></div></div>
           </div>`;
       }
 
       bar.innerHTML = `
-        <div class="auth-user">
-          <span class="auth-name">${esc(display)}</span>
-          ${usageHtml}
-          <span class="auth-divider">|</span>
-          <a class="auth-manage-link" href="/account.html">Settings</a>
-          <span class="auth-divider">|</span>
-          <button class="auth-btn" onclick="submitLogout()">Sign Out</button>
+        <div class="nav-auth-user">
+          <span class="nav-avatar" title="${esc(display)}">${esc(initial)}</span>
+          <span class="nav-user-name">${esc(display)}</span>
+          ${badgeHtml}
+          <a class="nav-settings" href="/account.html">Settings</a>
+          <button class="nav-signout" onclick="submitLogout()">Sign Out</button>
         </div>
       `;
     } else {
@@ -3996,6 +3978,10 @@
       currentUser = data.user || null;
     } catch {
       currentUser = null;
+    }
+    if (!currentUser) {
+      window.location.href = '/';
+      return;
     }
     renderAuthBar();
     updateVerifyBanner();
