@@ -2060,6 +2060,103 @@
       .metrics-row .metric-card:last-child { grid-column: span 1; }
       .main-tab { padding: 10px 10px 9px; font-size: 0.78rem; }
     }
+
+    /* ── Live Scores Strip ──────────────────────────────── */
+    .ls-strip-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin-bottom: 18px;
+    }
+    .ls-strip-wrap::-webkit-scrollbar { display: none; }
+    .ls-strip {
+      display: flex;
+      gap: 10px;
+      padding: 2px 0 4px;
+      min-width: max-content;
+    }
+    .ls-card {
+      flex: 0 0 auto;
+      width: 154px;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      user-select: none;
+    }
+    .ls-card:hover { border-color: var(--green); }
+    .ls-card.ls-live { border-left: 3px solid var(--green); }
+    .ls-card.ls-final { opacity: 0.6; }
+    .ls-sport-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .ls-teams {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ls-score {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .ls-status {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .ls-status.ls-live-txt { color: var(--green); font-weight: 700; }
+    .ls-empty {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 12px 0;
+    }
+
+    /* ── In-game context panel ──────────────────────────── */
+    .lu-game-ctx {
+      display: none;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      animation: lu-fadein 0.2s ease;
+    }
+    .lu-game-ctx.show { display: block; }
+    .lu-ctx-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 6px;
+    }
+    .lu-ctx-score {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .lu-ctx-detail {
+      font-size: 12px;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -2177,7 +2274,7 @@
           <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">&#9788; LIGHT</button>
           <div class="live-badge">
             <span class="live-dot"></span>
-            DraftKings Live
+            Live Odds
           </div>
         </div>
         <div class="last-updated" id="last-updated"></div>
@@ -2187,15 +2284,15 @@
 
   <!-- ── MAIN TABS ── -->
   <nav class="main-tabs">
-    <button class="main-tab active" data-panel="odds" onclick="switchPanel('odds')">Odds</button>
+    <button class="main-tab active" data-panel="lu" onclick="switchPanel('lu')">Live Bets <span class="red-dot"></span></button>
+    <button class="main-tab" data-panel="odds" onclick="switchPanel('odds')">Odds</button>
     <button class="main-tab" data-panel="vf" onclick="switchPanel('vf')">Value Finder</button>
-    <button class="main-tab" data-panel="lu" onclick="switchPanel('lu')">Live Bets <span class="red-dot"></span></button>
   </nav>
 
   <!-- ══════════════════════════════════════════════════════════
        PANEL: ODDS
   ══════════════════════════════════════════════════════════ -->
-  <div class="tab-panel active" id="panel-odds">
+  <div class="tab-panel" id="panel-odds">
 
     <!-- Live Odds -->
     <div class="panel">
@@ -2354,7 +2451,7 @@
       <span class="label-text">Value Finder — Lowest-Juice Lines Today</span>
     </div>
     <div class="vf-disclaimer">
-      EV is calculated by comparing each side's book-implied probability against the no-vig (fair) probability derived from the DraftKings two-way market. Lines closest to 0 EV have the least juice. DraftKings lines only. Not a guarantee of profit.
+      EV is calculated by comparing each side's book-implied probability against the no-vig (fair) probability derived from the two-way market. Lines closest to 0 EV have the least juice. Not a guarantee of profit.
     </div>
     <button class="vf-scan-btn" id="vf-scan-btn" onclick="loadValueFinder()">Scan Today's Odds</button>
     <div id="vf-results"></div>
@@ -2363,9 +2460,16 @@
   <!-- ══════════════════════════════════════════════════════════
        PANEL: LIVE BETS
   ══════════════════════════════════════════════════════════ -->
-  <div class="tab-panel" id="panel-lu">
+  <div class="tab-panel active" id="panel-lu">
     <div class="section-label">
       <span class="label-text">Live Bets &#x1F534; &mdash; Real-Time Pace Analysis</span>
+    </div>
+
+    <!-- Live scores strip -->
+    <div class="ls-strip-wrap">
+      <div class="ls-strip" id="ls-strip">
+        <div class="ls-empty">Loading games...</div>
+      </div>
     </div>
 
     <!-- Sport selector — large pill buttons -->
@@ -2446,6 +2550,13 @@
         </div>
 
       </div><!-- /lu-grid -->
+
+      <!-- In-game context panel -->
+      <div class="lu-game-ctx" id="lu-game-ctx">
+        <div class="lu-ctx-label">Live Game</div>
+        <div class="lu-ctx-score" id="lu-ctx-score"></div>
+        <div class="lu-ctx-detail" id="lu-ctx-detail"></div>
+      </div>
 
       <!-- Error banner -->
       <div class="lu-error" id="lu-error" style="display:none"></div>
@@ -3027,6 +3138,109 @@
   /* ─── Live Bets — state & setup ─────────────────────────── */
   let luSport    = 'NBA';
   let luStatType = 'Points';
+  let luLiveGames = [];
+
+  /* ─── Live Scores Strip ──────────────────────────────────── */
+  async function fetchLiveScores() {
+    try {
+      const r = await fetch('/api/scores/live', { credentials: 'include' });
+      if (!r.ok) return;
+      luLiveGames = await r.json();
+      renderLiveStrip(luLiveGames);
+      updateGameCtx();
+    } catch (err) {
+      console.warn('[live scores]', err.message);
+      document.getElementById('ls-strip').innerHTML =
+        '<div class="ls-empty">No games data</div>';
+    }
+  }
+
+  function renderLiveStrip(games) {
+    const strip = document.getElementById('ls-strip');
+    if (!games.length) {
+      strip.innerHTML = '<div class="ls-empty">No games scheduled today</div>';
+      return;
+    }
+    strip.innerHTML = games.map(g => {
+      const isLive  = g.status === 'inprogress';
+      const isFinal = g.status === 'complete';
+      const homeS   = g.homeScore != null ? String(g.homeScore) : '–';
+      const awayS   = g.awayScore != null ? String(g.awayScore) : '–';
+      const scoreStr = (g.homeScore != null || g.awayScore != null)
+        ? `${awayS} – ${homeS}` : '';
+      let statusTxt = g.scheduledTime || '';
+      let statusCls = '';
+      if (isLive) {
+        statusCls = 'ls-live-txt';
+        if (g.sport === 'MLB') {
+          const half = g.inningHalf === 'T' ? 'Top' : g.inningHalf === 'B' ? 'Bot' : '';
+          statusTxt = g.inning ? `${half} ${g.inning}` : 'Live';
+        } else {
+          statusTxt = g.period ? `${g.period} ${g.timeRemaining || ''}`.trim() : 'Live';
+        }
+      } else if (isFinal) {
+        statusTxt = 'Final';
+      }
+      const cardCls = ['ls-card', isLive ? 'ls-live' : '', isFinal ? 'ls-final' : ''].filter(Boolean).join(' ');
+      return `<div class="${cardCls}" onclick="selectGameFromStrip(${JSON.stringify(JSON.stringify(g))})">
+        <div class="ls-sport-tag">${esc(g.sport)} ${g.broadcast ? '· ' + esc(g.broadcast) : ''}</div>
+        <div class="ls-teams">${esc(g.awayAbbr || g.awayTeam)} @ ${esc(g.homeAbbr || g.homeTeam)}</div>
+        ${scoreStr ? `<div class="ls-score">${esc(scoreStr)}</div>` : ''}
+        <div class="ls-status ${statusCls}">${esc(statusTxt)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function selectGameFromStrip(jsonStr) {
+    const g = JSON.parse(jsonStr);
+    // Switch sport to match game
+    if (g.sport !== luSport) selectSport(g.sport);
+    // Auto-fill scores if available
+    if (g.homeScore != null) document.getElementById('lu-home-score').value = g.homeScore;
+    if (g.awayScore != null) document.getElementById('lu-away-score').value = g.awayScore;
+    // Auto-set period/inning for live games
+    if (g.status === 'inprogress') {
+      if (g.sport === 'MLB' && g.inning) {
+        const inningLabels = { 1:'1st',2:'2nd',3:'3rd',4:'4th',5:'5th',6:'6th',7:'7th',8:'8th',9:'9th' };
+        const inningLabel = inningLabels[g.inning] || `${g.inning}th`;
+        selectPeriod(inningLabel);
+        if (g.inningHalf) selectHalf(g.inningHalf === 'T' ? 'Top' : 'Bottom');
+      } else if (g.sport === 'NBA' && g.period) {
+        selectPeriod(g.period);
+        if (g.timeRemaining) document.getElementById('lu-time').value = g.timeRemaining;
+      }
+    }
+    updateGameCtx();
+    document.getElementById('lu-player').focus();
+  }
+
+  function updateGameCtx() {
+    const ctx     = document.getElementById('lu-game-ctx');
+    const scoreEl = document.getElementById('lu-ctx-score');
+    const detailEl = document.getElementById('lu-ctx-detail');
+    const live = luLiveGames.find(g => g.sport === luSport && g.status === 'inprogress');
+    if (!live) {
+      ctx.classList.remove('show');
+      return;
+    }
+    const homeS = live.homeScore != null ? live.homeScore : '–';
+    const awayS = live.awayScore != null ? live.awayScore : '–';
+    scoreEl.textContent =
+      `${live.awayAbbr || live.awayTeam} ${awayS} – ${homeS} ${live.homeAbbr || live.homeTeam}`;
+    let detail = '';
+    if (live.sport === 'MLB') {
+      const half = live.inningHalf === 'T' ? 'Top' : live.inningHalf === 'B' ? 'Bottom' : '';
+      detail = live.inning ? `${half} ${live.inning}` : 'In Progress';
+    } else {
+      detail = [live.period, live.timeRemaining].filter(Boolean).join(' · ');
+    }
+    detailEl.textContent = detail || 'In Progress';
+    ctx.classList.add('show');
+  }
+
+  // Fetch on load, refresh every 30s
+  fetchLiveScores();
+  setInterval(fetchLiveScores, 30 * 1000);
 
   const luStatOptions = {
     NBA: ['Points', 'Rebounds', 'Assists', 'PRA'],
@@ -3186,6 +3400,9 @@
 
     // Clear everything
     clearLiveBetsForm();
+
+    // Update context panel for new sport
+    updateGameCtx();
   }
 
   const luPlaceholders = {

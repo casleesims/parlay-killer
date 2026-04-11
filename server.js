@@ -19,6 +19,10 @@ const session    = require('express-session');
 const PgSession  = require('connect-pg-simple')(session);
 const pool       = require('./db/index');
 
+if (!process.env.SPORTRADAR_API_KEY) {
+  console.warn('[Sportradar] API key not set — live scores will use fallback');
+}
+
 // Auto-create tables if they don't exist
 async function initDb() {
   try {

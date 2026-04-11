@@ -170,18 +170,94 @@ router.get('/nba', async (req, res) => {
   }
 });
 
-// ── GET /api/playerstats/mlb?name=mookie+betts ───────────
-// MLB Stats API is free (no key). Returns real current-season stats.
-router.get('/mlb', async (req, res) => {
-  const name = resolvePlayerName(req.query.name);
-  if (!name) return res.status(400).json({ error: 'Name required' });
+// ── Sportradar MLB helpers ────────────────────────────────
+const SR_MLB = 'https://api.sportradar.com/mlb/trial/v7/en';
 
-  const cacheKey = `mlb:${name}`;
-  const cached   = getCached(cacheKey);
-  if (cached) return res.json(cached);
+// Cache the full players list for 24 hours to avoid hammering the API
+let srPlayersCache = { data: null, timestamp: 0 };
+const SR_PLAYERS_TTL = 24 * 60 * 60 * 1000;
 
+async function getSrPlayers() {
+  if (srPlayersCache.data && Date.now() - srPlayersCache.timestamp < SR_PLAYERS_TTL) {
+    return srPlayersCache.data;
+  }
+  const res = await fetch(
+    `${SR_MLB}/league/players.json?api_key=${process.env.SPORTRADAR_API_KEY}`
+  );
+  if (!res.ok) throw new Error(`Sportradar players fetch failed: ${res.status}`);
+  const data = await res.json();
+  const players = data.players || [];
+  srPlayersCache = { data: players, timestamp: Date.now() };
+  return players;
+}
+
+function matchSrPlayer(players, name) {
+  const norm = s => (s || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+  const target = norm(name);
+  return players.find(p => {
+    const full = norm(`${p.first_name} ${p.last_name}`);
+    return full === target || full.startsWith(target) || target.startsWith(full);
+  }) || null;
+}
+
+async function fetchMlbSportradar(name, cacheKey, res) {
   try {
-    // Step 1: Search for player
+    const players = await getSrPlayers();
+    const player  = matchSrPlayer(players, name);
+
+    if (!player) return res.json({ found: false, message: 'Player not found' });
+
+    const year     = new Date().getFullYear();
+    const statsRes = await fetch(
+      `${SR_MLB}/seasons/${year}/REG/players/${player.id}/statistics.json?api_key=${process.env.SPORTRADAR_API_KEY}`
+    );
+    if (!statsRes.ok) return res.json({ found: false, message: 'Stats unavailable' });
+
+    const statsData = await statsRes.json();
+    // Sportradar v7: statistics.hitting.overall holds season totals
+    const h = statsData.statistics?.hitting?.overall;
+    if (!h) return res.json({ found: false, message: 'No hitting stats found for this season' });
+
+    const pa    = h.pa    || h.plate_appearances || 1;
+    const games = (h.games?.play) || h.games_played || 1;
+    const hits  = h.h     || h.hits              || 0;
+    const so    = h.so    || h.strikeouts        || 0;
+
+    const teamMarket = player.team?.market || '';
+    const teamName   = player.team?.name   || '';
+
+    const result = {
+      found:         true,
+      sport:         'MLB',
+      source:        'sportradar',
+      name:          `${player.preferred_name || player.first_name} ${player.last_name}`,
+      team:          [teamMarket, teamName].filter(Boolean).join(' '),
+      teamAbbr:      player.team?.abbr || '',
+      position:      player.primary_position || '',
+      batSide:       player.bat_hand || '',
+      avg:           parseFloat(h.avg)  || 0.250,
+      ops:           parseFloat(h.ops)  || 0.750,
+      slg:           parseFloat(h.slg)  || 0.400,
+      obp:           parseFloat(h.obp)  || 0.320,
+      paPerGame:     parseFloat((pa   / games).toFixed(2)),
+      hitsPerGame:   parseFloat((hits / games).toFixed(2)),
+      strikeoutRate: parseFloat((so   / pa   ).toFixed(3)),
+      hardHitRate:   0.380, // not in trial tier — league average placeholder
+      games,
+    };
+
+    setCache(cacheKey, result);
+    res.json(result);
+
+  } catch (err) {
+    console.error('Sportradar MLB error:', err.message);
+    res.json({ found: false, message: 'Stats unavailable — using estimates' });
+  }
+}
+
+// ── MLB Stats API fallback (free, no key needed) ──────────
+async function fetchMlbStatsApi(name, cacheKey, res) {
+  try {
     const searchRes = await fetch(
       `https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(name)}&sportId=1`
     );
@@ -193,12 +269,10 @@ router.get('/mlb', async (req, res) => {
     const player   = searchData.people[0];
     const playerId = player.id;
 
-    // Step 2: Get position and name
-    const peopleRes = await fetch(`https://statsapi.mlb.com/api/v1/people/${playerId}`);
+    const peopleRes  = await fetch(`https://statsapi.mlb.com/api/v1/people/${playerId}`);
     const peopleData = await peopleRes.json();
     const fullPlayer = peopleData.people?.[0] || player;
 
-    // Step 3: Current season hitting stats
     const currentYear = new Date().getFullYear();
     const statsRes    = await fetch(
       `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=season&season=${currentYear}&group=hitting`
@@ -208,13 +282,11 @@ router.get('/mlb', async (req, res) => {
     const statsData = await statsRes.json();
     const split     = statsData.stats?.[0]?.splits?.[0];
     const stats     = split?.stat;
-
     if (!stats) return res.json({ found: false, message: 'No stats found for this season' });
 
-    // Step 4: Get team abbreviation
-    const teamId   = split?.team?.id;
-    let teamAbbr   = '';
-    let teamName   = split?.team?.name || '';
+    const teamId = split?.team?.id;
+    let teamAbbr = '';
+    let teamName = split?.team?.name || '';
     if (teamId) {
       try {
         const teamRes  = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}`);
@@ -225,26 +297,26 @@ router.get('/mlb', async (req, res) => {
     }
 
     const pa    = parseInt(stats.plateAppearances) || 1;
-    const hits  = parseInt(stats.hits) || 0;
-    const games = parseInt(stats.gamesPlayed) || 1;
+    const hits  = parseInt(stats.hits)             || 0;
+    const games = parseInt(stats.gamesPlayed)      || 1;
 
     const result = {
-      found: true,
-      sport: 'MLB',
-      source: 'live',
-      name: fullPlayer.fullName,
-      team: teamName,
+      found:         true,
+      sport:         'MLB',
+      source:        'live',
+      name:          fullPlayer.fullName,
+      team:          teamName,
       teamAbbr,
-      position: fullPlayer.primaryPosition?.abbreviation || '',
-      batSide: fullPlayer.batSide?.code || '',
-      avg: parseFloat(stats.avg) || 0.250,
-      ops: parseFloat(stats.ops) || 0.750,
-      slg: parseFloat(stats.slg) || 0.400,
-      obp: parseFloat(stats.obp) || 0.320,
-      paPerGame: parseFloat((pa / games).toFixed(2)),
-      hitsPerGame: parseFloat((hits / games).toFixed(2)),
+      position:      fullPlayer.primaryPosition?.abbreviation || '',
+      batSide:       fullPlayer.batSide?.code || '',
+      avg:           parseFloat(stats.avg)    || 0.250,
+      ops:           parseFloat(stats.ops)    || 0.750,
+      slg:           parseFloat(stats.slg)    || 0.400,
+      obp:           parseFloat(stats.obp)    || 0.320,
+      paPerGame:     parseFloat((pa   / games).toFixed(2)),
+      hitsPerGame:   parseFloat((hits / games).toFixed(2)),
       strikeoutRate: parseFloat((parseInt(stats.strikeOuts) / pa).toFixed(3)),
-      hardHitRate: 0.380, // not in free API — league average placeholder
+      hardHitRate:   0.380,
       games,
     };
 
@@ -252,9 +324,25 @@ router.get('/mlb', async (req, res) => {
     res.json(result);
 
   } catch (err) {
-    console.error('MLB stats error:', err.message);
+    console.error('MLB Stats API error:', err.message);
     res.json({ found: false, message: 'Stats unavailable — using estimates' });
   }
+}
+
+// ── GET /api/playerstats/mlb?name=mookie+betts ───────────
+// Uses Sportradar if SPORTRADAR_API_KEY is set, otherwise falls back to free MLB Stats API.
+router.get('/mlb', async (req, res) => {
+  const name = resolvePlayerName(req.query.name);
+  if (!name) return res.status(400).json({ error: 'Name required' });
+
+  const cacheKey = `mlb:${name}`;
+  const cached   = getCached(cacheKey);
+  if (cached) return res.json(cached);
+
+  if (process.env.SPORTRADAR_API_KEY) {
+    return fetchMlbSportradar(name, cacheKey, res);
+  }
+  return fetchMlbStatsApi(name, cacheKey, res);
 });
 
 module.exports = router;
