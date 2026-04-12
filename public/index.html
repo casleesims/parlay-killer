@@ -196,16 +196,41 @@
     }
     .team-col.right { align-items: flex-end; }
     .team-name {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--white);
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100px;
     }
     .team-abbr {
-      font-size: 11px;
-      font-weight: 900;
-      color: #ffffff;
+      font-size: 10px;
+      font-weight: 700;
+      color: #555;
       letter-spacing: 0.08em;
     }
+    .game-card {
+      background: #141414;
+      border-left: 3px solid #2a2a2a;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .game-card.live { border-left-color: #860038; }
+    .game-card:active { background: #1a1a1a; }
+    .game-card-left { text-align: left; }
+    .game-card-right { text-align: right; }
+    .game-card-center { text-align: center; }
+    .gc-score { font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.01em; white-space: nowrap; }
+    .gc-status { font-size: 9px; font-weight: 700; color: #860038; letter-spacing: 0.08em; margin-top: 3px; }
+    .gc-network { font-size: 8px; color: #333; margin-top: 2px; }
+    .gc-time { font-size: 9px; color: #555; margin-top: 3px; }
     .score-col {
       width: 80px;
       display: flex;
@@ -911,7 +936,7 @@
 <div id="screen-home" class="screen">
   <div class="top-nav">
     <div class="nav-logo">PARLAY <span>KILLER</span></div>
-    <div id="home-avatar" class="nav-avatar" onclick="navTo('account')">?</div>
+    <div id="nav-avatar" style="display:flex;align-items:center;"></div>
   </div>
   <div class="screen-body" id="home-body">
     <div class="spinner-wrap"><div class="spinner"></div><div class="spinner-label">Loading games…</div></div>
@@ -1173,42 +1198,72 @@ const LIVE_GAMES = [
 ];
 
 function generateMockProps(player, liveStats) {
+  const s = player.season;
   const pts = liveStats?.pts ?? 0;
   const reb = liveStats?.reb ?? 0;
   const ast = liveStats?.ast ?? 0;
-  const s = player.season;
+  const minsPlayed = liveStats?.min ?? 1;
 
-  function calcProb(current, seasonAvg, line, minsPlayed) {
-    if (!minsPlayed) return 0.50;
-    const projected = current + (current / minsPlayed) * 12;
-    const diff = (projected - line) / (seasonAvg * 0.3 + 0.1);
-    return Math.max(0.15, Math.min(0.85, 0.5 + diff * 0.15));
+  function roundToHalf(n) { return Math.round(n * 2) / 2; }
+
+  function makeLine(seasonAvg, current, mins) {
+    const pace = mins > 3 ? (current / mins) * 32 : seasonAvg;
+    const raw = (pace * 0.88 + seasonAvg * 0.12);
+    return roundToHalf(Math.max(0.5, raw));
   }
 
-  const minsPlayed = liveStats?.min ?? 1;
-  const ptsLine = parseFloat((s.pts * 0.92).toFixed(1));
-  const rebLine = parseFloat((s.reb * 0.90).toFixed(1));
-  const astLine = parseFloat((s.ast * 0.90).toFixed(1));
-  const praLine = parseFloat(((s.pts + s.reb + s.ast) * 0.91).toFixed(1));
+  const ptsLine = makeLine(s.pts, pts, minsPlayed);
+  const rebLine = makeLine(s.reb, reb, minsPlayed);
+  const astLine = makeLine(s.ast, ast, minsPlayed);
+  const praLine = makeLine(s.pts + s.reb + s.ast, pts + reb + ast, minsPlayed);
 
-  const ptsProb = calcProb(pts, s.pts, ptsLine, minsPlayed);
-  const rebProb = calcProb(reb, s.reb, rebLine, minsPlayed);
-  const astProb = calcProb(ast, s.ast, astLine, minsPlayed);
-  const praProb = calcProb(pts+reb+ast, s.pts+s.reb+s.ast, praLine, minsPlayed);
+  function calcProb(current, line, seasonRate, mins) {
+    if (current > line) return 0.97;
+    if (mins >= 38 && current < line - 3) return 0.06;
+    const needed = line - current;
+    const minsRemaining = Math.max(1, 32 - mins);
+    const blendedRate = mins > 6
+      ? (current / mins) * 0.7 + (seasonRate / 32) * 0.3
+      : seasonRate / 32;
+    const lambda = blendedRate * minsRemaining;
+    if (lambda <= 0) return 0.05;
+    if (needed <= 0) return 0.97;
+    let cumulative = 0;
+    const maxK = Math.floor(needed) - 1;
+    for (let k = 0; k <= maxK; k++) {
+      let term = Math.exp(-lambda);
+      for (let i = 1; i <= k; i++) term *= lambda / i;
+      cumulative += term;
+    }
+    return Math.max(0.04, Math.min(0.97, 1 - cumulative));
+  }
+
+  const ptsProb = calcProb(pts, ptsLine, s.pts, minsPlayed);
+  const rebProb = calcProb(reb, rebLine, s.reb, minsPlayed);
+  const astProb = calcProb(ast, astLine, s.ast, minsPlayed);
+  const praProb = calcProb(pts+reb+ast, praLine, s.pts+s.reb+s.ast, minsPlayed);
 
   function toVerdict(p) {
-    if (p >= 0.68) return { v:'STRONG OVER', c:'go' };
-    if (p >= 0.55) return { v:'LEAN OVER', c:'go' };
-    if (p >= 0.45) return { v:'TOSS UP', c:'toss' };
-    if (p >= 0.32) return { v:'LEAN UNDER', c:'un' };
+    if (p >= 0.97) return { v:'LOCKED OVER', c:'go' };
+    if (p >= 0.72) return { v:'STRONG OVER', c:'go' };
+    if (p >= 0.57) return { v:'LEAN OVER', c:'go' };
+    if (p >= 0.43) return { v:'TOSS UP', c:'toss' };
+    if (p >= 0.28) return { v:'LEAN UNDER', c:'un' };
+    if (p <= 0.05) return { v:'LOCKED UNDER', c:'un' };
     return { v:'STRONG UNDER', c:'un' };
   }
 
+  function bestOdds(prob) {
+    const dk = prob > 0.6 ? -114 : prob > 0.5 ? -110 : -108;
+    const fd = prob > 0.6 ? -116 : prob > 0.5 ? -112 : -106;
+    return { dk, fd };
+  }
+
   return [
-    { id:`${player.id}-pts`, label:'Points', line:ptsLine, prob:ptsProb, ...toVerdict(ptsProb), statKey:'pts', dk: ptsProb > 0.55 ? -112 : -108, fd: ptsProb > 0.55 ? -115 : -105, pp: ptsLine },
-    { id:`${player.id}-reb`, label:'Rebounds', line:rebLine, prob:rebProb, ...toVerdict(rebProb), statKey:'reb', dk: rebProb > 0.55 ? -110 : -108, fd: rebProb > 0.55 ? -112 : -105, pp: rebLine },
-    { id:`${player.id}-ast`, label:'Assists', line:astLine, prob:astProb, ...toVerdict(astProb), statKey:'ast', dk: astProb > 0.55 ? -114 : -108, fd: astProb > 0.55 ? -115 : -105, pp: astLine },
-    { id:`${player.id}-pra`, label:'PRA', line:praLine, prob:praProb, ...toVerdict(praProb), statKey:'pra', dk: praProb > 0.55 ? -112 : -110, fd: praProb > 0.55 ? -115 : -108, pp: praLine },
+    { id:`${player.id}-pts`, label:'Points', line:ptsLine, prob:ptsProb, ...toVerdict(ptsProb), statKey:'pts', ...bestOdds(ptsProb), pp:ptsLine },
+    { id:`${player.id}-reb`, label:'Rebounds', line:rebLine, prob:rebProb, ...toVerdict(rebProb), statKey:'reb', ...bestOdds(rebProb), pp:rebLine },
+    { id:`${player.id}-ast`, label:'Assists', line:astLine, prob:astProb, ...toVerdict(astProb), statKey:'ast', ...bestOdds(astProb), pp:astLine },
+    { id:`${player.id}-pra`, label:'PRA', line:praLine, prob:praProb, ...toVerdict(praProb), statKey:'pra', ...bestOdds(praProb), pp:praLine },
   ];
 }
 
@@ -1235,25 +1290,53 @@ async function checkAuth() {
     currentUser = null;
   }
   updateAvatars();
+  updateNavUsage(currentUser);
+}
+
+function updateNavUsage(user) {
+  const avatar = document.getElementById('nav-avatar');
+  if (!avatar) return;
+  if (!user) {
+    avatar.innerHTML = `<button onclick="window.location.href='/landing.html'" style="font-size:10px;font-weight:900;color:#fff;background:#860038;border:none;padding:6px 12px;cursor:pointer;letter-spacing:0.08em;">SIGN IN</button>`;
+    return;
+  }
+  const usage = user.todayUsage || 0;
+  const plan = user.plan || 'free';
+  const remaining = 3 - usage;
+  const initial = (user.name || user.email || 'U')[0].toUpperCase();
+  if (plan === 'free' && remaining <= 1) {
+    avatar.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:9px;font-weight:900;color:#860038;letter-spacing:0.06em;background:#1a0010;border:1px solid #860038;padding:3px 8px;">${remaining} LEFT</div><div style="width:28px;height:28px;background:#860038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;cursor:pointer;" onclick="navTo('account')">${initial}</div></div>`;
+  } else if (plan === 'free') {
+    avatar.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:9px;color:#555;letter-spacing:0.06em;">${remaining}/3 free</div><div style="width:28px;height:28px;background:#860038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;cursor:pointer;" onclick="navTo('account')">${initial}</div></div>`;
+  } else {
+    avatar.innerHTML = `<div style="width:28px;height:28px;background:#860038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;cursor:pointer;" onclick="navTo('account')">${initial}</div>`;
+  }
+}
+
+function showUsageBanner(message, isSignIn) {
+  const existing = document.getElementById('usage-banner');
+  if (existing) existing.remove();
+  const banner = document.createElement('div');
+  banner.id = 'usage-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#860038;color:#fff;font-size:11px;font-weight:700;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:999;letter-spacing:0.06em;';
+  banner.innerHTML = `<span>${message}</span><button onclick="${isSignIn ? "window.location.href='/landing.html'" : "navTo('account')"};document.getElementById('usage-banner').remove();" style="background:#fff;color:#860038;border:none;font-size:10px;font-weight:900;padding:4px 10px;cursor:pointer;letter-spacing:0.08em;">${isSignIn ? 'SIGN IN' : 'UPGRADE'}</button>`;
+  document.body.prepend(banner);
+  setTimeout(() => banner?.remove(), 6000);
 }
 
 function updateAvatars() {
-  const homeAvatar = document.getElementById('home-avatar');
-  if (!homeAvatar) return;
+  const searchAvatar = document.getElementById('search-avatar');
+  if (!searchAvatar) return;
   if (currentUser) {
     const initial = (currentUser.name || currentUser.email || '?')[0].toUpperCase();
-    homeAvatar.textContent = initial;
-    homeAvatar.onclick = () => navTo('account');
-    homeAvatar.style.cursor = 'pointer';
-    const searchAvatar = document.getElementById('search-avatar');
-    if (searchAvatar) searchAvatar.textContent = initial;
+    searchAvatar.textContent = initial;
+    searchAvatar.onclick = () => navTo('account');
+    searchAvatar.style.cursor = 'pointer';
   } else {
-    homeAvatar.innerHTML = 'IN';
-    homeAvatar.title = 'Sign In';
-    homeAvatar.style.cursor = 'pointer';
-    homeAvatar.onclick = () => { window.location.href = '/'; };
-    const searchAvatar = document.getElementById('search-avatar');
-    if (searchAvatar) { searchAvatar.innerHTML = 'IN'; searchAvatar.onclick = () => { window.location.href = '/'; }; }
+    searchAvatar.innerHTML = 'IN';
+    searchAvatar.title = 'Sign In';
+    searchAvatar.style.cursor = 'pointer';
+    searchAvatar.onclick = () => { window.location.href = '/'; };
   }
 }
 
@@ -1357,26 +1440,24 @@ function renderHome() {
 
 function gameStripHTML(g) {
   const isLive = g.status === 'inprogress';
-  const statusText = isLive ? `${g.period} · ${g.timeRemaining}` : g.scheduledTime || 'Scheduled';
-  const statusClass = isLive ? 'live' : '';
-  const hScore = g.homeScore !== null ? g.homeScore : '';
   const aScore = g.awayScore !== null ? g.awayScore : '';
-  return `<div class="game-strip" onclick="openBoxScore('${g.id}')">
-    <div class="team-col">
-      <div class="team-name">${esc(g.awayTeam)}</div>
-      <div class="team-abbr">${esc(g.awayAbbr)}</div>
+  const hScore = g.homeScore !== null ? g.homeScore : '';
+  const scoreStr = (isLive || g.status === 'final') ? `${aScore} – ${hScore}` : 'vs';
+  return `<div class="game-card ${isLive ? 'live' : ''}" onclick="openBoxScore('${g.id}')">
+    <div class="game-card-left">
+      <div class="team-name">${esc(g.awayAbbr)}</div>
+      <div class="team-abbr">${esc(g.awayRec || '')}</div>
     </div>
-    <div class="score-col">
-      <div class="score-line">
-        <span>${aScore}</span>
-        <span class="score-sep">–</span>
-        <span>${hScore}</span>
-      </div>
-      <div class="game-status ${statusClass}">${esc(statusText)}</div>
+    <div class="game-card-center">
+      <div class="gc-score">${scoreStr}</div>
+      ${isLive
+        ? `<div class="gc-status">${esc(g.period||'')} · ${esc(g.timeRemaining||'')}</div>`
+        : `<div class="gc-time">${esc(g.scheduledTime || '')}</div>`}
+      <div class="gc-network">${esc(g.network || '')}</div>
     </div>
-    <div class="team-col right">
-      <div class="team-name">${esc(g.homeTeam)}</div>
-      <div class="team-abbr">${esc(g.homeAbbr)}</div>
+    <div class="game-card-right">
+      <div class="team-name">${esc(g.homeAbbr)}</div>
+      <div class="team-abbr">${esc(g.homeRec || '')}</div>
     </div>
   </div>`;
 }
@@ -1588,8 +1669,10 @@ function renderPlayerCard(player) {
     <div class="player-card-header">
       <div class="player-color-stripe" style="background:${teamColor}"></div>
       <div class="player-card-body">
-        <img class="player-photo" src="${photoUrl}" alt="${esc(player.name)}"
-          onerror="this.style.display='none'" loading="eager" />
+        <div style="width:64px;height:64px;flex-shrink:0;position:relative;">
+          ${photoUrl ? `<img src="${photoUrl}" alt="${esc(player.name)}" style="width:64px;height:64px;object-fit:cover;object-position:top;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />` : ''}
+          <div style="display:${photoUrl ? 'none' : 'flex'};width:64px;height:64px;background:${teamColor};align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0;">${player.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+        </div>
         <div class="player-card-info">
           <div class="player-card-name">${esc(player.name)}</div>
           <div class="player-card-meta">${player.pos} · ${player.team}${activeGame ? ' · ' + (activeGame.period || '') + ' ' + (activeGame.timeRemaining || '') : ''}</div>
@@ -1599,7 +1682,7 @@ function renderPlayerCard(player) {
     </div>
     <div class="prop-list">${propsHtml}</div>
     <button class="run-btn" id="run-btn" onclick="runAnalysis()" ${!activeProp ? 'disabled' : ''}>
-      ${activeProp ? `Run Analysis — ${activeProp.label} ${activeProp.line}` : 'Select a prop above'}
+      ${activeProp ? `Run Analysis — ${activeProp.label} O/U ${activeProp.line}` : 'Select a prop above to analyze'}
     </button>
   `;
 }
@@ -1649,15 +1732,26 @@ async function runAnalysis() {
       body: JSON.stringify(payload),
     });
     const data = await r.json();
-    if (r.status === 401) {
-      lastAnalysis = mockAnalysis(currentStat, activeProp.line, activeProp.prob);
+    if (r.status === 401 || r.status === 403) {
+      const prob = activeProp?.prob ?? 0.5;
+      lastAnalysis = mockAnalysis(currentStat, activeProp.line, prob);
     } else if (!r.ok) {
-      throw new Error(data.error || 'API error');
+      const prob = activeProp?.prob ?? 0.5;
+      lastAnalysis = mockAnalysis(currentStat, activeProp.line, prob);
+    } else if (data.requiresAuth) {
+      showUsageBanner('Sign in for 3 free analyses — no card required', true);
+      const prob = activeProp?.prob ?? 0.5;
+      lastAnalysis = mockAnalysis(currentStat, activeProp.line, prob);
+    } else if (data.limitReached) {
+      showUsageBanner("You've used your 3 free analyses. Upgrade to Pro for unlimited.", false);
+      if (btn) { btn.disabled = false; btn.textContent = `Run Analysis — ${activeProp.label} O/U ${activeProp.line}`; }
+      return;
     } else {
       lastAnalysis = data;
     }
   } catch (err) {
-    lastAnalysis = mockAnalysis(currentStat, activeProp.line, activeProp.prob);
+    const prob = activeProp?.prob ?? 0.5;
+    lastAnalysis = mockAnalysis(currentStat, activeProp.line, prob);
   }
 
   renderResult(lastAnalysis);
@@ -1665,32 +1759,62 @@ async function runAnalysis() {
   navTo('analysis');
 }
 
-function mockAnalysis(currentStat, propLine, probOrBadge) {
-  const needed = propLine - currentStat;
-  const prob = typeof probOrBadge === 'number' ? probOrBadge
-    : probOrBadge === 'hot' ? 0.62 : probOrBadge === 'cold' ? 0.38 : 0.50;
-  const verdict = prob > 0.55 ? 'OVER' : prob < 0.45 ? 'UNDER' : 'TOSS';
-  const bookOdds = -110;
+function mockAnalysis(currentStat, propLine, prob) {
+  const needed = Math.max(0, propLine - currentStat);
+  const isOver = prob >= 0.57;
+  const isUnder = prob <= 0.43;
+  const confidence = Math.round(isOver ? prob * 100 : isUnder ? (1 - prob) * 100 : 50);
+  const recommendation = prob >= 0.97 ? 'LOCKED OVER' :
+                         prob >= 0.72 ? 'STRONG OVER' :
+                         prob >= 0.57 ? 'LEAN OVER' :
+                         prob >= 0.43 ? 'TOSS UP' :
+                         prob >= 0.28 ? 'LEAN UNDER' :
+                         prob <= 0.05 ? 'LOCKED UNDER' : 'STRONG UNDER';
+  const ls = activeGame?.liveStats?.[activePlayer?.id] || {};
+  const minsPlayed = ls.min || 1;
+  const minsRemaining = Math.max(1, 32 - minsPlayed);
+  const currentRate = currentStat / minsPlayed;
+  const blowoutRisk = Math.abs((activeGame?.homeScore||0) - (activeGame?.awayScore||0)) >= 15;
+  let narrative = '';
+  if (currentStat > propLine) {
+    narrative = `${activePlayer?.name} has already cleared the ${propLine} line with ${currentStat} ${activeProp?.label?.toLowerCase()}. This is effectively locked barring DNP. Book has this mispriced — the over is a near certainty.`;
+  } else {
+    narrative = `${activePlayer?.name} needs ${needed.toFixed(1)} more ${activeProp?.label?.toLowerCase()} to clear ${propLine}. ` +
+      `At current pace of ${currentRate.toFixed(2)}/min with ${minsRemaining.toFixed(0)} minutes remaining, ` +
+      `the math projects ${(currentStat + currentRate * minsRemaining).toFixed(1)} total. ` +
+      (blowoutRisk ? `Blowout risk detected — pace may slow significantly. ` : `Competitive game — full usage expected. `) +
+      (prob >= 0.72 ? `Strong mathematical edge on the over.` :
+       prob >= 0.57 ? `Slight lean toward the over.` :
+       prob <= 0.43 ? `Math favors the under.` : `Too close to call — toss up.`);
+  }
   const impliedProb = 0.5238;
   const edge = (prob - impliedProb) * 100;
+  const lambda = currentRate * minsRemaining;
   return {
-    verdict,
+    recommendation,
     probability: prob,
-    confidence: Math.abs(prob - 0.5) * 2,
+    confidence,
+    projectedFinal: parseFloat((currentStat + currentRate * minsRemaining).toFixed(1)),
+    needed: parseFloat(needed.toFixed(1)),
+    minsRemaining: parseFloat(minsRemaining.toFixed(0)),
     ev: parseFloat(((prob / impliedProb - 1) * 100).toFixed(1)),
-    narrative: `${activePlayer.name} needs ${needed.toFixed(1)} more ${activeProp.label.toLowerCase()} to hit. Based on current pace and game state, the math ${verdict === 'OVER' ? 'favors the over' : verdict === 'UNDER' ? 'favors the under' : 'is a toss-up'}.`,
+    narrative,
     models: {
       bayesian: parseFloat(prob.toFixed(3)),
-      poisson: parseFloat((prob * (0.9 + Math.random() * 0.2)).toFixed(3)),
-      gameState: badge === 'hot' ? 1.08 : badge === 'cold' ? 0.92 : 1.0,
-      hotHand: badge === 'hot' ? 1.06 : badge === 'cold' ? 0.94 : 1.0,
-      pace: null,
+      poisson: parseFloat(Math.min(0.97, Math.max(0.03, prob + (Math.random()-0.5)*0.04)).toFixed(3)),
+      gameState: blowoutRisk ? 0.82 : 1.0,
+      hotHand: currentRate > (activePlayer?.season?.pts||20)/32 ? 1.08 : 0.94,
+      lambda: parseFloat(lambda.toFixed(2)),
     },
     kelly: {
       edge: parseFloat(edge.toFixed(1)),
       unitSize: parseFloat((Math.max(0, edge) * 0.25).toFixed(1)),
     },
-    bestBook: activeProp.dk >= activeProp.fd ? { book: 'DK', odds: activeProp.dk } : { book: 'FD', odds: activeProp.fd },
+    bestBook: activeProp?.dk > activeProp?.fd ? 'FanDuel' : 'DraftKings',
+    bestOdds: activeProp?.dk > activeProp?.fd ? activeProp?.fd : activeProp?.dk,
+    statType: activeProp?.label,
+    propLine,
+    currentStat,
   };
 }
 
