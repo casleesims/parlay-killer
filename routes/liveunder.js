@@ -2265,158 +2265,255 @@ function resolvePlayerName(name) {
   return nameAliases[lower] || lower;
 }
 
-// ── MLB binomial helper ───────────────────────────────────
-function mlbBinomialProb(n, k, p) {
-  if (n <= 0) return k === 0 ? 1 : 0;
-  if (k > n)  return 0;
-  let comb = 1;
-  for (let i = 0; i < k; i++) comb *= (n - i) / (i + 1);
-  return comb * Math.pow(p, k) * Math.pow(1 - p, n - k);
+// ── MATH ENGINE ──────────────────────────────────────────
+
+// Model 2: Poisson probability P(X >= needed)
+function poissonProb(lambda, needed) {
+  if (lambda <= 0) return needed <= 0 ? 1 : 0;
+  if (needed <= 0) return 1;
+  let cumulative = 0;
+  const maxK = Math.min(Math.floor(needed) - 1, 50);
+  for (let k = 0; k <= maxK; k++) {
+    let term = Math.exp(-lambda);
+    for (let i = 1; i <= k; i++) term *= lambda / i;
+    cumulative += term;
+  }
+  return Math.max(0, Math.min(1, 1 - cumulative));
+}
+
+// Model 3: Game state multipliers
+function gameStateMultiplier(differential, period, isOT) {
+  const absDiff = Math.abs(differential);
+  const periodNum = isOT ? 5 : period;
+
+  const blowout = absDiff >= 20 ? 0.50 :
+                  absDiff >= 15 ? 0.68 :
+                  absDiff >= 10 ? 0.82 :
+                  absDiff >= 6  ? 0.92 : 1.0;
+
+  const closeGame = absDiff <= 3 && periodNum >= 3 ? 1.12 :
+                    absDiff <= 5 && periodNum >= 3 ? 1.06 : 1.0;
+
+  const fourthQ = periodNum === 4 && absDiff <= 5 ? 1.08 : 1.0;
+
+  return { blowout, closeGame, fourthQ, combined: blowout * closeGame * fourthQ };
+}
+
+// Model 4: Hot hand momentum
+function hotHandMultiplier(currentStat, minutesPlayed, seasonRate, gameWeight) {
+  if (minutesPlayed < 4) return 1.0;
+  const observedRate = currentStat / minutesPlayed;
+  const cv = 0.30;
+  const zScore = (observedRate - seasonRate) / (seasonRate * cv + 0.001);
+  const clamped = Math.max(-2, Math.min(2, zScore));
+  const momentum = 1 + (clamped * 0.06 * gameWeight);
+  return Math.max(0.88, Math.min(1.12, momentum));
+}
+
+// Model 5: Defensive rating adjustment
+function defRatingAdjustment(oppDefRating) {
+  if (!oppDefRating) return 1.0;
+  const leagueAvg = 112.5;
+  const raw = leagueAvg / oppDefRating;
+  return Math.max(0.88, Math.min(1.12, 2 - raw));
+}
+
+// Model 6: Pace projection for game totals
+function paceProjection(homeScore, awayScore, minutesPlayed, minutesRemaining, differential) {
+  const totalPoints = homeScore + awayScore;
+  if (minutesPlayed < 2) return null;
+  const currentPace = totalPoints / minutesPlayed;
+  const blowoutDampener = Math.abs(differential) >= 15 ? 0.80 :
+                          Math.abs(differential) >= 10 ? 0.90 : 1.0;
+  const projectedFinal = totalPoints + (currentPace * minutesRemaining * blowoutDampener);
+  return {
+    currentPace: parseFloat(currentPace.toFixed(2)),
+    projectedFinal: parseFloat(projectedFinal.toFixed(1)),
+    totalSoFar: totalPoints,
+    minutesRemaining: parseFloat(minutesRemaining.toFixed(1))
+  };
+}
+
+// Model 7: Alt line EV scanner
+function altLineEV(trueProb, bookOdds) {
+  const bookProb = bookOdds < 0
+    ? Math.abs(bookOdds) / (Math.abs(bookOdds) + 100)
+    : 100 / (bookOdds + 100);
+  const netPayout = bookOdds > 0 ? bookOdds : 10000 / Math.abs(bookOdds);
+  const ev = (trueProb * netPayout) - ((1 - trueProb) * 100);
+  const edge = trueProb - bookProb;
+  return { ev: parseFloat(ev.toFixed(2)), edge: parseFloat((edge * 100).toFixed(1)), isPositive: ev > 0 };
+}
+
+// Model 8: Quarter Kelly criterion
+function kellyCriterion(trueProb, bookOdds, bankroll = 1000) {
+  const netOdds = bookOdds > 0 ? bookOdds / 100 : 100 / Math.abs(bookOdds);
+  const fullKelly = (trueProb * netOdds - (1 - trueProb)) / netOdds;
+  const quarterKelly = Math.max(0, fullKelly * 0.25);
+  return {
+    edge: parseFloat((fullKelly * 100).toFixed(1)),
+    unitSize: parseFloat((quarterKelly * 100).toFixed(1)),
+    suggestedBet: parseFloat((bankroll * quarterKelly).toFixed(2))
+  };
+}
+
+// Model 1: Bayesian blend — core of the engine
+function bayesianBlend(seasonRate, currentStat, minutesPlayed, totalMinutes) {
+  const gameWeight = Math.min(minutesPlayed / totalMinutes, 0.85);
+  const seasonWeight = 1 - gameWeight;
+  const observedRate = minutesPlayed > 0 ? currentStat / minutesPlayed : seasonRate;
+  const blendedRate = (seasonWeight * seasonRate) + (gameWeight * observedRate);
+  return { blendedRate, gameWeight, seasonWeight, observedRate };
 }
 
 // ── NBA analysis ──────────────────────────────────────────
-function analyzeNBA({ playerName, statType, currentStat, propLine, period, timeRemaining, homeScore, awayScore, liveStats }) {
-  const qcMap = { Q1: 0, Q2: 1, Q3: 2, Q4: 3, OT: 4 };
+function analyzeNBA({ playerName, statType, currentStat, propLine, period, timeRemaining, homeScore, awayScore, liveStats, oppDefRating }) {
+  const qcMap = { Q1: 1, Q2: 2, Q3: 3, Q4: 4, OT: 5 };
   const timeRemainingMins = parseTimeRemaining(timeRemaining);
   const isOT = period === 'OT';
-  const qc   = qcMap[period] ?? 0;
-  const qNum = isOT ? 5 : qc + 1;
+  const periodNum = qcMap[period] ?? 1;
 
+  // Minutes played and remaining
   let minsPlayed, minsRemaining;
   if (isOT) {
-    minsPlayed    = 48 + Math.max(0, 5 - Math.min(timeRemainingMins, 5));
+    minsPlayed = 48 + Math.max(0, 5 - Math.min(timeRemainingMins, 5));
     minsRemaining = Math.max(0, timeRemainingMins);
   } else {
-    minsPlayed    = qc * 12 + Math.max(0, 12 - Math.min(timeRemainingMins, 12));
-    minsRemaining = Math.max(0, timeRemainingMins + (3 - qc) * 12);
+    minsPlayed = (periodNum - 1) * 12 + Math.max(0, 12 - Math.min(timeRemainingMins, 12));
+    minsRemaining = Math.max(0, timeRemainingMins + (4 - periodNum) * 12);
   }
 
   if (minsPlayed < 0.5) {
-    return { error: 'Not enough playing time to calculate pace. Enter time remaining.' };
+    return { error: 'Not enough playing time. Enter time remaining.' };
   }
 
-  const statLabel  = statType || 'Points';
-  const homeSc     = parseFloat(homeScore) || 0;
-  const awaySc     = parseFloat(awayScore) || 0;
-  const isBlowout  = Math.abs(homeSc - awaySc) >= 10;
+  const homeSc = parseFloat(homeScore) || 0;
+  const awaySc = parseFloat(awayScore) || 0;
+  const differential = homeSc - awaySc;
+  const statLabel = statType || 'Points';
+  const statTypeLower = statLabel.toLowerCase();
 
-  // ── Data source priority: database → league averages ──────
-  // (BDL free tier has no stats endpoint — rates always come from DB)
+  // Get player data
   const dbPlayer = playerStats[resolvePlayerName(playerName)];
-  let pacePtsPerMin, paceRebPerMin, paceAstPerMin, usageRate, dataSource;
+  let seasonRate, dataSource;
 
   if (dbPlayer) {
-    pacePtsPerMin = dbPlayer.ptsPerMin;
-    paceRebPerMin = dbPlayer.rebPerMin;
-    paceAstPerMin = dbPlayer.astPerMin;
-    usageRate     = dbPlayer.usageRate;
-    dataSource    = 'database';
+    seasonRate = statTypeLower === 'points'   ? dbPlayer.ptsPerMin :
+                 statTypeLower === 'rebounds' ? dbPlayer.rebPerMin :
+                 statTypeLower === 'assists'  ? dbPlayer.astPerMin :
+                 dbPlayer.ptsPerMin + dbPlayer.rebPerMin + dbPlayer.astPerMin;
+    dataSource = 'database';
   } else {
-    pacePtsPerMin = 0.55;
-    paceRebPerMin = 0.18;
-    paceAstPerMin = 0.14;
-    usageRate     = 0.25;
-    dataSource    = 'estimate';
+    seasonRate = statTypeLower === 'points'   ? 0.55 :
+                 statTypeLower === 'rebounds' ? 0.18 :
+                 statTypeLower === 'assists'  ? 0.14 : 0.87;
+    dataSource = 'estimate';
   }
 
-  // Apply blowout reduction for high-usage players sitting late
-  if (isBlowout && period === 'Q4' && usageRate > 0.28) {
-    pacePtsPerMin *= 0.65;
-    paceRebPerMin *= 0.70;
-    paceAstPerMin *= 0.70;
-  }
+  // Model 1: Bayesian blend
+  const { blendedRate, gameWeight } = bayesianBlend(seasonRate, currentStat, minsPlayed, dbPlayer?.minPerGame || 32);
 
-  const statTypeLower = statLabel.toLowerCase();
-  let relevantPace;
-  if      (statTypeLower === 'points')   relevantPace = pacePtsPerMin;
-  else if (statTypeLower === 'rebounds') relevantPace = paceRebPerMin;
-  else if (statTypeLower === 'assists')  relevantPace = paceAstPerMin;
-  else relevantPace = pacePtsPerMin + paceRebPerMin + paceAstPerMin; // PRA
+  // Model 3: Game state
+  const gameState = gameStateMultiplier(differential, periodNum, isOT);
 
-  const projectedFinal = parseFloat((currentStat + relevantPace * Math.max(minsRemaining, 0)).toFixed(1));
-  const needed         = Math.max(0, propLine - currentStat);
-  const observedPace   = currentStat / Math.max(minsPlayed, 1);
-  const paceRatio      = minsRemaining > 0 && relevantPace > 0
-    ? (needed / minsRemaining) / relevantPace
-    : (needed <= 0 ? 0 : 999);
+  // Model 4: Hot hand
+  const momentum = hotHandMultiplier(currentStat, minsPlayed, seasonRate, gameWeight);
 
+  // Model 5: Defensive rating
+  const defAdj = defRatingAdjustment(oppDefRating);
+
+  // Final adjusted rate
+  const adjustedRate = blendedRate * gameState.combined * momentum * defAdj;
+
+  // Model 2: Poisson projection
+  const needed = Math.max(0, propLine - currentStat);
+  const lambda = adjustedRate * minsRemaining;
+  const probability = poissonProb(lambda, needed);
+  const projectedFinal = parseFloat((currentStat + adjustedRate * minsRemaining).toFixed(1));
+
+  // Model 6: Game pace
+  const pace = paceProjection(homeSc, awaySc, minsPlayed, minsRemaining, differential);
+
+  // Model 7: Alt line EV (assume -110 as default book odds)
+  const bookOdds = -110;
+  const evData = altLineEV(probability, bookOdds);
+
+  // Model 8: Kelly
+  const kelly = kellyCriterion(probability, bookOdds);
+
+  // Signals
   const signals = [];
-  let score = 50;
 
   if (projectedFinal > propLine * 1.08) {
-    score += 25;
-    signals.push({ type: 'over',    text: `Projects to ${projectedFinal} — ${((projectedFinal / propLine - 1) * 100).toFixed(0)}% above the ${propLine} line` });
+    signals.push({ type: 'over', text: `Projects to ${projectedFinal} — ${((projectedFinal / propLine - 1) * 100).toFixed(0)}% above the ${propLine} line` });
   } else if (projectedFinal < propLine * 0.92) {
-    score -= 25;
-    signals.push({ type: 'under',   text: `Projects to ${projectedFinal} — ${((1 - projectedFinal / propLine) * 100).toFixed(0)}% below the ${propLine} line` });
+    signals.push({ type: 'under', text: `Projects to ${projectedFinal} — ${((1 - projectedFinal / propLine) * 100).toFixed(0)}% below the ${propLine} line` });
   } else {
     signals.push({ type: 'neutral', text: `Projects to ${projectedFinal} — right on the ${propLine} line` });
   }
 
-  if (paceRatio < 0.80) {
-    score += 20;
-    signals.push({ type: 'over',    text: `Well ahead of needed pace — only needs ${(paceRatio * 100).toFixed(0)}% of current rate to hit the over` });
-  } else if (paceRatio > 1.25) {
-    score -= 20;
-    signals.push({ type: 'under',   text: `Needs ${((paceRatio - 1) * 100).toFixed(0)}% acceleration from current rate to clear the line` });
-  } else {
-    signals.push({ type: 'neutral', text: `Tracking at ${(paceRatio * 100).toFixed(0)}% of required pace` });
+  if (gameState.blowout < 0.80) {
+    signals.push({ type: 'under', text: `${Math.abs(differential)}-point blowout in ${period} — reduced minutes likely (${Math.round(gameState.blowout * 100)}% rate adjustment)` });
   }
-
+  if (gameState.closeGame > 1.05) {
+    signals.push({ type: 'over', text: `Close game in ${period} — star usage up (${Math.round((gameState.closeGame - 1) * 100)}% boost applied)` });
+  }
+  if (momentum > 1.06) {
+    signals.push({ type: 'over', text: `Running hot — ${(currentStat / minsPlayed).toFixed(2)} per min vs ${seasonRate.toFixed(2)} season rate` });
+  } else if (momentum < 0.94) {
+    signals.push({ type: 'under', text: `Running cold — ${(currentStat / minsPlayed).toFixed(2)} per min vs ${seasonRate.toFixed(2)} season rate` });
+  }
   if (minsRemaining < 8 && needed >= 6) {
-    score -= 20;
     signals.push({ type: 'under', text: `Only ${minsRemaining.toFixed(1)} min left — needs ${needed.toFixed(1)} more ${statLabel.toLowerCase()}` });
-  } else if (minsRemaining > 20 && needed <= propLine * 0.3) {
-    score += 15;
-    signals.push({ type: 'over', text: `Plenty of time with only ${needed.toFixed(1)} more needed` });
+  }
+  if (evData.isPositive) {
+    signals.push({ type: 'over', text: `+EV play — math edge of ${evData.edge}% over book's implied probability` });
   }
 
-  if (isBlowout && qNum >= 3) {
-    score -= 15;
-    signals.push({ type: 'under', text: `Blowout by ${Math.abs(homeSc - awaySc)} in ${period} — starters may see reduced minutes` });
-  }
-
-  score = Math.max(0, Math.min(100, score));
-
+  // Recommendation
   let recommendation, confidence;
-  if      (score >= 75) { recommendation = 'STRONG OVER';  confidence = score; }
-  else if (score >= 58) { recommendation = 'LEAN OVER';    confidence = score; }
-  else if (score >= 43) { recommendation = 'TOSS UP';      confidence = Math.round(50 + Math.abs(score - 50)); }
-  else if (score >= 26) { recommendation = 'LEAN UNDER';   confidence = 100 - score; }
-  else                  { recommendation = 'STRONG UNDER'; confidence = 100 - score; }
+  if      (probability >= 0.72) { recommendation = 'STRONG OVER';  confidence = Math.round(probability * 100); }
+  else if (probability >= 0.58) { recommendation = 'LEAN OVER';    confidence = Math.round(probability * 100); }
+  else if (probability >= 0.42) { recommendation = 'TOSS UP';      confidence = Math.round(50 + Math.abs(probability * 100 - 50)); }
+  else if (probability >= 0.28) { recommendation = 'LEAN UNDER';   confidence = Math.round((1 - probability) * 100); }
+  else                          { recommendation = 'STRONG UNDER'; confidence = Math.round((1 - probability) * 100); }
 
-  const ratioDir = paceRatio > 1
-    ? `${Math.round((paceRatio - 1) * 100)}% faster than current pace`
-    : `${Math.round((1 - paceRatio) * 100)}% slower than current pace`;
-
-  let explanation;
-  if (dataSource === 'database') {
-    explanation  = `Based on ${playerName}'s season average of ${relevantPace.toFixed(2)} ${statLabel.toLowerCase()} per minute and ${(usageRate * 100).toFixed(1)}% usage rate, the projection is ${projectedFinal} against a line of ${propLine}. `;
-  } else {
-    explanation  = `Player not in database — using league average estimates. At ${observedPace.toFixed(2)} ${statLabel.toLowerCase()} per minute (observed pace), ${playerName} projects to finish with ${projectedFinal} against a line of ${propLine}. `;
-  }
-  explanation += `${needed.toFixed(1)} more needed in ${minsRemaining.toFixed(1)} min — requiring ${ratioDir}.`;
-  if (isBlowout && qNum >= 3 && usageRate > 0.28) {
-    explanation += ` High-usage player in a ${Math.abs(homeSc - awaySc)}-point blowout — significant minute reduction likely.`;
-  } else if (isBlowout && qNum >= 3) {
-    explanation += ` Blowout situation in ${period} — reduced starter minutes possible.`;
-  } else if (minsRemaining < 8) {
-    explanation += ` Limited time remaining makes a significant pace change unlikely.`;
-  } else {
-    explanation += ` Meaningful time remains — pace could shift in either direction.`;
-  }
+  // Plain English explanation
+  const explanation = [
+    dataSource === 'database'
+      ? `${playerName} projects to ${projectedFinal} ${statLabel.toLowerCase()} based on Bayesian blend of ${(seasonRate).toFixed(2)}/min season rate and ${(currentStat/Math.max(minsPlayed,1)).toFixed(2)}/min today (${Math.round(gameWeight*100)}% weight on today's performance).`
+      : `Using league average estimates — ${playerName} projects to ${projectedFinal} ${statLabel.toLowerCase()}.`,
+    `Needs ${needed.toFixed(1)} more in ${minsRemaining.toFixed(1)} min at ${(adjustedRate).toFixed(2)}/min (adjusted for game state, momentum, defense).`,
+    gameState.blowout < 0.80 ? `Blowout alert: ${Math.abs(differential)}-point lead reduces projected rate by ${Math.round((1-gameState.blowout)*100)}%.` : '',
+    gameState.closeGame > 1.05 ? `Close game in ${period}: star usage boosted ${Math.round((gameState.closeGame-1)*100)}%.` : '',
+    momentum > 1.06 ? `Hot hand detected: running ${Math.round((momentum-1)*100)}% above season pace.` : '',
+    evData.isPositive ? `Book edge: ${evData.edge}% mathematical advantage over implied probability.` : '',
+  ].filter(Boolean).join(' ');
 
   const playerDbInfo = buildNBADbInfo(playerName, liveStats, dbPlayer, dataSource);
 
   return {
-    sport: 'NBA', recommendation, confidence,
-    projectedFinal, needed: parseFloat(needed.toFixed(1)),
+    sport: 'NBA',
+    recommendation,
+    confidence,
+    probability: parseFloat((probability * 100).toFixed(1)),
+    projectedFinal,
+    needed: parseFloat(needed.toFixed(1)),
     minsRemaining: parseFloat(minsRemaining.toFixed(1)),
-    pace: parseFloat(relevantPace.toFixed(2)),
-    paceRatio: parseFloat(paceRatio.toFixed(2)),
-    isBlowout, explanation, signals, statType: statLabel,
-    dataSource, playerDbInfo,
-    disclaimer: 'Projections based on season per-minute rates. Actual performance may vary. Bet responsibly.',
+    adjustedRate: parseFloat(adjustedRate.toFixed(3)),
+    signals,
+    explanation,
+    gameState,
+    momentum: parseFloat(momentum.toFixed(3)),
+    bayesian: { blendedRate: parseFloat(blendedRate.toFixed(3)), gameWeight: parseFloat(gameWeight.toFixed(2)) },
+    ev: evData,
+    kelly,
+    pace,
+    statType: statLabel,
+    dataSource,
+    playerDbInfo,
+    models: ['bayesian', 'poisson', 'game-state', 'hot-hand', 'def-rating', 'pace', 'ev-scanner', 'kelly'],
+    disclaimer: 'Projections use Bayesian + Poisson models with live game state adjustments. Bet responsibly.'
   };
 }
 
@@ -2434,166 +2531,149 @@ function buildNBADbInfo(playerName, liveStats, dbPlayer, dataSource) {
 }
 
 // ── MLB analysis ──────────────────────────────────────────
-function analyzeMLB({ playerName, statType, currentStat, propLine, period, halfInning, liveStats }) {
-  const inningMap = {
-    '1st': 1, '2nd': 2, '3rd': 3, '4th': 4, '5th': 5,
-    '6th': 6, '7th': 7, '8th': 8, '9th': 9, 'Extra': 10,
-  };
-
+function analyzeMLB({ playerName, statType, currentStat, propLine, period, halfInning, homeScore, awayScore, liveStats, oppDefRating }) {
+  const inningMap = { '1st':1,'2nd':2,'3rd':3,'4th':4,'5th':5,'6th':6,'7th':7,'8th':8,'9th':9,'Extra':10 };
   const currentInning = inningMap[period] || 1;
-  const isBottom      = halfInning === 'Bottom';
-  const statLabel     = statType || 'Hits';
-  const needed        = Math.max(0, propLine - currentStat);
+  const isBottom = halfInning === 'Bottom';
+  const statLabel = statType || 'Hits';
+  const needed = Math.max(0, propLine - currentStat);
 
-  // ── Data source priority: live → database → league averages ──
   const dbPlayer = playerStats[resolvePlayerName(playerName)];
-  let baselineRate = 0.255;
-  let paPerGame    = 4.2;
-  let battingOrder = null;
-  let dataSource;
+  let baselineRate, paPerGame, battingOrder, dataSource;
 
-  if (liveStats && liveStats.sport === 'MLB') {
-    baselineRate = liveStats.avg  || 0.255;
-    paPerGame    = liveStats.paPerGame || 4.2;
+  if (liveStats?.sport === 'MLB') {
+    baselineRate = liveStats.avg || 0.255;
+    paPerGame = liveStats.paPerGame || 4.2;
+    battingOrder = dbPlayer?.battingOrder ?? null;
     if (liveStats.ops > 0.900) baselineRate *= 1.06;
     if (liveStats.strikeoutRate > 0.280) baselineRate *= 0.94;
-    // Supplement with DB batting order if available
-    battingOrder = dbPlayer?.battingOrder ?? null;
-    dataSource   = 'live';
+    dataSource = 'live';
   } else if (dbPlayer) {
     baselineRate = dbPlayer.avg;
-    paPerGame    = dbPlayer.paPerGame || 4.2;
+    paPerGame = dbPlayer.paPerGame || 4.2;
+    battingOrder = dbPlayer.battingOrder;
     if (dbPlayer.ops > 0.900) baselineRate *= 1.08;
     else if (dbPlayer.ops < 0.700) baselineRate *= 0.88;
     if (dbPlayer.kRate > 0.280) baselineRate *= 0.94;
     else if (dbPlayer.kRate < 0.150) baselineRate *= 1.04;
-    battingOrder = dbPlayer.battingOrder;
-    dataSource   = 'database';
+    dataSource = 'database';
   } else {
-    dataSource = 'estimate';
+    baselineRate = 0.255; paPerGame = 4.2; dataSource = 'estimate';
   }
 
-  // ── Blended rate ──────────────────────────────────────────
-  const gameProgress         = Math.min(currentInning / 9, 1);
-  const blendWeight          = Math.min(gameProgress * 1.5, 0.7);
-  const paPerInning          = paPerGame / 9;
-  const estimatedPACompleted = Math.max(currentInning * paPerInning, 0.5);
-  const observedRate         = currentStat / estimatedPACompleted;
-  const blendedRate          = baselineRate * (1 - blendWeight) + observedRate * blendWeight;
+  // Game progress
+  const gameProgress = Math.min(currentInning / 9, 1);
+  const blendWeight = Math.min(gameProgress * 1.5, 0.70);
+  const paPerInning = paPerGame / 9;
+  const estimatedPADone = Math.max(currentInning * paPerInning, 0.5);
+  const observedRate = currentStat / estimatedPADone;
 
-  // ── Remaining PAs ─────────────────────────────────────────
-  const halfInningBonus    = isBottom ? paPerInning * 0.5 : 0;
-  const paCompleted        = currentInning * paPerInning;
-  const battingOrderBonus  = battingOrder !== null
-    ? (battingOrder <= 2 ? 0.3 : battingOrder >= 7 ? -0.2 : 0)
-    : 0;
-  const paRemaining        = Math.max(paPerGame - paCompleted - halfInningBonus, 0);
-  const adjustedPARemaining = Math.max(paRemaining + battingOrderBonus, 0);
-  const paRemainingRounded = Math.round(adjustedPARemaining * 10) / 10;
+  // Model 1: Bayesian blend
+  const blendedRate = baselineRate * (1 - blendWeight) + observedRate * blendWeight;
 
-  // ── Binomial probabilities ────────────────────────────────
-  const paInt  = Math.round(adjustedPARemaining);
-  const prob0  = mlbBinomialProb(paInt, 0, blendedRate);
-  const prob1  = mlbBinomialProb(paInt, 1, blendedRate);
-  const prob2p = Math.max(0, 1 - prob0 - prob1);
+  // Model 4: Hot hand for MLB
+  const zScore = (observedRate - baselineRate) / (baselineRate * 0.35 + 0.001);
+  const hotHandMult = Math.max(0.90, Math.min(1.10, 1 + (Math.max(-2, Math.min(2, zScore)) * 0.05 * blendWeight)));
+  const adjustedRate = blendedRate * hotHandMult;
 
-  const projectedFinal = parseFloat((currentStat + blendedRate * adjustedPARemaining).toFixed(2));
+  // Remaining PAs
+  const halfBonus = isBottom ? paPerInning * 0.5 : 0;
+  const orderBonus = battingOrder !== null ? (battingOrder <= 2 ? 0.3 : battingOrder >= 7 ? -0.2 : 0) : 0;
+  const paRemaining = Math.max(paPerGame - (currentInning * paPerInning) - halfBonus + orderBonus, 0);
+  const paRounded = Math.round(paRemaining * 10) / 10;
 
-  // ── Signals & score ───────────────────────────────────────
+  // Model 2: Poisson for PA-based stats
+  function mlbPoisson(pa, rate, n) {
+    if (pa <= 0) return n <= 0 ? 1 : 0;
+    const lambda = rate * pa;
+    return poissonProb(lambda, n);
+  }
+
+  const probability = needed <= 0 ? 0.92 : mlbPoisson(paRemaining, adjustedRate, needed);
+  const projectedFinal = parseFloat((currentStat + adjustedRate * paRemaining).toFixed(2));
+
+  // Model 7: EV
+  const evData = altLineEV(probability, -110);
+
+  // Model 8: Kelly
+  const kelly = kellyCriterion(probability, -110);
+
+  // Model 6: Game pace
+  const homeSc = parseFloat(homeScore) || 0;
+  const awaySc = parseFloat(awayScore) || 0;
+  const inningsPlayed = currentInning + (isBottom ? 0.5 : 0);
+  const totalRuns = homeSc + awaySc;
+  const pacePerInning = inningsPlayed > 0 ? totalRuns / inningsPlayed : 0;
+  const projectedGameTotal = parseFloat((totalRuns + pacePerInning * (9 - inningsPlayed)).toFixed(1));
+
+  // Signals
   const signals = [];
-  let score = 50;
-
   if (needed <= 0) {
-    score = 80;
     signals.push({ type: 'over', text: `Already cleared the ${propLine} line — over is locked in` });
   } else {
-    if (prob0 > 0.55 && propLine <= 1.5) {
-      score -= 18;
-      signals.push({ type: 'under', text: `${(prob0 * 100).toFixed(0)}% chance of going hitless the rest of the way` });
-    } else if (prob2p > 0.35) {
-      score += 18;
-      signals.push({ type: 'over', text: `${(prob2p * 100).toFixed(0)}% chance of 2+ more — favorable for the over` });
-    } else {
-      signals.push({ type: 'neutral', text: `${(prob1 * 100).toFixed(0)}% chance of exactly 1 more — line is a toss-up` });
+    if (paRemaining < 0.5) {
+      signals.push({ type: 'under', text: `Less than 1 PA remaining — may not bat again` });
+    } else if (paRounded >= 1.5 && needed <= 1) {
+      signals.push({ type: 'over', text: `${paRounded} PAs remaining with only ${needed} more needed` });
     }
-
-    if (adjustedPARemaining < 0.5) {
-      score -= 25;
-      signals.push({ type: 'under', text: `Player may not bat again — less than 1 PA estimated remaining` });
-    } else if (adjustedPARemaining >= 1.5 && needed <= 1) {
-      score += 12;
-      signals.push({ type: 'over', text: `${paRemainingRounded} PAs remaining with only ${needed} more needed` });
-    }
-
     if (currentInning >= 5 && currentStat === 0 && needed >= 2) {
-      score -= 15;
-      signals.push({ type: 'under', text: `0 ${statLabel.toLowerCase()} through ${period} with ${needed}+ still needed — cold bat` });
+      signals.push({ type: 'under', text: `0 ${statLabel.toLowerCase()} through ${period} — cold bat with ${needed}+ still needed` });
     }
-
-    if (observedRate > 0.40 && currentInning >= 3 && adjustedPARemaining >= 1) {
-      score += 12;
-      signals.push({ type: 'over', text: `Hot today (${(observedRate * 100).toFixed(0)}% observed rate) — blended model leans over` });
+    if (observedRate > 0.40 && currentInning >= 3) {
+      signals.push({ type: 'over', text: `Hot today — ${(observedRate * 100).toFixed(0)}% observed rate vs ${(baselineRate * 100).toFixed(0)}% season` });
     }
-
-    if (blendedRate < baselineRate * 0.75) {
-      score -= 10;
-      signals.push({ type: 'under', text: `Below season average pace — blended rate ${(blendedRate * 100).toFixed(1)}% vs ${(baselineRate * 100).toFixed(1)}% baseline` });
+    if (hotHandMult > 1.05) {
+      signals.push({ type: 'over', text: `Hot hand detected — blended model boosted ${Math.round((hotHandMult-1)*100)}% above baseline` });
+    }
+    if (evData.isPositive) {
+      signals.push({ type: 'over', text: `+EV: ${evData.edge}% mathematical edge over book's implied probability` });
     }
   }
-
-  score = Math.max(0, Math.min(100, score));
 
   let recommendation, confidence;
-  if      (score >= 75) { recommendation = 'STRONG OVER';  confidence = score; }
-  else if (score >= 58) { recommendation = 'LEAN OVER';    confidence = score; }
-  else if (score >= 43) { recommendation = 'TOSS UP';      confidence = Math.round(50 + Math.abs(score - 50)); }
-  else if (score >= 26) { recommendation = 'LEAN UNDER';   confidence = 100 - score; }
-  else                  { recommendation = 'STRONG UNDER'; confidence = 100 - score; }
+  if      (probability >= 0.72) { recommendation = 'STRONG OVER';  confidence = Math.round(probability * 100); }
+  else if (probability >= 0.58) { recommendation = 'LEAN OVER';    confidence = Math.round(probability * 100); }
+  else if (probability >= 0.42) { recommendation = 'TOSS UP';      confidence = Math.round(50 + Math.abs(probability * 100 - 50)); }
+  else if (probability >= 0.28) { recommendation = 'LEAN UNDER';   confidence = Math.round((1 - probability) * 100); }
+  else                          { recommendation = 'STRONG UNDER'; confidence = Math.round((1 - probability) * 100); }
 
   if (currentInning <= 5) {
-    if (recommendation === 'STRONG OVER')  recommendation = 'LEAN OVER';
+    if (recommendation === 'STRONG OVER') recommendation = 'LEAN OVER';
     if (recommendation === 'STRONG UNDER') recommendation = 'LEAN UNDER';
-    confidence = Math.min(confidence, 65);
+    confidence = Math.min(confidence, 68);
   }
 
-  const gameStageNote = currentInning <= 3
-    ? 'Early in the game — season average is weighted heavily since small samples are unreliable.'
-    : currentInning >= 7
-      ? 'Late in the game — today\'s performance is weighted more heavily.'
-      : 'Mid-game blend of season average and today\'s performance.';
-
-  let explanation;
-  if (dataSource === 'live' && liveStats) {
-    const teamStr = liveStats.teamAbbr ? ` (${liveStats.teamAbbr})` : '';
-    const avgStr  = liveStats.avg?.toFixed(3).replace('0.', '.') || '.255';
-    explanation   = `Based on ${playerName}'s live ${new Date().getFullYear()} season average of ${avgStr}${teamStr} and ${liveStats.paPerGame?.toFixed(1)} PA/game, `;
-    explanation  += `the projection is ${projectedFinal} against a line of ${propLine}. `;
-  } else if (dataSource === 'database' && dbPlayer) {
-    const avgStr      = dbPlayer.avg.toFixed(3).replace('0.', '.');
-    const orderSuffix = ['', 'st', 'nd', 'rd'][battingOrder] || 'th';
-    explanation   = `Based on ${playerName}'s ${avgStr} batting average and ${paPerGame} PA/game (bats ${battingOrder}${orderSuffix}), `;
-    explanation  += `the projection is ${projectedFinal} against a line of ${propLine}. `;
-  } else {
-    explanation   = `Player not in database — using league average estimates. ${playerName} has ${currentStat} ${statLabel.toLowerCase()}(s) through ${currentInning} inning(s) with ~${paRemainingRounded} plate appearances remaining. `;
-  }
-  explanation += `Blended rate of ${(blendedRate * 100).toFixed(1)}% — ${(prob0 * 100).toFixed(0)}% chance of no more ${statLabel.toLowerCase()}, ${(prob1 * 100).toFixed(0)}% chance of exactly one more, ${(prob2p * 100).toFixed(0)}% chance of two or more. ${gameStageNote}`;
+  const explanation = [
+    dataSource === 'live' ? `Live ${new Date().getFullYear()} data: ${(baselineRate*1000/10).toFixed(1)}% avg, ${paPerGame} PA/game.` : dataSource === 'database' ? `Season data: .${(baselineRate*1000).toFixed(0)} avg, ${paPerGame} PA/game.` : 'League average estimates used.',
+    `Bayesian blend rate: ${(adjustedRate*100).toFixed(1)}% (${Math.round(blendWeight*100)}% weight on today).`,
+    `${paRounded} PAs estimated remaining. Needs ${needed} more to clear ${propLine}.`,
+    `Projected final: ${projectedFinal}. Game total pace: ${projectedGameTotal} runs.`,
+    evData.isPositive ? `Book edge: ${evData.edge}% mathematical advantage.` : '',
+  ].filter(Boolean).join(' ');
 
   const playerDbInfo = buildMLBDbInfo(playerName, liveStats, dbPlayer, dataSource);
 
   return {
-    sport: 'MLB', recommendation, confidence,
-    projectedFinal, needed: parseFloat(needed.toFixed(1)),
-    inningsRemaining: parseFloat(Math.max(0, 9 - currentInning - (isBottom ? 0.5 : 0)).toFixed(1)),
-    estimatedPARemaining: paRemainingRounded,
+    sport: 'MLB',
+    recommendation,
+    confidence,
+    probability: parseFloat((probability * 100).toFixed(1)),
+    projectedFinal,
+    needed: parseFloat(needed.toFixed(1)),
+    estimatedPARemaining: paRounded,
+    adjustedRate: parseFloat(adjustedRate.toFixed(3)),
     blendedRate: parseFloat(blendedRate.toFixed(3)),
-    explanation, signals, statType: statLabel,
-    dataSource, playerDbInfo,
-    probabilities: {
-      zero:    parseFloat((prob0  * 100).toFixed(1)),
-      one:     parseFloat((prob1  * 100).toFixed(1)),
-      twoPlus: parseFloat((prob2p * 100).toFixed(1)),
-    },
-    disclaimer: 'MLB projections use blended season/observed rates and estimated plate appearances. Lineup changes and pitching matchups affect results. Bet responsibly.',
+    hotHandMultiplier: parseFloat(hotHandMult.toFixed(3)),
+    signals,
+    explanation,
+    ev: evData,
+    kelly,
+    pace: { projectedGameTotal, pacePerInning: parseFloat(pacePerInning.toFixed(2)) },
+    statType: statLabel,
+    dataSource,
+    playerDbInfo,
+    models: ['bayesian', 'poisson', 'hot-hand', 'ev-scanner', 'kelly', 'pace'],
+    disclaimer: 'MLB projections use Bayesian blend + Poisson models with PA estimates. Bet responsibly.'
   };
 }
 
@@ -2623,7 +2703,7 @@ function buildMLBDbInfo(playerName, liveStats, dbPlayer, dataSource) {
 // ── Route ─────────────────────────────────────────────────
 router.post('/', checkUsage, async (req, res) => {
   let { playerName, sport, statType, currentStat, propLine, period,
-        timeRemaining, halfInning, homeScore, awayScore } = req.body;
+        timeRemaining, halfInning, homeScore, awayScore, oppDefRating } = req.body;
 
   if (!playerName || typeof playerName !== 'string' || playerName.length > 60) {
     return res.status(400).json({ error: 'Invalid player name' });
@@ -2659,15 +2739,85 @@ router.post('/', checkUsage, async (req, res) => {
   }
 
   if (sport === 'NBA') {
-    const result = analyzeNBA({ playerName, statType, currentStat, propLine, period, timeRemaining, homeScore, awayScore, liveStats });
+    const result = analyzeNBA({ playerName, statType, currentStat, propLine, period, timeRemaining, homeScore, awayScore, liveStats, oppDefRating });
     return result.error ? res.status(400).json(result) : res.json(result);
   }
   if (sport === 'MLB') {
-    const result = analyzeMLB({ playerName, statType, currentStat, propLine, period, halfInning, homeScore, awayScore, liveStats });
+    const result = analyzeMLB({ playerName, statType, currentStat, propLine, period, halfInning, homeScore, awayScore, liveStats, oppDefRating });
     return result.error ? res.status(400).json(result) : res.json(result);
   }
 
   return res.status(400).json({ error: 'Unsupported sport. Use NBA or MLB.' });
+});
+
+router.post('/game-total', checkUsage, async (req, res) => {
+  let { homeScore, awayScore, period, timeRemaining, bookTotal, sport, altLines } = req.body;
+
+  homeScore = parseFloat(homeScore) || 0;
+  awayScore = parseFloat(awayScore) || 0;
+  bookTotal = parseFloat(bookTotal);
+
+  const timeRemainingMins = parseTimeRemaining(timeRemaining);
+  const isOT = period === 'OT';
+  const periodNum = { Q1:1,Q2:2,Q3:3,Q4:4,OT:5 }[period] || 1;
+
+  let minsPlayed, minsRemaining;
+  if (sport === 'MLB') {
+    const inningMap = {'1st':1,'2nd':2,'3rd':3,'4th':4,'5th':5,'6th':6,'7th':7,'8th':8,'9th':9};
+    const inning = inningMap[period] || 1;
+    minsPlayed = inning * 22;
+    minsRemaining = (9 - inning) * 22;
+  } else {
+    minsPlayed = (periodNum - 1) * 12 + Math.max(0, 12 - Math.min(timeRemainingMins, 12));
+    minsRemaining = Math.max(0, timeRemainingMins + (4 - periodNum) * 12);
+  }
+
+  const totalPoints = homeScore + awayScore;
+  const differential = Math.abs(homeScore - awayScore);
+
+  if (minsPlayed < 1) return res.status(400).json({ error: 'Need more game data' });
+
+  const currentPace = totalPoints / minsPlayed;
+  const blowoutDamp = differential >= 20 ? 0.72 : differential >= 15 ? 0.82 : differential >= 10 ? 0.91 : 1.0;
+  const projectedFinal = parseFloat((totalPoints + currentPace * minsRemaining * blowoutDamp).toFixed(1));
+
+  // Scan alt lines
+  const defaultAltLines = sport === 'NBA'
+    ? [-20, -15, -10, -5, 0, 5, 10, 15, 20].map(d => ({ line: bookTotal + d, odds: d < 0 ? -130 + d * 3 : -110 + d * 2 }))
+    : altLines || [];
+
+  const scannedLines = defaultAltLines.map(al => {
+    const needed = al.line - totalPoints;
+    const lambda = currentPace * minsRemaining * blowoutDamp;
+    const prob = poissonProb(lambda, needed);
+    const ev = altLineEV(prob, al.odds);
+    return {
+      line: al.line,
+      odds: al.odds,
+      probability: parseFloat((prob * 100).toFixed(1)),
+      ...ev,
+      label: al.line < projectedFinal ? 'UNDER' : 'OVER'
+    };
+  }).filter(l => l.isPositive).sort((a, b) => b.ev - a.ev);
+
+  const signals = [];
+  if (differential >= 15) signals.push({ type: 'under', text: `${differential}-point blowout — pace dampened ${Math.round((1-blowoutDamp)*100)}%` });
+  if (projectedFinal < bookTotal - 5) signals.push({ type: 'under', text: `Pace projects ${projectedFinal} — ${(bookTotal - projectedFinal).toFixed(0)} below book total` });
+  if (projectedFinal > bookTotal + 5) signals.push({ type: 'over', text: `Pace projects ${projectedFinal} — ${(projectedFinal - bookTotal).toFixed(0)} above book total` });
+
+  res.json({
+    sport,
+    bookTotal,
+    projectedFinal,
+    currentPace: parseFloat(currentPace.toFixed(2)),
+    blowoutDampener: blowoutDamp,
+    totalSoFar: totalPoints,
+    minsRemaining: parseFloat(minsRemaining.toFixed(1)),
+    positiveEVLines: scannedLines.slice(0, 5),
+    signals,
+    recommendation: projectedFinal < bookTotal ? 'LEAN UNDER' : 'LEAN OVER',
+    models: ['pace-projection', 'poisson', 'ev-scanner']
+  });
 });
 
 module.exports = router;
