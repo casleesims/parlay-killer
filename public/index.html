@@ -103,13 +103,16 @@
 
     /* ── Bottom Nav ──────────────────────────────────────── */
     .bottom-nav {
-      flex-shrink: 0;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
       display: flex;
       align-items: stretch;
       background: var(--s1);
       border-top: 1px solid var(--border);
       height: 56px;
-      z-index: 10;
+      z-index: 100;
     }
     .bottom-nav-item {
       flex: 1;
@@ -130,7 +133,7 @@
       transition: color 0.15s;
     }
     .bottom-nav-item.active { color: var(--primary); }
-    .bottom-nav-item svg { fill: currentColor; }
+    .bottom-nav-item svg { stroke: currentColor; }
 
     /* ── Scrollable body area ────────────────────────────── */
     .screen-body {
@@ -138,6 +141,7 @@
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
+      padding-bottom: 56px; /* reserve space for fixed bottom nav */
     }
 
     /* ── Live badge ──────────────────────────────────────── */
@@ -197,9 +201,10 @@
       color: var(--white);
     }
     .team-abbr {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--dim);
+      font-size: 11px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.08em;
     }
     .score-col {
       width: 80px;
@@ -233,25 +238,65 @@
 
     /* ── Box Score Screen ────────────────────────────────── */
     .score-header {
-      padding: 16px;
+      padding: 0;
       background: var(--s1);
       border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
     .score-matchup {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
+      gap: 8px;
+      padding: 14px 16px 8px;
     }
-    .score-team {
-      font-size: 1.5rem;
+    .score-team-left { text-align: left; }
+    .score-team-right { text-align: right; }
+    .score-abbr {
+      font-size: 11px;
       font-weight: 900;
-      color: var(--white);
+      color: #ffffff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
-    .score-divider {
-      font-size: 1.1rem;
-      color: var(--muted);
-      font-weight: 400;
+    .score-num {
+      font-size: 38px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .score-record {
+      font-size: 8px;
+      color: #444;
+      margin-top: 2px;
+    }
+    .score-center {
+      text-align: center;
+      padding: 0 4px;
+    }
+    .score-period {
+      font-size: 11px;
+      font-weight: 900;
+      color: #860038;
+      letter-spacing: 0.06em;
+    }
+    .score-clock {
+      font-size: 10px;
+      color: #555;
+      margin-top: 3px;
+    }
+    .score-live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #860038;
+      padding: 2px 7px;
+      font-size: 8px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.1em;
+      margin-top: 5px;
     }
     .quarter-chart {
       display: flex;
@@ -415,26 +460,36 @@
     }
     .prop-row {
       display: flex;
-      align-items: center;
-      padding: 13px 16px;
+      flex-direction: column;
       border-bottom: 1px solid var(--border);
-      gap: 12px;
       cursor: pointer;
       transition: background 0.12s;
       -webkit-tap-highlight-color: transparent;
     }
     .prop-row:active { background: var(--s2); }
-    .prop-row.selected { background: rgba(134,0,56,0.12); border-left: 3px solid var(--primary); }
-    .prop-label {
-      flex: 1;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--white);
+    .prop-row.selected { background: #111; border-left: 2px solid #860038; }
+    .prop-main-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px 6px;
     }
-    .prop-line {
-      font-size: 1rem;
-      font-weight: 800;
-      color: var(--white);
+    .prop-type-label {
+      font-size: 9px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .prop-line-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ddd;
+      margin-top: 2px;
+    }
+    .books-row {
+      display: flex;
+      gap: 4px;
+      padding: 0 16px 10px;
     }
     .book-chips {
       display: flex;
@@ -442,28 +497,52 @@
       flex-shrink: 0;
     }
     .book-chip {
-      background: var(--s3);
-      border: 1px solid var(--border2);
-      border-radius: 3px;
-      padding: 3px 6px;
-      font-size: 0.65rem;
+      flex: 1;
+      background: #111;
+      padding: 5px 4px;
+      text-align: center;
+      border: none;
+      border-radius: 0;
+    }
+    .book-chip.best { background: #0a1a00; }
+    .book-name {
+      font-size: 7px;
+      color: #333;
       font-weight: 700;
-      color: var(--dim);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
     }
-    .book-chip.positive { color: var(--over); border-color: rgba(57,255,20,0.3); }
-    .book-chip.negative { color: #ff4444; border-color: rgba(255,68,68,0.3); }
-    .prop-badge {
-      font-size: 0.6rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 2px 6px;
-      border-radius: 3px;
-      flex-shrink: 0;
+    .book-odds {
+      font-size: 11px;
+      font-weight: 900;
+      color: #666;
     }
-    .prop-badge.hot { background: rgba(57,255,20,0.15); color: var(--over); border: 1px solid rgba(57,255,20,0.3); }
-    .prop-badge.cold { background: rgba(134,0,56,0.2); color: #ff6688; border: 1px solid rgba(134,0,56,0.4); }
+    .book-chip.best .book-odds { color: #39ff14; }
+    .best-tag {
+      font-size: 6px;
+      color: #39ff14;
+      font-weight: 700;
+      margin-top: 1px;
+      letter-spacing: 0.06em;
+    }
+    .hot-pill {
+      background: #0d1f00;
+      border: 1px solid #39ff14;
+      color: #39ff14;
+      font-size: 7px;
+      font-weight: 900;
+      padding: 1px 4px;
+      letter-spacing: 0.06em;
+    }
+    .cold-pill {
+      background: #1a0500;
+      border: 1px solid #5a2000;
+      color: #864000;
+      font-size: 7px;
+      font-weight: 900;
+      padding: 1px 4px;
+      letter-spacing: 0.06em;
+    }
 
     .run-btn {
       display: block;
@@ -837,24 +916,6 @@
   <div class="screen-body" id="home-body">
     <div class="spinner-wrap"><div class="spinner"></div><div class="spinner-label">Loading games…</div></div>
   </div>
-  <nav class="bottom-nav">
-    <button class="bottom-nav-item active" onclick="navTo('home')" id="bnav-home">
-      <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 2L2 8v10h5v-5h6v5h5V8L10 2z"/></svg>
-      Home
-    </button>
-    <button class="bottom-nav-item" onclick="navTo('search')" id="bnav-search">
-      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><line x1="13" y1="13" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      Search
-    </button>
-    <button class="bottom-nav-item" onclick="navTo('history')" id="bnav-history">
-      <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 1a9 9 0 1 0 0 18A9 9 0 0 0 10 1zm.5 9.7l-3.5 2-.6-1L9.5 10V5h1v5.7z"/></svg>
-      History
-    </button>
-    <button class="bottom-nav-item" onclick="navTo('account')" id="bnav-account">
-      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-      Account
-    </button>
-  </nav>
 </div>
 
 <!-- ══════════════════════════════════════════════════════ -->
@@ -913,24 +974,6 @@
     <input type="text" class="search-input" id="search-input" placeholder="Search player…" oninput="onSearchInput(this.value)" />
     <div id="search-results"></div>
   </div>
-  <nav class="bottom-nav">
-    <button class="bottom-nav-item" onclick="navTo('home')" id="sbnav-home">
-      <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 2L2 8v10h5v-5h6v5h5V8L10 2z"/></svg>
-      Home
-    </button>
-    <button class="bottom-nav-item active" onclick="navTo('search')" id="sbnav-search">
-      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><line x1="13" y1="13" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      Search
-    </button>
-    <button class="bottom-nav-item" onclick="navTo('history')" id="sbnav-history">
-      <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 1a9 9 0 1 0 0 18A9 9 0 0 0 10 1zm.5 9.7l-3.5 2-.6-1L9.5 10V5h1v5.7z"/></svg>
-      History
-    </button>
-    <button class="bottom-nav-item" onclick="navTo('account')" id="sbnav-account">
-      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-      Account
-    </button>
-  </nav>
 </div>
 
 <!-- ══════════════════════════════════════════════════════ -->
@@ -942,24 +985,6 @@
     <div></div>
   </div>
   <div class="screen-body" id="history-body"></div>
-  <nav class="bottom-nav">
-    <button class="bottom-nav-item" onclick="navTo('home')">
-      <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 2L2 8v10h5v-5h6v5h5V8L10 2z"/></svg>
-      Home
-    </button>
-    <button class="bottom-nav-item" onclick="navTo('search')">
-      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><line x1="13" y1="13" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      Search
-    </button>
-    <button class="bottom-nav-item active" onclick="navTo('history')">
-      <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 1a9 9 0 1 0 0 18A9 9 0 0 0 10 1zm.5 9.7l-3.5 2-.6-1L9.5 10V5h1v5.7z"/></svg>
-      History
-    </button>
-    <button class="bottom-nav-item" onclick="navTo('account')">
-      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-      Account
-    </button>
-  </nav>
 </div>
 
 <!-- ══════════════════════════════════════════════════════ -->
@@ -975,6 +1000,26 @@
   </div>
   <div class="screen-body" id="account-body"></div>
 </div>
+
+<!-- Global Bottom Nav -->
+<nav class="bottom-nav" id="global-bottom-nav">
+  <button class="bottom-nav-item active" onclick="navTo('home')" id="bnav-home">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9L10 3L17 9V18H13V13H7V18H3V9Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Home</span>
+  </button>
+  <button class="bottom-nav-item" onclick="navTo('search')" id="bnav-search">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="6"/><path d="M14 14L18 18" stroke-linecap="round"/></svg>
+    <span>Search</span>
+  </button>
+  <button class="bottom-nav-item" onclick="navTo('history')" id="bnav-history">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="1"/><path d="M6 8H14M6 11H11" stroke-linecap="round"/></svg>
+    <span>History</span>
+  </button>
+  <button class="bottom-nav-item" onclick="navTo('account')" id="bnav-account">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3"/><path d="M3 18C3 15 6.1 13 10 13s7 2 7 5" stroke-linecap="round"/></svg>
+    <span>Account</span>
+  </button>
+</nav>
 
 <!-- toast -->
 <div id="toast"></div>
@@ -992,112 +1037,180 @@ const TEAM_COLORS = {
 };
 
 const PLAYERS = {
-  'shai-gilgeous-alexander': {
-    id: 'shai-gilgeous-alexander', name: 'Shai Gilgeous-Alexander',
-    team: 'OKC', pos: 'G', number: '2', nbaId: '1628983',
-    season: { pts: 32.7, reb: 5.5, ast: 6.4, stl: 2.0 },
-  },
-  'nikola-jokic': {
-    id: 'nikola-jokic', name: 'Nikola Jokic',
-    team: 'DEN', pos: 'C', number: '15', nbaId: '203999',
-    season: { pts: 26.4, reb: 12.4, ast: 9.0, stl: 1.4 },
-  },
-  'jayson-tatum': {
-    id: 'jayson-tatum', name: 'Jayson Tatum',
-    team: 'BOS', pos: 'F', number: '0', nbaId: '1628369',
-    season: { pts: 26.9, reb: 8.1, ast: 5.0, stl: 1.1 },
-  },
-  'karl-anthony-towns': {
-    id: 'karl-anthony-towns', name: "Karl-Anthony Towns",
-    team: 'NYK', pos: 'C', number: '32', nbaId: '1626157',
-    season: { pts: 24.5, reb: 13.7, ast: 3.3, stl: 0.8 },
-  },
-  'lebron-james': {
-    id: 'lebron-james', name: 'LeBron James',
-    team: 'LAL', pos: 'F', number: '23', nbaId: '2544',
-    season: { pts: 23.7, reb: 8.0, ast: 9.4, stl: 1.3 },
-  },
+  // OKC
+  'shai-gilgeous-alexander': { id:'shai-gilgeous-alexander', name:'Shai Gilgeous-Alexander', team:'OKC', pos:'G', number:'2', nbaId:'1628983', season:{ pts:32.7, reb:5.5, ast:6.4 }, spark:[28,35,22,31,22] },
+  'jalen-williams': { id:'jalen-williams', name:'Jalen Williams', team:'OKC', pos:'F', number:'8', nbaId:'1631108', season:{ pts:23.2, reb:4.5, ast:5.9 }, spark:[18,24,21,19,14] },
+  'chet-holmgren': { id:'chet-holmgren', name:'Chet Holmgren', team:'OKC', pos:'C', number:'7', nbaId:'1631096', season:{ pts:18.1, reb:7.9, ast:2.0 }, spark:[14,22,16,18,11] },
+  'lu-dort': { id:'lu-dort', name:'Lu Dort', team:'OKC', pos:'G', number:'5', nbaId:'1629652', season:{ pts:14.2, reb:3.8, ast:1.8 }, spark:[12,8,16,11,8] },
+  'isaiah-joe': { id:'isaiah-joe', name:'Isaiah Joe', team:'OKC', pos:'G', number:'11', nbaId:'1630557', season:{ pts:8.4, reb:2.1, ast:1.4 }, spark:[6,9,4,8,6] },
+  'kenrich-williams': { id:'kenrich-williams', name:'Kenrich Williams', team:'OKC', pos:'F', number:'34', nbaId:'1629016', season:{ pts:5.8, reb:3.2, ast:1.6 }, spark:[4,8,6,5,3] },
+  'aaron-wiggins': { id:'aaron-wiggins', name:'Aaron Wiggins', team:'OKC', pos:'G', number:'21', nbaId:'1641747', season:{ pts:6.2, reb:2.4, ast:0.8 }, spark:[8,4,7,5,9] },
+  'alex-caruso': { id:'alex-caruso', name:'Alex Caruso', team:'OKC', pos:'G', number:'6', nbaId:'1628960', season:{ pts:7.4, reb:3.1, ast:3.8 }, spark:[6,10,5,8,7] },
+  // DEN
+  'nikola-jokic': { id:'nikola-jokic', name:'Nikola Jokic', team:'DEN', pos:'C', number:'15', nbaId:'203999', season:{ pts:26.4, reb:12.4, ast:9.0 }, spark:[32,24,28,38,18] },
+  'jamal-murray': { id:'jamal-murray', name:'Jamal Murray', team:'DEN', pos:'G', number:'27', nbaId:'1627750', season:{ pts:21.2, reb:4.1, ast:6.5 }, spark:[18,24,14,22,19] },
+  'michael-porter-jr': { id:'michael-porter-jr', name:'Michael Porter Jr.', team:'DEN', pos:'F', number:'1', nbaId:'1629008', season:{ pts:16.4, reb:7.2, ast:1.4 }, spark:[14,19,11,16,14] },
+  'aaron-gordon': { id:'aaron-gordon', name:'Aaron Gordon', team:'DEN', pos:'F', number:'50', nbaId:'203932', season:{ pts:13.8, reb:6.8, ast:3.4 }, spark:[12,8,14,10,11] },
+  'kentavious-caldwell-pope': { id:'kentavious-caldwell-pope', name:'KCP', team:'DEN', pos:'G', number:'5', nbaId:'203484', season:{ pts:9.8, reb:2.8, ast:1.8 }, spark:[8,12,6,10,9] },
+  'christian-braun': { id:'christian-braun', name:'Christian Braun', team:'DEN', pos:'G', number:'0', nbaId:'1631217', season:{ pts:8.2, reb:3.4, ast:1.8 }, spark:[6,10,8,5,8] },
+  'reggie-jackson': { id:'reggie-jackson', name:'Reggie Jackson', team:'DEN', pos:'G', number:'7', nbaId:'202704', season:{ pts:6.4, reb:2.1, ast:3.8 }, spark:[4,8,6,9,6] },
+  'peyton-watson': { id:'peyton-watson', name:'Peyton Watson', team:'DEN', pos:'F', number:'8', nbaId:'1631250', season:{ pts:5.2, reb:3.8, ast:1.2 }, spark:[6,4,8,3,5] },
+  // BOS
+  'jayson-tatum': { id:'jayson-tatum', name:'Jayson Tatum', team:'BOS', pos:'F', number:'0', nbaId:'1628369', season:{ pts:26.9, reb:8.1, ast:5.0 }, spark:[18,31,24,27,16] },
+  'jaylen-brown': { id:'jaylen-brown', name:'Jaylen Brown', team:'BOS', pos:'G', number:'7', nbaId:'1627759', season:{ pts:23.0, reb:5.5, ast:3.6 }, spark:[22,15,19,21,19] },
+  'kristaps-porzingis': { id:'kristaps-porzingis', name:'Kristaps Porzingis', team:'BOS', pos:'C', number:'8', nbaId:'2585516', season:{ pts:20.1, reb:7.2, ast:2.0 }, spark:[14,22,18,16,13] },
+  'payton-pritchard': { id:'payton-pritchard', name:'Payton Pritchard', team:'BOS', pos:'G', number:'11', nbaId:'1630029', season:{ pts:14.9, reb:3.2, ast:4.8 }, spark:[8,12,9,14,11] },
+  'al-horford': { id:'al-horford', name:'Al Horford', team:'BOS', pos:'C', number:'42', nbaId:'201143', season:{ pts:9.8, reb:6.4, ast:2.8 }, spark:[8,14,10,12,10] },
+  'derrick-white': { id:'derrick-white', name:'Derrick White', team:'BOS', pos:'G', number:'9', nbaId:'1628401', season:{ pts:15.2, reb:4.2, ast:5.2 }, spark:[12,18,14,16,12] },
+  'sam-hauser': { id:'sam-hauser', name:'Sam Hauser', team:'BOS', pos:'F', number:'30', nbaId:'1630545', season:{ pts:10.8, reb:3.4, ast:1.8 }, spark:[8,14,10,6,12] },
+  'luke-kornet': { id:'luke-kornet', name:'Luke Kornet', team:'BOS', pos:'C', number:'2', nbaId:'1628952', season:{ pts:5.8, reb:4.8, ast:1.2 }, spark:[4,8,6,5,3] },
+  // NYK
+  'jalen-brunson': { id:'jalen-brunson', name:'Jalen Brunson', team:'NYK', pos:'G', number:'11', nbaId:'1628386', season:{ pts:29.0, reb:3.5, ast:6.8 }, spark:[24,31,28,22,19] },
+  'karl-anthony-towns': { id:'karl-anthony-towns', name:'Karl-Anthony Towns', team:'NYK', pos:'C', number:'32', nbaId:'1626157', season:{ pts:24.5, reb:13.7, ast:3.3 }, spark:[22,18,25,19,21] },
+  'mikal-bridges': { id:'mikal-bridges', name:'Mikal Bridges', team:'NYK', pos:'F', number:'0', nbaId:'1628384', season:{ pts:19.6, reb:4.5, ast:3.9 }, spark:[15,19,13,18,16] },
+  'og-anunoby': { id:'og-anunoby', name:'OG Anunoby', team:'NYK', pos:'F', number:'8', nbaId:'1628384', season:{ pts:15.7, reb:5.7, ast:2.3 }, spark:[14,11,16,13,15] },
+  'josh-hart': { id:'josh-hart', name:'Josh Hart', team:'NYK', pos:'G', number:'3', nbaId:'1628404', season:{ pts:12.4, reb:8.8, ast:5.2 }, spark:[10,14,12,8,14] },
+  'donte-divincenzo': { id:'donte-divincenzo', name:'Donte DiVincenzo', team:'NYK', pos:'G', number:'0', nbaId:'1628978', season:{ pts:14.8, reb:4.2, ast:3.8 }, spark:[12,18,10,16,14] },
+  'precious-achiuwa': { id:'precious-achiuwa', name:'Precious Achiuwa', team:'NYK', pos:'F', number:'5', nbaId:'1630173', season:{ pts:6.8, reb:5.8, ast:1.2 }, spark:[4,8,6,10,6] },
+  'miles-mcbride': { id:'miles-mcbride', name:'Miles McBride', team:'NYK', pos:'G', number:'2', nbaId:'1630540', season:{ pts:8.2, reb:2.4, ast:2.8 }, spark:[6,10,8,4,8] },
+  // LAL
+  'lebron-james': { id:'lebron-james', name:'LeBron James', team:'LAL', pos:'F', number:'23', nbaId:'2544', season:{ pts:23.7, reb:8.0, ast:9.4 }, spark:[26,22,31,18,10] },
+  'anthony-davis': { id:'anthony-davis', name:'Anthony Davis', team:'LAL', pos:'C', number:'3', nbaId:'203076', season:{ pts:24.7, reb:12.6, ast:3.5 }, spark:[28,19,24,22,18] },
+  'austin-reaves': { id:'austin-reaves', name:'Austin Reaves', team:'LAL', pos:'G', number:'15', nbaId:'1630559', season:{ pts:15.9, reb:4.2, ast:4.8 }, spark:[14,11,18,9,12] },
+  'rui-hachimura': { id:'rui-hachimura', name:'Rui Hachimura', team:'LAL', pos:'F', number:'28', nbaId:'1629628', season:{ pts:13.2, reb:4.4, ast:1.4 }, spark:[10,16,14,8,12] },
+  'max-christie': { id:'max-christie', name:'Max Christie', team:'LAL', pos:'G', number:'10', nbaId:'1631217', season:{ pts:8.8, reb:2.8, ast:1.8 }, spark:[6,10,8,12,8] },
+  'dalton-knecht': { id:'dalton-knecht', name:'Dalton Knecht', team:'LAL', pos:'G', number:'4', nbaId:'1641828', season:{ pts:9.2, reb:3.2, ast:1.2 }, spark:[8,12,6,10,8] },
+  'dorian-finney-smith': { id:'dorian-finney-smith', name:'Dorian Finney-Smith', team:'LAL', pos:'F', number:'17', nbaId:'1627827', season:{ pts:7.4, reb:4.2, ast:1.8 }, spark:[6,8,4,10,6] },
+  'gabe-vincent': { id:'gabe-vincent', name:'Gabe Vincent', team:'LAL', pos:'G', number:'7', nbaId:'1629216', season:{ pts:6.2, reb:2.1, ast:2.8 }, spark:[4,8,6,4,6] },
 };
 
 const LIVE_GAMES = [
   {
-    id: 'okc-den-0411', sport: 'NBA',
-    homeTeam: 'Oklahoma City Thunder', homeAbbr: 'OKC',
-    awayTeam: 'Denver Nuggets', awayAbbr: 'DEN',
-    homeScore: 68, awayScore: 61,
-    period: 'Q3', timeRemaining: '4:22', status: 'inprogress',
-    players: {
-      OKC: ['shai-gilgeous-alexander'],
-      DEN: ['nikola-jokic'],
+    id:'okc-den', sport:'NBA',
+    homeTeam:'Oklahoma City Thunder', homeAbbr:'OKC',
+    awayTeam:'Denver Nuggets', awayAbbr:'DEN',
+    homeScore:87, awayScore:84,
+    period:'Q4', timeRemaining:'6:22', status:'inprogress',
+    network:'TNT', awayRec:'48-22', homeRec:'45-25',
+    qtrs:[[28,24],[26,22],[18,20],[15,18]],
+    players:{
+      OKC:['shai-gilgeous-alexander','jalen-williams','chet-holmgren','lu-dort','isaiah-joe','kenrich-williams','aaron-wiggins','alex-caruso'],
+      DEN:['nikola-jokic','jamal-murray','michael-porter-jr','aaron-gordon','kentavious-caldwell-pope','christian-braun','reggie-jackson','peyton-watson'],
     },
-    liveStats: {
-      'shai-gilgeous-alexander': { pts: 22, reb: 3, ast: 5, min: 28 },
-      'nikola-jokic':            { pts: 18, reb: 9, ast: 6, min: 28 },
+    liveStats:{
+      'shai-gilgeous-alexander':{ pts:31, reb:6, ast:5, min:34 },
+      'jalen-williams':{ pts:18, reb:4, ast:3, min:32 },
+      'chet-holmgren':{ pts:14, reb:9, ast:2, min:30 },
+      'lu-dort':{ pts:8, reb:3, ast:1, min:28 },
+      'isaiah-joe':{ pts:6, reb:2, ast:4, min:22 },
+      'kenrich-williams':{ pts:4, reb:3, ast:1, min:18 },
+      'aaron-wiggins':{ pts:4, reb:2, ast:0, min:16 },
+      'alex-caruso':{ pts:2, reb:2, ast:2, min:14 },
+      'nikola-jokic':{ pts:26, reb:11, ast:8, min:34 },
+      'jamal-murray':{ pts:19, reb:3, ast:6, min:32 },
+      'michael-porter-jr':{ pts:14, reb:7, ast:1, min:30 },
+      'aaron-gordon':{ pts:10, reb:6, ast:3, min:28 },
+      'kentavious-caldwell-pope':{ pts:8, reb:2, ast:1, min:24 },
+      'christian-braun':{ pts:5, reb:3, ast:1, min:20 },
+      'reggie-jackson':{ pts:2, reb:1, ast:3, min:14 },
+      'peyton-watson':{ pts:0, reb:2, ast:0, min:8 },
     },
   },
   {
-    id: 'bos-nyk-0411', sport: 'NBA',
-    homeTeam: 'Boston Celtics', homeAbbr: 'BOS',
-    awayTeam: 'New York Knicks', awayAbbr: 'NYK',
-    homeScore: 54, awayScore: 57,
-    period: 'Q3', timeRemaining: '1:08', status: 'inprogress',
-    players: {
-      BOS: ['jayson-tatum'],
-      NYK: ['karl-anthony-towns'],
+    id:'bos-nyk', sport:'NBA',
+    homeTeam:'New York Knicks', homeAbbr:'NYK',
+    awayTeam:'Boston Celtics', awayAbbr:'BOS',
+    homeScore:68, awayScore:71,
+    period:'Q3', timeRemaining:'2:41', status:'inprogress',
+    network:'ESPN', awayRec:'52-18', homeRec:'44-26',
+    qtrs:[[30,28],[22,24],[19,16]],
+    players:{
+      BOS:['jayson-tatum','jaylen-brown','kristaps-porzingis','derrick-white','al-horford','payton-pritchard','sam-hauser','luke-kornet'],
+      NYK:['jalen-brunson','karl-anthony-towns','mikal-bridges','og-anunoby','josh-hart','donte-divincenzo','precious-achiuwa','miles-mcbride'],
     },
-    liveStats: {
-      'jayson-tatum':      { pts: 16, reb: 6, ast: 3, min: 25 },
-      'karl-anthony-towns': { pts: 19, reb: 10, ast: 2, min: 25 },
+    liveStats:{
+      'jayson-tatum':{ pts:24, reb:7, ast:3, min:29 },
+      'jaylen-brown':{ pts:19, reb:4, ast:2, min:28 },
+      'kristaps-porzingis':{ pts:16, reb:6, ast:1, min:26 },
+      'derrick-white':{ pts:12, reb:3, ast:4, min:25 },
+      'al-horford':{ pts:8, reb:7, ast:2, min:22 },
+      'payton-pritchard':{ pts:6, reb:2, ast:3, min:18 },
+      'sam-hauser':{ pts:4, reb:2, ast:0, min:14 },
+      'luke-kornet':{ pts:2, reb:3, ast:0, min:10 },
+      'jalen-brunson':{ pts:22, reb:3, ast:5, min:29 },
+      'karl-anthony-towns':{ pts:18, reb:10, ast:2, min:28 },
+      'mikal-bridges':{ pts:14, reb:4, ast:2, min:27 },
+      'og-anunoby':{ pts:6, reb:4, ast:1, min:24 },
+      'josh-hart':{ pts:8, reb:7, ast:3, min:22 },
+      'donte-divincenzo':{ pts:10, reb:3, ast:2, min:20 },
+      'precious-achiuwa':{ pts:4, reb:4, ast:0, min:14 },
+      'miles-mcbride':{ pts:2, reb:1, ast:2, min:10 },
     },
   },
   {
-    id: 'lal-gsw-0411', sport: 'NBA',
-    homeTeam: 'Los Angeles Lakers', homeAbbr: 'LAL',
-    awayTeam: 'Golden State Warriors', awayAbbr: 'GSW',
-    homeScore: 31, awayScore: 28,
-    period: 'Q2', timeRemaining: '6:55', status: 'inprogress',
-    players: {
-      LAL: ['lebron-james'],
-      GSW: [],
+    id:'lal-gsw', sport:'NBA',
+    homeTeam:'Los Angeles Lakers', homeAbbr:'LAL',
+    awayTeam:'Golden State Warriors', awayAbbr:'GSW',
+    homeScore:0, awayScore:0,
+    period:'', timeRemaining:'', status:'upcoming',
+    network:'ABC', scheduledTime:'7:30 PM ET', awayRec:'40-30', homeRec:'38-32',
+    qtrs:[],
+    players:{
+      LAL:['lebron-james','anthony-davis','austin-reaves','rui-hachimura','max-christie','dalton-knecht','dorian-finney-smith','gabe-vincent'],
+      GSW:[],
     },
-    liveStats: {
-      'lebron-james': { pts: 10, reb: 4, ast: 5, min: 17 },
+    liveStats:{
+      'lebron-james':{ pts:0, reb:0, ast:0, min:0 },
+      'anthony-davis':{ pts:0, reb:0, ast:0, min:0 },
+      'austin-reaves':{ pts:0, reb:0, ast:0, min:0 },
+      'rui-hachimura':{ pts:0, reb:0, ast:0, min:0 },
+      'max-christie':{ pts:0, reb:0, ast:0, min:0 },
+      'dalton-knecht':{ pts:0, reb:0, ast:0, min:0 },
+      'dorian-finney-smith':{ pts:0, reb:0, ast:0, min:0 },
+      'gabe-vincent':{ pts:0, reb:0, ast:0, min:0 },
     },
   },
 ];
 
-const MOCK_PROPS = {
-  'shai-gilgeous-alexander': [
-    { id: 'sga-pts', label: 'Points', line: 30.5, books: { FD: '+108', DK: '+105', MGM: '+110' }, badge: 'hot', statKey: 'pts' },
-    { id: 'sga-ast', label: 'Assists', line: 5.5, books: { FD: '-115', DK: '-112', MGM: '-118' }, badge: null, statKey: 'ast' },
-    { id: 'sga-reb', label: 'Rebounds', line: 4.5, books: { FD: '-108', DK: '-110', MGM: '-105' }, badge: null, statKey: 'reb' },
-    { id: 'sga-pra', label: 'Pts+Reb+Ast', line: 39.5, books: { FD: '-110', DK: '-108', MGM: '-112' }, badge: 'hot', statKey: 'pra' },
-  ],
-  'nikola-jokic': [
-    { id: 'jok-pts', label: 'Points', line: 25.5, books: { FD: '-115', DK: '-112', MGM: '-118' }, badge: null, statKey: 'pts' },
-    { id: 'jok-reb', label: 'Rebounds', line: 12.5, books: { FD: '+105', DK: '+102', MGM: '+108' }, badge: null, statKey: 'reb' },
-    { id: 'jok-ast', label: 'Assists', line: 8.5, books: { FD: '-110', DK: '-108', MGM: '-112' }, badge: 'cold', statKey: 'ast' },
-    { id: 'jok-pra', label: 'Pts+Reb+Ast', line: 47.5, books: { FD: '-115', DK: '-118', MGM: '-112' }, badge: null, statKey: 'pra' },
-  ],
-  'jayson-tatum': [
-    { id: 'tat-pts', label: 'Points', line: 26.5, books: { FD: '-110', DK: '-108', MGM: '-112' }, badge: 'cold', statKey: 'pts' },
-    { id: 'tat-reb', label: 'Rebounds', line: 7.5, books: { FD: '+100', DK: '+102', MGM: '-103' }, badge: null, statKey: 'reb' },
-    { id: 'tat-ast', label: 'Assists', line: 4.5, books: { FD: '-115', DK: '-112', MGM: '-118' }, badge: null, statKey: 'ast' },
-    { id: 'tat-pra', label: 'Pts+Reb+Ast', line: 37.5, books: { FD: '-110', DK: '-115', MGM: '-108' }, badge: null, statKey: 'pra' },
-  ],
-  'karl-anthony-towns': [
-    { id: 'kat-pts', label: 'Points', line: 24.5, books: { FD: '-110', DK: '-108', MGM: '-115' }, badge: 'hot', statKey: 'pts' },
-    { id: 'kat-reb', label: 'Rebounds', line: 13.5, books: { FD: '+110', DK: '+108', MGM: '+112' }, badge: 'hot', statKey: 'reb' },
-    { id: 'kat-ast', label: 'Assists', line: 3.5, books: { FD: '-108', DK: '-110', MGM: '-105' }, badge: null, statKey: 'ast' },
-    { id: 'kat-pra', label: 'Pts+Reb+Ast', line: 41.5, books: { FD: '-112', DK: '-115', MGM: '-108' }, badge: null, statKey: 'pra' },
-  ],
-  'lebron-james': [
-    { id: 'lbj-pts', label: 'Points', line: 22.5, books: { FD: '-115', DK: '-112', MGM: '-118' }, badge: null, statKey: 'pts' },
-    { id: 'lbj-ast', label: 'Assists', line: 8.5, books: { FD: '-110', DK: '-108', MGM: '-112' }, badge: 'hot', statKey: 'ast' },
-    { id: 'lbj-reb', label: 'Rebounds', line: 7.5, books: { FD: '-105', DK: '-108', MGM: '-103' }, badge: null, statKey: 'reb' },
-    { id: 'lbj-pra', label: 'Pts+Reb+Ast', line: 37.5, books: { FD: '-110', DK: '-115', MGM: '-108' }, badge: null, statKey: 'pra' },
-  ],
-};
+function generateMockProps(player, liveStats) {
+  const pts = liveStats?.pts ?? 0;
+  const reb = liveStats?.reb ?? 0;
+  const ast = liveStats?.ast ?? 0;
+  const s = player.season;
+
+  function calcProb(current, seasonAvg, line, minsPlayed) {
+    if (!minsPlayed) return 0.50;
+    const projected = current + (current / minsPlayed) * 12;
+    const diff = (projected - line) / (seasonAvg * 0.3 + 0.1);
+    return Math.max(0.15, Math.min(0.85, 0.5 + diff * 0.15));
+  }
+
+  const minsPlayed = liveStats?.min ?? 1;
+  const ptsLine = parseFloat((s.pts * 0.92).toFixed(1));
+  const rebLine = parseFloat((s.reb * 0.90).toFixed(1));
+  const astLine = parseFloat((s.ast * 0.90).toFixed(1));
+  const praLine = parseFloat(((s.pts + s.reb + s.ast) * 0.91).toFixed(1));
+
+  const ptsProb = calcProb(pts, s.pts, ptsLine, minsPlayed);
+  const rebProb = calcProb(reb, s.reb, rebLine, minsPlayed);
+  const astProb = calcProb(ast, s.ast, astLine, minsPlayed);
+  const praProb = calcProb(pts+reb+ast, s.pts+s.reb+s.ast, praLine, minsPlayed);
+
+  function toVerdict(p) {
+    if (p >= 0.68) return { v:'STRONG OVER', c:'go' };
+    if (p >= 0.55) return { v:'LEAN OVER', c:'go' };
+    if (p >= 0.45) return { v:'TOSS UP', c:'toss' };
+    if (p >= 0.32) return { v:'LEAN UNDER', c:'un' };
+    return { v:'STRONG UNDER', c:'un' };
+  }
+
+  return [
+    { id:`${player.id}-pts`, label:'Points', line:ptsLine, prob:ptsProb, ...toVerdict(ptsProb), statKey:'pts', dk: ptsProb > 0.55 ? -112 : -108, fd: ptsProb > 0.55 ? -115 : -105, pp: ptsLine },
+    { id:`${player.id}-reb`, label:'Rebounds', line:rebLine, prob:rebProb, ...toVerdict(rebProb), statKey:'reb', dk: rebProb > 0.55 ? -110 : -108, fd: rebProb > 0.55 ? -112 : -105, pp: rebLine },
+    { id:`${player.id}-ast`, label:'Assists', line:astLine, prob:astProb, ...toVerdict(astProb), statKey:'ast', dk: astProb > 0.55 ? -114 : -108, fd: astProb > 0.55 ? -115 : -105, pp: astLine },
+    { id:`${player.id}-pra`, label:'PRA', line:praLine, prob:praProb, ...toVerdict(praProb), statKey:'pra', dk: praProb > 0.55 ? -112 : -110, fd: praProb > 0.55 ? -115 : -108, pp: praLine },
+  ];
+}
 
 // ── State ─────────────────────────────────────────────────
 let currentUser = null;
@@ -1113,25 +1226,44 @@ let lastAnalysis = null;
 async function checkAuth() {
   try {
     const r = await fetch('/api/auth/me', { credentials: 'include' });
-    if (!r.ok) { window.location.href = '/'; return; }
-    const data = await r.json();
-    currentUser = data;
-    updateAvatars();
+    if (r.ok) {
+      currentUser = await r.json();
+    } else {
+      currentUser = null;
+    }
   } catch {
-    window.location.href = '/';
+    currentUser = null;
   }
+  updateAvatars();
 }
 
 function updateAvatars() {
-  if (!currentUser) return;
-  const initial = (currentUser.name || currentUser.email || '?')[0].toUpperCase();
-  document.querySelectorAll('.nav-avatar').forEach(el => { el.textContent = initial; });
+  const homeAvatar = document.getElementById('home-avatar');
+  if (!homeAvatar) return;
+  if (currentUser) {
+    const initial = (currentUser.name || currentUser.email || '?')[0].toUpperCase();
+    homeAvatar.textContent = initial;
+    homeAvatar.onclick = () => navTo('account');
+    homeAvatar.style.cursor = 'pointer';
+    const searchAvatar = document.getElementById('search-avatar');
+    if (searchAvatar) searchAvatar.textContent = initial;
+  } else {
+    homeAvatar.innerHTML = 'IN';
+    homeAvatar.title = 'Sign In';
+    homeAvatar.style.cursor = 'pointer';
+    homeAvatar.onclick = () => { window.location.href = '/'; };
+    const searchAvatar = document.getElementById('search-avatar');
+    if (searchAvatar) { searchAvatar.innerHTML = 'IN'; searchAvatar.onclick = () => { window.location.href = '/'; }; }
+  }
 }
 
-async function logout() {
+async function signOut() {
   try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
+  currentUser = null;
   window.location.href = '/';
 }
+
+async function logout() { await signOut(); }
 
 // ── Navigation ────────────────────────────────────────────
 const SCREEN_IDS = {
@@ -1169,6 +1301,11 @@ function navTo(name, pushHistory = true) {
   });
 
   currentScreen = name;
+
+  // Update global bottom nav active state
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('bnav-' + name);
+  if (activeBtn) activeBtn.classList.add('active');
 
   if (name === 'history') renderHistoryScreen();
   if (name === 'account') renderAccountScreen();
@@ -1260,33 +1397,42 @@ function renderBoxScore(game) {
 
   badge.innerHTML = isLive ? '<span class="live-dot">Live</span>' : '';
 
-  const qtrMax = game.homeScore + game.awayScore || 1;
   const qLabels = ['Q1', 'Q2', 'Q3', 'Q4'];
+  const qtrsData = game.qtrs || [];
   const qChart = qLabels.map((q, i) => {
-    const active = i < (game.period === 'Q1' ? 1 : game.period === 'Q2' ? 2 : game.period === 'Q3' ? 3 : 4);
-    const fillH = active ? Math.round((game.homeScore / qtrMax) * 28) : 0;
-    const fillA = active ? Math.round((game.awayScore / qtrMax) * 28) : 0;
+    const homeQ = qtrsData[i]?.[0] ?? 0;
+    const awayQ = qtrsData[i]?.[1] ?? 0;
+    const maxQ = Math.max(homeQ, awayQ, 1);
+    const fillH = Math.round((homeQ / maxQ) * 26);
+    const fillA = Math.round((awayQ / maxQ) * 26);
+    const isActive = qtrsData[i] !== undefined;
     return `<div style="flex:1">
-      <div class="qtr-block"><div class="qtr-fill" style="height:${fillH}px"></div></div>
+      <div class="qtr-block" style="background:${isActive ? 'var(--s3)' : 'var(--border)'}">
+        <div class="qtr-fill" style="height:${isActive ? fillH : 0}px"></div>
+      </div>
       <div class="qtr-label">${q}</div>
     </div>`;
   }).join('');
 
   header.innerHTML = `
     <div class="score-matchup">
-      <div>
-        <div class="score-team" style="color:${TEAM_COLORS[game.awayAbbr]||'#fff'}">${game.awayAbbr}</div>
-        <div style="font-size:1.8rem;font-weight:900;color:var(--white)">${game.awayScore}</div>
+      <div class="score-team-left">
+        <div class="score-abbr">${game.awayAbbr}</div>
+        <div class="score-num">${isLive || game.awayScore > 0 ? game.awayScore : '—'}</div>
+        <div class="score-record">${game.awayRec || ''}</div>
       </div>
-      <div style="text-align:center">
-        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;color:var(--dim);text-transform:uppercase">${isLive ? game.period + ' · ' + game.timeRemaining : 'Final'}</div>
+      <div class="score-center">
+        <div class="score-period">${isLive ? game.period : (game.homeScore > 0 ? 'FINAL' : '')}</div>
+        <div class="score-clock">${isLive ? game.timeRemaining : (game.scheduledTime || '')}</div>
+        ${isLive ? '<div class="score-live-pill"><span style="width:4px;height:4px;background:#fff;border-radius:50%;display:inline-block;"></span>LIVE</div>' : ''}
       </div>
-      <div style="text-align:right">
-        <div class="score-team" style="color:${TEAM_COLORS[game.homeAbbr]||'#fff'}">${game.homeAbbr}</div>
-        <div style="font-size:1.8rem;font-weight:900;color:var(--white)">${game.homeScore}</div>
+      <div class="score-team-right">
+        <div class="score-abbr">${game.homeAbbr}</div>
+        <div class="score-num">${isLive || game.homeScore > 0 ? game.homeScore : '—'}</div>
+        <div class="score-record">${game.homeRec || ''}</div>
       </div>
     </div>
-    <div style="display:flex;gap:2px">${qChart}</div>
+    <div style="display:flex;gap:4px;padding:4px 16px 10px;">${qChart}</div>
   `;
 
   // Team tabs
@@ -1316,18 +1462,24 @@ function renderPlayerTable() {
   }
 
   let html = '';
-  playerIds.forEach((pid, i) => {
+  playerIds.forEach((pid) => {
     const p = PLAYERS[pid];
     if (!p) return;
     const ls = liveStats[pid] || {};
     const pts = ls.pts !== undefined ? ls.pts : '—';
     const reb = ls.reb !== undefined ? ls.reb : '—';
     const ast = ls.ast !== undefined ? ls.ast : '—';
-    const sparkData = generateSparkData(p.season.pts, pts);
-    html += `<div class="player-row" onclick="openPlayerCard('${pid}')">
+    const minsPlayed = ls.min || 1;
+    const ptsPerMin = typeof pts === 'number' ? pts / minsPlayed : 0;
+    const seasonPtsPerMin = p.season.pts / 32;
+    const isHot = ptsPerMin > seasonPtsPerMin * 1.15 && minsPlayed > 8;
+    const isCold = ptsPerMin < seasonPtsPerMin * 0.80 && minsPlayed > 8;
+    const hotColdHtml = isHot ? '<span class="hot-pill">🔥 HOT</span>' : isCold ? '<span class="cold-pill">❄ COLD</span>' : '';
+    const sparkData = p.spark || generateSparkData(p.season.pts, pts);
+    html += `<div class="player-row" onclick="openPlayerCard('${pid}')" style="flex-direction:row;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);gap:12px;">
       <div class="player-num">${p.number}</div>
       <div class="player-info">
-        <div class="player-row-name">${esc(p.name)}</div>
+        <div class="player-row-name">${esc(p.name)} ${hotColdHtml}</div>
         <div class="player-row-pos">${p.pos} · ${teamAbbr}</div>
       </div>
       <div class="player-stats-mini">
@@ -1391,22 +1543,40 @@ function renderPlayerCard(player) {
   const body = document.getElementById('pc-body');
   const ls = activeGame?.liveStats?.[player.id] || {};
   const teamColor = TEAM_COLORS[player.team] || '#860038';
-  const props = MOCK_PROPS[player.id] || [];
+  const props = generateMockProps(player, ls);
   const photoUrl = `https://cdn.nba.com/headshots/nba/latest/260x190/${player.nbaId}.png`;
 
   const propsHtml = props.map(prop => {
     const isSelected = activeProp?.id === prop.id;
-    const bookHtml = Object.entries(prop.books).map(([book, odds]) => {
-      const num = parseInt(odds, 10);
-      const cls = num > 0 ? 'positive' : num < -115 ? 'negative' : '';
-      return `<span class="book-chip ${cls}">${book} ${odds}</span>`;
-    }).join('');
-    const badgeHtml = prop.badge ? `<span class="prop-badge ${prop.badge}">${prop.badge}</span>` : '';
+    const pctColor = prop.c === 'go' ? '#39ff14' : prop.c === 'un' ? '#ff6688' : '#f5a623';
+    const bestBook = prop.dk >= prop.fd ? 'DK' : 'FD';
     return `<div class="prop-row ${isSelected ? 'selected' : ''}" onclick="selectProp('${prop.id}', '${player.id}')">
-      <div class="prop-label">${esc(prop.label)}</div>
-      <div class="prop-line">${prop.line}</div>
-      <div class="book-chips">${bookHtml}</div>
-      ${badgeHtml}
+      <div class="prop-main-row">
+        <div>
+          <div class="prop-type-label">${esc(prop.label)}</div>
+          <div class="prop-line-val">O/U ${prop.line} live</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:900;color:${pctColor}">${Math.round(prop.prob*100)}%</div>
+          <div style="font-size:8px;font-weight:900;letter-spacing:0.1em;color:${pctColor}">${prop.v}</div>
+        </div>
+      </div>
+      <div class="books-row">
+        <div class="book-chip ${bestBook==='DK'?'best':''}">
+          <div class="book-name">DRAFTKINGS</div>
+          <div class="book-odds">${prop.dk > 0 ? '+'+prop.dk : prop.dk}</div>
+          ${bestBook==='DK'?'<div class="best-tag">BEST</div>':''}
+        </div>
+        <div class="book-chip ${bestBook==='FD'?'best':''}">
+          <div class="book-name">FANDUEL</div>
+          <div class="book-odds">${prop.fd > 0 ? '+'+prop.fd : prop.fd}</div>
+          ${bestBook==='FD'?'<div class="best-tag">BEST</div>':''}
+        </div>
+        <div class="book-chip">
+          <div class="book-name">PRIZEPICKS</div>
+          <div class="book-odds">${prop.pp}</div>
+        </div>
+      </div>
     </div>`;
   }).join('');
 
@@ -1435,9 +1605,9 @@ function renderPlayerCard(player) {
 }
 
 function selectProp(propId, playerId) {
-  const props = MOCK_PROPS[playerId] || [];
+  const ls = activeGame?.liveStats?.[playerId] || {};
+  const props = generateMockProps(PLAYERS[playerId], ls);
   activeProp = props.find(p => p.id === propId) || null;
-  // Re-render player card to update selection state
   renderPlayerCard(activePlayer);
 }
 
@@ -1479,11 +1649,15 @@ async function runAnalysis() {
       body: JSON.stringify(payload),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'API error');
-    lastAnalysis = data;
+    if (r.status === 401) {
+      lastAnalysis = mockAnalysis(currentStat, activeProp.line, activeProp.prob);
+    } else if (!r.ok) {
+      throw new Error(data.error || 'API error');
+    } else {
+      lastAnalysis = data;
+    }
   } catch (err) {
-    // Fallback to mock result
-    lastAnalysis = mockAnalysis(currentStat, activeProp.line, activeProp.badge);
+    lastAnalysis = mockAnalysis(currentStat, activeProp.line, activeProp.prob);
   }
 
   renderResult(lastAnalysis);
@@ -1491,10 +1665,10 @@ async function runAnalysis() {
   navTo('analysis');
 }
 
-function mockAnalysis(currentStat, propLine, badge) {
+function mockAnalysis(currentStat, propLine, probOrBadge) {
   const needed = propLine - currentStat;
-  const prob = badge === 'hot' ? 0.62 : badge === 'cold' ? 0.38 : 0.50;
-  const isOver = prob > 0.52;
+  const prob = typeof probOrBadge === 'number' ? probOrBadge
+    : probOrBadge === 'hot' ? 0.62 : probOrBadge === 'cold' ? 0.38 : 0.50;
   const verdict = prob > 0.55 ? 'OVER' : prob < 0.45 ? 'UNDER' : 'TOSS';
   const bookOdds = -110;
   const impliedProb = 0.5238;
@@ -1516,10 +1690,7 @@ function mockAnalysis(currentStat, propLine, badge) {
       edge: parseFloat(edge.toFixed(1)),
       unitSize: parseFloat((Math.max(0, edge) * 0.25).toFixed(1)),
     },
-    bestBook: Object.entries(activeProp.books).reduce((best, [book, odds]) => {
-      const n = parseInt(odds, 10);
-      return n > parseInt(best.odds, 10) ? { book, odds } : best;
-    }, { book: 'FD', odds: '-115' }),
+    bestBook: activeProp.dk >= activeProp.fd ? { book: 'DK', odds: activeProp.dk } : { book: 'FD', odds: activeProp.fd },
   };
 }
 
@@ -1541,10 +1712,16 @@ function renderResult(data) {
   const narrative = data.narrative || `Math analysis for ${activePlayer.name} ${activeProp.label} ${activeProp.line}.`;
 
   // Book chips
-  const bookHtml = Object.entries(activeProp.books).map(([book, odds]) => {
-    const num = parseInt(odds, 10);
-    const cls = num > 0 ? 'positive' : num < -115 ? 'negative' : '';
-    return `<span class="book-chip ${cls}">${book} ${odds}</span>`;
+  const booksForDisplay = [
+    { name: 'DK', odds: activeProp.dk },
+    { name: 'FD', odds: activeProp.fd },
+    { name: 'PP', odds: activeProp.pp },
+  ];
+  const bookHtml = booksForDisplay.map(({ name, odds }) => {
+    const isNum = typeof odds === 'number';
+    const cls = isNum && odds > 0 ? 'positive' : isNum && odds < -115 ? 'negative' : '';
+    const display = isNum ? (odds > 0 ? `+${odds}` : odds) : odds;
+    return `<span class="book-chip ${cls}" style="padding:3px 8px;font-size:0.65rem;font-weight:700;letter-spacing:0.04em;">${name} ${display}</span>`;
   }).join('');
 
   // Model rows
@@ -1730,51 +1907,34 @@ function openPlayerFromSearch(playerId) {
 // ── Account Screen ────────────────────────────────────────
 function renderAccountScreen() {
   const body = document.getElementById('account-body');
-  if (!currentUser) { body.innerHTML = ''; return; }
+
+  if (!currentUser) {
+    body.innerHTML = `
+      <div style="padding:24px 16px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#333;text-transform:uppercase;margin-bottom:16px;">Account</div>
+        <div style="color:#555;font-size:14px;margin-bottom:24px;line-height:1.6;">Sign in to track your analyses and unlock unlimited access.</div>
+        <button onclick="window.location.href='/'" style="width:100%;background:#860038;color:#fff;font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;border:none;padding:14px;cursor:pointer;margin-bottom:10px;">Sign In / Create Account</button>
+      </div>`;
+    return;
+  }
 
   const name = currentUser.name || currentUser.email || 'User';
-  const tier = currentUser.tier || 'free';
-  const badgeClass = tier === 'pro' ? 'pro' : 'free';
-  const badgeLabel = tier === 'pro' ? 'PRO' : 'FREE';
+  const plan = currentUser.tier || currentUser.plan || 'free';
+  const usage = currentUser.todayUsage || 0;
   const initial = name[0].toUpperCase();
 
   body.innerHTML = `
-    <div style="display:flex;align-items:center;gap:14px;padding:20px 16px;border-bottom:1px solid var(--border)">
-      <div style="width:48px;height:48px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;color:#fff;flex-shrink:0">${esc(initial)}</div>
-      <div>
-        <div style="font-size:1rem;font-weight:700;color:var(--white)">${esc(name)}</div>
-        <div style="font-size:0.75rem;color:var(--dim)">${esc(currentUser.email || '')}</div>
+    <div style="padding:24px 16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#333;text-transform:uppercase;margin-bottom:16px;">Account</div>
+      <div style="background:#111;border:1px solid #1e1e1e;padding:14px 16px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">${esc(name)}</div>
+        <div style="font-size:11px;color:#555;">${esc(currentUser.email || '')}</div>
+        <div style="font-size:11px;color:#860038;margin-top:6px;font-weight:700;">${plan === 'pro' ? '⚡ PRO — Unlimited' : 'Free — ' + (3 - usage) + ' analyses remaining'}</div>
       </div>
-      <span class="pill-badge ${badgeClass}" style="margin-left:auto">${badgeLabel}</span>
-    </div>
-    ${tier !== 'pro' ? `<div class="upgrade-banner">
-      <div class="upgrade-banner-title">Upgrade to Pro</div>
-      <div class="upgrade-banner-sub">Unlimited analyses, alt line EV scanner, Kelly sizing, and more.</div>
-      <button class="upgrade-btn" onclick="window.location.href='/account.html'">Upgrade — $9/mo</button>
-    </div>` : ''}
-    <div class="account-section-title">Account</div>
-    <div class="account-section">
-      <div class="account-row">
-        <span class="account-row-label">Plan</span>
-        <span class="account-row-val">${esc(tier.charAt(0).toUpperCase() + tier.slice(1))}</span>
-      </div>
-      <div class="account-row">
-        <span class="account-row-label">Settings</span>
-        <a href="/account.html" style="font-size:0.88rem;color:var(--primary);font-weight:600;text-decoration:none">Manage →</a>
-      </div>
-    </div>
-    <div class="account-section-title">App</div>
-    <div class="account-section">
-      <div class="account-row">
-        <span class="account-row-label">Version</span>
-        <span class="account-row-val">2.0.0</span>
-      </div>
-      <div class="account-row" style="cursor:pointer" onclick="logout()">
-        <span class="account-row-label" style="color:#ff6688">Sign Out</span>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M11 11l3-3-3-3M14 8H6" stroke="#ff6688" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-    </div>
-  `;
+      ${plan !== 'pro' ? `<button onclick="window.location.href='/account.html'" style="width:100%;background:#860038;color:#fff;font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;border:none;padding:14px;cursor:pointer;margin-bottom:10px;">Upgrade to Pro — $9.99/mo</button>` : ''}
+      <button onclick="signOut()" style="width:100%;background:none;border:1px solid #333;color:#555;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:14px;cursor:pointer;margin-bottom:10px;">Sign Out</button>
+      <a href="/account.html" style="display:block;text-align:center;font-size:11px;color:#444;text-decoration:none;margin-top:8px;">Account Settings →</a>
+    </div>`;
 }
 
 // ── Utilities ─────────────────────────────────────────────

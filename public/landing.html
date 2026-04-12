@@ -1,1191 +1,994 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parlay Killer — Stop Losing Money on Parlays</title>
-  <meta name="description" content="Parlay Killer runs the real math on your bets — true probability, expected value, and exactly how much the house is taking from you." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parlay Killer — Live Prop Math Engine</title>
+  <meta name="description" content="Real-time math on live player props. Know if the book's line makes sense right now — before you place the bet.">
+  <meta property="og:title" content="Parlay Killer — Live Prop Math Engine">
+  <meta property="og:description" content="Real-time math on live player props. Bayesian + Poisson models. Know your edge instantly.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:      #080808;
-      --s1:      #0d0d0d;
-      --s2:      #111111;
-      --s3:      #181818;
-      --border:  #1a1a1a;
-      --border2: #242424;
-      --green:   #00ff87;
-      --green2:  #00cc6a;
-      --red:     #ff3b3b;
-      --yellow:  #f4a261;
-      --white:   #ffffff;
-      --dim:     #999999;
-      --muted:   #444444;
-      --font:    'Barlow Condensed', sans-serif;
+      --bg: #080808;
+      --s1: #0d0d0d;
+      --s2: #111111;
+      --border: #1e1e1e;
+      --burgundy: #860038;
+      --green: #39ff14;
+      --amber: #f5a623;
+      --white: #ffffff;
+      --dim: #555555;
+      --muted: #333333;
     }
-
     html { scroll-behavior: smooth; }
-
     body {
       background: var(--bg);
       color: var(--white);
-      font-family: var(--font);
+      font-family: 'Inter', system-ui, sans-serif;
       font-size: 16px;
-      line-height: 1.4;
+      line-height: 1.5;
       min-height: 100vh;
-      border-top: 3px solid #00ff87;
+      border-top: 3px solid var(--burgundy);
     }
-
-    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
-
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
     a { color: inherit; text-decoration: none; }
 
-    /* ── TOP NAV ── */
-    .top-nav {
-      border-bottom: 1px solid var(--border);
+    /* NAV */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       padding: 16px 0;
-    }
-    .top-nav-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-    .nav-brand {
-      font-size: 1.6rem;
-      font-weight: 900;
-      letter-spacing: -0.01em;
-      text-transform: uppercase;
-      color: var(--white);
-    }
-    .nav-brand span { color: var(--green); }
-    .nav-actions { display: flex; gap: 10px; align-items: center; }
-    .nav-btn {
-      font-family: var(--font);
-      font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 8px 18px;
-      border: 1px solid var(--border2);
-      background: transparent;
-      color: var(--white);
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .nav-btn:hover { border-color: var(--green); color: var(--green); }
-    .nav-btn.primary {
-      background: var(--green);
-      border-color: var(--green);
-      color: #000;
-    }
-    .nav-btn.primary:hover { background: var(--green2); border-color: var(--green2); }
-
-    /* ── LIVE HERO (first section — the hook) ── */
-    .hero-live {
-      padding: 72px 0 80px;
       border-bottom: 1px solid var(--border);
     }
-    .live-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
-    .live-hero-note {
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      margin-top: 16px;
-      margin-bottom: 44px;
-    }
-
-    /* ── PARLAY SECTION (second section) ── */
-    .parlay-sec {
-      background: var(--s1);
-      border-bottom: 1px solid var(--border);
-      padding: 80px 0;
-    }
-    .parlay-sec-inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 60px;
-      align-items: center;
-    }
-    .parlay-eyebrow {
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 18px;
-    }
-    .parlay-headline {
-      font-size: clamp(2.5rem, 5vw, 4.2rem);
+    .nav-logo {
+      font-size: 18px;
       font-weight: 900;
-      line-height: 0.93;
-      letter-spacing: -0.01em;
-      text-transform: uppercase;
+      letter-spacing: 0.12em;
       color: var(--white);
-      margin-bottom: 22px;
-    }
-    .parlay-headline span { color: var(--green); }
-    .parlay-body {
-      font-size: 1rem;
-      font-weight: 400;
-      color: #cccccc;
-      line-height: 1.65;
-    }
-
-    /* ── CTA BUTTONS (shared) ── */
-    .cta-primary {
-      font-family: var(--font);
-      font-size: 0.92rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
       text-transform: uppercase;
-      background: var(--green);
-      color: #000;
-      border: none;
-      padding: 16px 32px;
-      min-height: 56px;
-      cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
-      display: inline-flex;
-      align-items: center;
     }
-    .cta-primary:hover { background: var(--green2); }
-    .cta-secondary {
-      font-family: var(--font);
-      font-size: 0.92rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      background: transparent;
-      color: var(--white);
-      border: 1px solid var(--border2);
-      padding: 16px 32px;
-      min-height: 56px;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-      display: inline-flex;
-      align-items: center;
-    }
-    .cta-secondary:hover { border-color: var(--green); color: var(--green); }
-
-    /* ── EXAMPLE CARD ── */
-    .example-wrap {
-      background: var(--s1);
-      border: 1px solid var(--border2);
-      border-top: 2px solid var(--green);
-      padding: 22px 22px 18px;
-    }
-    .example-label {
-      font-size: 0.6rem;
-      font-weight: 800;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-    .ex-legs { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
-    .ex-leg {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.88rem;
+    .nav-logo span { color: var(--burgundy); }
+    .nav-actions { display: flex; gap: 12px; align-items: center; }
+    .btn-ghost {
+      font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      color: var(--white);
-      padding: 8px 12px;
-      background: var(--s2);
-      border: 1px solid var(--border);
-    }
-    .ex-odds {
-      font-size: 0.78rem;
-      font-weight: 800;
       color: var(--dim);
-      background: var(--s3);
-      padding: 3px 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px 12px;
+      transition: color 0.15s;
     }
-    .ex-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-    .ex-metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 14px;
+    .btn-ghost:hover { color: var(--white); }
+    .btn-primary {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--burgundy);
+      border: none;
+      cursor: pointer;
+      padding: 10px 20px;
+      transition: opacity 0.15s;
     }
-    .ex-metric {
+    .btn-primary:hover { opacity: 0.85; }
+
+    /* HERO */
+    .hero {
+      padding: 80px 0 60px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       background: var(--s2);
       border: 1px solid var(--border);
-      padding: 10px 12px;
+      border-left: 3px solid var(--burgundy);
+      padding: 6px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
     }
-    .ex-metric-label {
-      font-size: 0.58rem;
-      font-weight: 800;
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--burgundy);
+      border-radius: 50%;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .hero-headline {
+      font-size: clamp(36px, 7vw, 72px);
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.0;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+      max-width: 800px;
+    }
+    .hero-headline span { color: var(--burgundy); }
+    .hero-sub {
+      font-size: 18px;
+      color: var(--dim);
+      max-width: 560px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      font-weight: 400;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
+    }
+    .cta-primary {
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--burgundy);
+      border: none;
+      cursor: pointer;
+      padding: 16px 32px;
+      transition: opacity 0.15s;
+      display: inline-block;
+    }
+    .cta-primary:hover { opacity: 0.85; }
+    .cta-secondary {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: none;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      padding: 16px 32px;
+      transition: all 0.15s;
+      display: inline-block;
+    }
+    .cta-secondary:hover { border-color: var(--white); color: var(--white); }
+    .social-proof {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .social-proof-dot { width: 4px; height: 4px; background: var(--green); border-radius: 50%; }
+
+    /* LIVE DEMO CARD */
+    .demo-wrap {
+      padding: 60px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: var(--muted);
+      margin-bottom: 32px;
+    }
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      max-width: 680px;
+    }
+    @media (max-width: 600px) { .demo-grid { grid-template-columns: 1fr; } }
+    .demo-card {
+      background: var(--s1);
+      padding: 20px;
+    }
+    .demo-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .demo-player-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--white);
+    }
+    .demo-player-meta {
+      font-size: 10px;
+      color: var(--dim);
+      margin-top: 2px;
+    }
+    .demo-stat {
+      font-size: 40px;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1;
       margin-bottom: 4px;
     }
-    .ex-metric-value {
-      font-size: 1.45rem;
-      font-weight: 900;
-      letter-spacing: -0.01em;
+    .demo-stat-sub {
+      font-size: 10px;
+      color: var(--dim);
+      margin-bottom: 16px;
     }
-    .ex-metric-value.green { color: var(--green); }
-    .ex-metric-value.red   { color: var(--red); }
-    .ex-metric-value.dim   { color: var(--dim); }
-    .ex-verdict {
-      font-size: 0.72rem;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      text-align: center;
-      padding: 10px;
-      background: rgba(255,59,59,0.06);
-      border: 1px solid rgba(255,59,59,0.2);
-      color: var(--red);
+    .demo-prop-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-top: 1px solid var(--border);
     }
+    .demo-prop-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; }
+    .demo-prop-line { font-size: 13px; font-weight: 700; color: #ccc; margin-top: 2px; }
+    .demo-prop-result { text-align: right; }
+    .demo-pct { font-size: 22px; font-weight: 900; }
+    .demo-verdict { font-size: 8px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
+    .go { color: var(--green); }
+    .un { color: var(--burgundy); }
+    .to { color: var(--amber); }
+    .demo-narrative {
+      background: #0a0a0a;
+      border-left: 2px solid var(--burgundy);
+      padding: 10px 12px;
+      margin-top: 12px;
+      font-size: 10px;
+      color: var(--dim);
+      line-height: 1.7;
+    }
+    .demo-narrative b { color: #aaa; }
 
-    /* ── SECTION BASE ── */
-    .section {
+    /* HOW IT WORKS */
+    .how-wrap {
       padding: 80px 0;
       border-bottom: 1px solid var(--border);
     }
-    .section-eyebrow {
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-size: clamp(2rem, 4vw, 3.2rem);
+    .how-headline {
+      font-size: 32px;
       font-weight: 900;
-      line-height: 0.95;
+      color: var(--white);
       letter-spacing: -0.01em;
-      text-transform: uppercase;
-      color: var(--white);
-      margin-bottom: 14px;
+      margin-bottom: 48px;
+      max-width: 480px;
     }
-    .section-sub {
-      font-size: 0.95rem;
-      font-weight: 400;
-      color: #cccccc;
-      line-height: 1.6;
-      max-width: 520px;
-      margin-bottom: 52px;
-    }
-
-    /* ── HOW IT WORKS ── */
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
-    .step {
-      padding: 28px 28px 28px 0;
-      border-right: 1px solid var(--border);
-      padding-right: 28px;
-    }
-    .step:last-child { border-right: none; padding-right: 0; }
-    .step:not(:first-child) { padding-left: 28px; }
-    .step-num {
-      font-size: 3.5rem;
-      font-weight: 900;
-      line-height: 1;
-      color: var(--green);
-      opacity: 0.25;
-      margin-bottom: 14px;
-      display: block;
-    }
-    .step-title {
-      font-size: 1.25rem;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--white);
-      margin-bottom: 8px;
-    }
-    .step-desc {
-      font-size: 0.88rem;
-      font-weight: 400;
-      color: #cccccc;
-      line-height: 1.6;
-    }
-
-    /* ── FEATURES ── */
-    .features-grid {
+    .steps {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1px;
       background: var(--border);
     }
-    .feature {
+    .step {
       background: var(--s1);
-      padding: 28px 28px;
+      padding: 28px 24px;
     }
-    .feature-icon {
-      font-size: 1.6rem;
-      margin-bottom: 12px;
-      display: block;
-    }
-    .feature-title {
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
+    .step-num {
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--burgundy);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .step-title {
+      font-size: 16px;
+      font-weight: 800;
       color: var(--white);
       margin-bottom: 8px;
+      line-height: 1.2;
     }
-    .feature-desc {
-      font-size: 0.85rem;
-      font-weight: 400;
-      color: #cccccc;
+    .step-desc {
+      font-size: 13px;
+      color: var(--dim);
       line-height: 1.6;
     }
 
-    /* ── PRICING ── */
+    /* MATH MODELS */
+    .math-wrap {
+      padding: 80px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .math-headline {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+    .math-sub {
+      font-size: 15px;
+      color: var(--dim);
+      margin-bottom: 40px;
+      max-width: 520px;
+    }
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1px;
+      background: var(--border);
+    }
+    .model-card {
+      background: var(--s1);
+      padding: 24px;
+      border-top: 2px solid var(--border);
+      transition: border-color 0.15s;
+    }
+    .model-card:hover { border-top-color: var(--burgundy); }
+    .model-name {
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--burgundy);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .model-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .model-desc {
+      font-size: 12px;
+      color: var(--dim);
+      line-height: 1.6;
+    }
+
+    /* PRICING */
+    .pricing-wrap {
+      padding: 80px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pricing-headline {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      margin-bottom: 40px;
+    }
     .pricing-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      max-width: 720px;
+      gap: 1px;
+      background: var(--border);
+      max-width: 560px;
     }
-    .pricing-card {
-      border: 1px solid var(--border2);
-      padding: 32px 28px 28px;
+    @media (max-width: 480px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .plan {
       background: var(--s1);
-      position: relative;
+      padding: 28px 24px;
     }
-    .pricing-card.featured {
-      border-color: var(--green);
-      border-top: 3px solid var(--green);
+    .plan.featured {
+      background: var(--s2);
+      border-top: 2px solid var(--burgundy);
     }
-    .pricing-badge {
-      position: absolute;
-      top: -11px;
-      left: 28px;
-      background: var(--green);
-      color: #000;
-      font-size: 0.6rem;
-      font-weight: 800;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      padding: 3px 10px;
-    }
-    .pricing-tier {
-      font-size: 0.7rem;
-      font-weight: 800;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
-    .pricing-price {
-      font-size: 2.8rem;
+    .plan-name {
+      font-size: 10px;
       font-weight: 900;
-      line-height: 1;
+      color: var(--dim);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .plan-price {
+      font-size: 36px;
+      font-weight: 900;
       color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1;
       margin-bottom: 4px;
     }
-    .pricing-price sup {
-      font-size: 1.2rem;
-      vertical-align: super;
-      font-weight: 700;
-    }
-    .pricing-cadence {
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--muted);
+    .plan-period {
+      font-size: 11px;
+      color: var(--dim);
       margin-bottom: 24px;
-      letter-spacing: 0.06em;
     }
-    .pricing-features {
+    .plan-features {
       list-style: none;
-      margin-bottom: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      margin-bottom: 24px;
     }
-    .pricing-features li {
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: #cccccc;
+    .plan-features li {
+      font-size: 13px;
+      color: var(--dim);
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 8px;
-      line-height: 1.4;
     }
-    .pricing-features li::before {
-      content: '✓';
-      color: var(--green);
-      font-weight: 900;
+    .plan-features li::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background: var(--burgundy);
+      border-radius: 50%;
       flex-shrink: 0;
-      margin-top: 1px;
     }
-    .pricing-cta {
+    .plan-cta {
       display: block;
       width: 100%;
-      font-family: var(--font);
-      font-size: 0.85rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      padding: 13px 20px;
+      padding: 12px;
       text-align: center;
       cursor: pointer;
       transition: opacity 0.15s;
       border: none;
+      font-family: inherit;
     }
-    .pricing-cta:hover { opacity: 0.88; }
-    .pricing-cta.free-cta {
-      background: transparent;
-      color: var(--green);
-      border: 1px solid rgba(0,255,135,0.3);
-    }
-    .pricing-cta.pro-cta {
-      background: var(--green);
-      color: #000;
-    }
-    .pricing-annual {
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--muted);
+    .plan-cta.primary { background: var(--burgundy); color: var(--white); }
+    .plan-cta.ghost { background: none; border: 1px solid var(--border); color: var(--dim); }
+    .plan-cta:hover { opacity: 0.85; }
+
+    /* BOTTOM CTA */
+    .bottom-cta {
+      padding: 80px 0;
       text-align: center;
-      margin-top: 10px;
-      letter-spacing: 0.04em;
     }
-    .pricing-annual a {
-      color: var(--green);
-      cursor: pointer;
-      text-decoration: underline;
+    .bottom-cta-headline {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .bottom-cta-sub {
+      font-size: 16px;
+      color: var(--dim);
+      margin-bottom: 36px;
     }
 
-    /* ── FOOTER ── */
-    .site-footer {
+    /* FOOTER */
+    footer {
       border-top: 1px solid var(--border);
-      padding: 22px 0 32px;
-      margin-top: 0;
+      padding: 32px 0;
+    }
+    .footer-inner {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 16px;
     }
-    .site-footer-copy {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-    .site-footer-links {
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-    }
-    .site-footer-links a {
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
+    .footer-logo {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: var(--white);
       text-transform: uppercase;
-      color: var(--muted);
-      text-decoration: none;
+    }
+    .footer-logo span { color: var(--burgundy); }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: var(--dim);
       transition: color 0.15s;
     }
-    .site-footer-links a:hover { color: var(--green); }
-    .site-footer-legal {
-      width: 100%;
-      font-size: 0.6rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      color: #333;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
+    .footer-links a:hover { color: var(--white); }
+    .footer-disclaimer {
+      font-size: 10px;
+      color: var(--muted);
+      max-width: 600px;
+      line-height: 1.6;
+      margin-top: 16px;
+    }
+    @media (max-width: 600px) {
+      .hero { padding: 48px 0 40px; }
+      .hero-sub { font-size: 15px; }
+      .cta-primary, .cta-secondary { width: 100%; text-align: center; padding: 14px 24px; }
+      .hero-ctas { flex-direction: column; }
+      .footer-inner { flex-direction: column; }
     }
 
-    /* ── MODALS (same as index.html) ── */
+    /* MODALS */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.72);
-      z-index: 1000;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: #0f0f0f;
-      border: 1px solid var(--border2);
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--burgundy);
       width: 100%;
       max-width: 400px;
-      padding: 32px 28px;
+      padding: 32px;
       position: relative;
     }
-    .modal-close {
-      position: absolute;
-      top: 14px; right: 16px;
-      font-family: var(--font);
-      font-size: 1.3rem;
-      font-weight: 300;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      line-height: 1;
-      padding: 2px 6px;
-      transition: color 0.15s;
-    }
-    .modal-close:hover { color: var(--white); }
     .modal-title {
-      font-size: 1.6rem;
+      font-size: 18px;
       font-weight: 900;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      margin-bottom: 22px;
-    }
-    .modal-google {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      font-family: var(--font);
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: var(--s3);
-      border: 1px solid var(--border2);
       color: var(--white);
-      padding: 11px 16px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+      margin-bottom: 24px;
     }
-    .modal-google:hover { border-color: var(--green); }
-    .modal-divider {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .modal-divider-line { flex: 1; border: none; border-top: 1px solid var(--border2); }
-    .modal-divider-text {
-      font-size: 0.68rem;
+    .modal-field { margin-bottom: 16px; }
+    .modal-label {
+      font-size: 10px;
       font-weight: 700;
+      color: var(--dim);
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--muted);
-    }
-    .modal-error {
-      display: none;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--red);
-      background: rgba(255,59,59,0.06);
-      border: 1px solid rgba(255,59,59,0.2);
-      padding: 8px 12px;
-      margin-bottom: 14px;
-    }
-    .modal-field { margin-bottom: 14px; }
-    .modal-label {
       display: block;
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--dim);
       margin-bottom: 6px;
     }
     .modal-input {
       width: 100%;
-      background: var(--s2);
-      border: 1px solid var(--border2);
+      background: var(--bg);
+      border: 1px solid var(--border);
       color: var(--white);
-      font-family: var(--font);
-      font-size: 0.95rem;
-      padding: 10px 12px;
+      font-size: 15px;
+      padding: 12px 14px;
+      font-family: inherit;
       outline: none;
       transition: border-color 0.15s;
     }
-    .modal-input:focus { border-color: var(--green); }
+    .modal-input:focus { border-color: var(--burgundy); }
     .modal-submit {
       width: 100%;
-      font-family: var(--font);
-      font-size: 0.85rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
+      background: var(--burgundy);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      background: var(--green);
-      color: #000;
       border: none;
-      padding: 13px 20px;
+      padding: 14px;
       cursor: pointer;
-      transition: background 0.15s;
-      margin-top: 4px;
-      margin-bottom: 14px;
+      margin-top: 8px;
+      transition: opacity 0.15s;
+      font-family: inherit;
     }
-    .modal-submit:hover { background: var(--green2); }
-    .modal-submit:disabled { opacity: 0.6; cursor: default; }
-    .modal-switch {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-align: center;
-    }
-    .modal-switch button {
-      background: none; border: none;
-      color: var(--green); cursor: pointer;
-      font-family: var(--font); font-size: 0.75rem; font-weight: 700;
-      text-decoration: underline;
-    }
-    .signup-hint {
-      font-size: 0.8rem; font-weight: 600;
-      color: var(--green);
-      background: rgba(0,255,135,0.06);
-      border: 1px solid rgba(0,255,135,0.2);
-      padding: 8px 12px; margin-bottom: 14px;
-      display: none;
-    }
-    .signup-hint.show { display: block; }
-
-    /* ── LIVE EDGE (used inside hero-live) ── */
-    .live-edge-eyebrow {
+    .modal-submit:hover { opacity: 0.85; }
+    .modal-google {
+      width: 100%;
+      background: var(--s2);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      border: 1px solid var(--border);
+      padding: 13px;
+      cursor: pointer;
+      margin-bottom: 16px;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 10px;
-      margin-bottom: 18px;
+      transition: border-color 0.15s;
+      font-family: inherit;
     }
-    .live-dot-badge {
-      display: inline-flex;
+    .modal-google:hover { border-color: var(--dim); }
+    .modal-divider {
+      display: flex;
       align-items: center;
-      gap: 7px;
-      font-size: 0.6rem;
-      font-weight: 800;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--red);
-      border: 1px solid rgba(255,59,59,0.3);
-      background: rgba(255,59,59,0.06);
-      padding: 4px 10px;
+      gap: 12px;
+      margin: 16px 0;
+      font-size: 11px;
+      color: var(--muted);
     }
-    .live-dot-badge-dot {
-      width: 6px; height: 6px;
-      background: var(--red);
-      border-radius: 50%;
-      animation: pulsered 1.4s ease-in-out infinite;
-      flex-shrink: 0;
-    }
-    @keyframes pulsered { 0%,100%{opacity:1} 50%{opacity:.3} }
-    .live-edge-headline {
-      font-size: clamp(2.8rem, 6vw, 5rem);
-      font-weight: 900;
-      line-height: 0.93;
-      letter-spacing: -0.01em;
-      text-transform: uppercase;
-      color: var(--white);
-      margin-bottom: 16px;
-    }
-    .live-edge-sub {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--green);
-      letter-spacing: 0.02em;
-      margin-bottom: 20px;
-    }
-    .live-edge-body {
-      font-size: 0.95rem;
-      font-weight: 400;
-      color: var(--dim);
-      line-height: 1.7;
-      max-width: 680px;
-      margin-bottom: 28px;
-    }
-    .live-callouts {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
+    .modal-divider::before, .modal-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
       background: var(--border);
     }
-    .live-callout {
-      background: var(--s3);
-      padding: 24px 22px;
+    .modal-switch {
+      font-size: 12px;
+      color: var(--dim);
+      text-align: center;
+      margin-top: 16px;
     }
-    .live-callout-icon {
-      font-size: 1.3rem;
-      margin-bottom: 10px;
-      display: block;
+    .modal-switch a {
+      color: var(--burgundy);
+      cursor: pointer;
+      font-weight: 700;
     }
-    .live-callout-title {
-      font-size: 0.75rem;
-      font-weight: 900;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 8px;
+    .modal-error {
+      font-size: 12px;
+      color: #ff4444;
+      margin-bottom: 12px;
+      min-height: 16px;
     }
-    .live-callout-desc {
-      font-size: 0.82rem;
-      font-weight: 400;
-      color: #cccccc;
-      line-height: 1.55;
-    }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 760px) {
-      /* Live hero */
-      .hero-live { padding: 48px 0 56px; }
-      .live-callouts { grid-template-columns: 1fr; }
-      /* Parlay section */
-      .parlay-sec { padding: 52px 0; }
-      .parlay-sec-inner { grid-template-columns: 1fr; gap: 36px; }
-      /* Shared */
-      .steps { grid-template-columns: 1fr; gap: 0; }
-      .step {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 24px 0;
-      }
-      .step:last-child { border-bottom: none; }
-      .step:not(:first-child) { padding-left: 0; }
-      .features-grid { grid-template-columns: 1fr; }
-      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
-      .section { padding: 52px 0; }
-      .section-sub { margin-bottom: 36px; }
-    }
-
-    @media (max-width: 480px) {
-      .wrap { padding: 0 16px; }
-      .live-edge-headline { font-size: 2.6rem; }
-      .live-ctas { flex-direction: column; }
-      .cta-primary, .cta-secondary { text-align: center; justify-content: center; width: 100%; }
-      .nav-brand { font-size: 1.3rem; }
-      .ex-metrics { grid-template-columns: 1fr 1fr; }
-      .hero-live { padding: 40px 0 48px; }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
     }
   </style>
 </head>
 <body>
 
-<!-- ── AUTH MODALS ── -->
-<div class="modal-overlay" id="modal-login" onclick="handleOverlayClick(event,'modal-login')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-login')">&times;</button>
-    <div class="modal-title">Log In</div>
-    <button class="modal-google" onclick="loginWithGoogle()">
-      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
-      Continue with Google
-    </button>
-    <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
-    <div class="modal-error" id="login-error"></div>
-    <div class="modal-field">
-      <label class="modal-label">Email</label>
-      <input type="email" class="modal-input" id="login-email" placeholder="you@example.com" autocomplete="email" />
+<!-- NAV -->
+<div class="wrap">
+  <nav class="nav">
+    <div class="nav-logo">PARLAY<span>KILLER</span></div>
+    <div class="nav-actions">
+      <button class="btn-ghost" onclick="openModal('login')">Sign In</button>
+      <button class="btn-primary" onclick="openModal('signup')">Get Started Free</button>
     </div>
-    <div class="modal-field">
-      <label class="modal-label">Password</label>
-      <input type="password" class="modal-input" id="login-password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" autocomplete="current-password" />
-    </div>
-    <button class="modal-submit" id="login-submit" onclick="submitLogin()">Log In</button>
-    <div style="text-align:center;margin-top:10px;">
-      <button onclick="switchModal('modal-login','modal-forgot')" style="background:none;border:none;color:#555;font-size:13px;cursor:pointer;padding:4px;">Forgot password?</button>
-    </div>
-    <div class="modal-switch">No account? <button onclick="switchModal('modal-login','modal-signup')">Sign up free</button></div>
-  </div>
+  </nav>
 </div>
 
-<div class="modal-overlay" id="modal-forgot" onclick="handleOverlayClick(event,'modal-forgot')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-forgot')">&times;</button>
-    <div class="modal-title">Reset Password</div>
-    <div class="modal-error" id="forgot-error"></div>
-    <div id="forgot-success" style="display:none;background:#0a2e1a;border:1px solid #00ff87;border-radius:6px;padding:14px;font-size:14px;color:#00ff87;margin-bottom:16px;text-align:center;"></div>
-    <p style="font-size:14px;color:#888;margin-bottom:16px;line-height:1.6;">Enter your email and we'll send you a link to reset your password.</p>
-    <div class="modal-field">
-      <label class="modal-label">Email</label>
-      <input type="email" class="modal-input" id="forgot-email" placeholder="you@example.com" autocomplete="email" />
+<!-- HERO -->
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-eyebrow">
+      <span class="live-dot"></span>
+      Live Prop Math Engine — NBA &amp; MLB
     </div>
-    <button class="modal-submit" id="forgot-submit" onclick="submitForgotPassword()">Send Reset Link</button>
-    <div class="modal-switch"><button onclick="switchModal('modal-forgot','modal-login')">Back to login</button></div>
-  </div>
+    <h1 class="hero-headline">
+      The math on<br>live props.<br><span>In real time.</span>
+    </h1>
+    <p class="hero-sub">
+      You're watching a game. You see a prop. Parlay Killer runs Bayesian + Poisson models on that exact live situation — game state, pace, hot hand, blowout risk — and tells you if the book's line makes sense right now.
+    </p>
+    <div class="hero-ctas">
+      <a href="#" class="cta-primary" onclick="openModal('signup');return false;">Create Free Account</a>
+      <a href="#how" class="cta-secondary">See How It Works</a>
+    </div>
+    <div class="social-proof">
+      <span class="social-proof-dot"></span>
+      3 free analyses — no credit card required
+    </div>
+  </section>
 </div>
 
-<div class="modal-overlay" id="modal-signup" onclick="handleOverlayClick(event,'modal-signup')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-signup')">&times;</button>
-    <div class="modal-title">Create Account</div>
-    <div class="signup-hint" id="signup-hint">Get 3 free analyses — no credit card required</div>
-    <button class="modal-google" onclick="loginWithGoogle()">
-      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
-      Continue with Google
-    </button>
-    <div class="modal-divider"><div class="modal-divider-line"></div><span class="modal-divider-text">or</span><div class="modal-divider-line"></div></div>
-    <div class="modal-error" id="signup-error"></div>
-    <div class="modal-field">
-      <label class="modal-label">Name</label>
-      <input type="text" class="modal-input" id="signup-name" placeholder="Your name" autocomplete="name" />
-    </div>
-    <div class="modal-field">
-      <label class="modal-label">Email</label>
-      <input type="email" class="modal-input" id="signup-email" placeholder="you@example.com" autocomplete="email" />
-    </div>
-    <div class="modal-field">
-      <label class="modal-label">Password (min 8 chars)</label>
-      <input type="password" class="modal-input" id="signup-password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" autocomplete="new-password" />
-    </div>
-    <button class="modal-submit" id="signup-submit" onclick="submitSignup()">Create Account</button>
-    <div class="modal-switch">Already have an account? <button onclick="switchModal('modal-signup','modal-login')">Log in</button></div>
-  </div>
-</div>
-
-<!-- ── TOP NAV ── -->
-<nav class="top-nav">
-  <div class="wrap">
-    <div class="top-nav-inner">
-      <div class="nav-brand">PARLAY<span>KILLER</span></div>
-      <div class="nav-actions">
-        <button class="nav-btn" onclick="openModal('modal-login')">Sign In</button>
-        <button class="nav-btn primary" onclick="openModal('modal-signup')">Get Started Free</button>
-      </div>
-    </div>
-  </div>
-</nav>
-
-<!-- ── HERO — Live Betting (the hook) ── -->
-<section class="hero-live">
-  <div class="wrap">
-
-    <div class="live-edge-eyebrow">
-      <span class="live-dot-badge">
-        <span class="live-dot-badge-dot"></span>
-        Live Betting Engine
-      </span>
-    </div>
-
-    <h1 class="live-edge-headline">The Edge Bettors<br>Don't Know They're Missing</h1>
-    <p style="font-size:0.78rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#00ff87;margin:14px 0 18px;">Trusted math, not gut feelings</p>
-    <p class="live-edge-sub">While the book adjusts lines in real time, you're guessing. Parlay Killer isn't.</p>
-    <p class="live-edge-body">Our live betting engine pulls real game data — pace, score, time remaining — and runs binomial probability math to tell you if that live player prop or team total is actually worth it right now. Not yesterday's line. Not a gut feeling. The math, live.</p>
-
-    <div class="live-ctas">
-      <button class="cta-primary" onclick="openModal('modal-signup')">Create Free Account</button>
-      <button class="cta-secondary" onclick="openModal('modal-login')">Sign In</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:16px;margin-bottom:12px;">
-      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,255,135,0.08);border:1px solid rgba(0,255,135,0.2);padding:5px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;color:#00ff87;">&#9733; Join 500+ bettors running smarter math</span>
-    </div>
-    <p class="live-hero-note">3 free analyses &mdash; no credit card required</p>
-
-    <div class="live-callouts">
-      <div class="live-callout">
-        <span class="live-callout-icon">&#128308;</span>
-        <div class="live-callout-title">Live Data</div>
-        <p class="live-callout-desc">Real-time stats updated as the game moves — score, period, time remaining fed directly into the model.</p>
-      </div>
-      <div class="live-callout">
-        <span class="live-callout-icon">&#128202;</span>
-        <div class="live-callout-title">Pace Math</div>
-        <p class="live-callout-desc">Projected totals based on current game pace. If a player is on a 32-point pace through three quarters, we know.</p>
-      </div>
-      <div class="live-callout">
-        <span class="live-callout-icon">&#9889;</span>
-        <div class="live-callout-title">Instant EV</div>
-        <p class="live-callout-desc">Expected value on live props in seconds. Know whether to hammer the over or pass before the line moves again.</p>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- ── PARLAY SECTION — Core tool proof ── -->
-<section class="parlay-sec">
-  <div class="wrap">
-    <div class="parlay-sec-inner">
-
-      <div>
-        <div class="parlay-eyebrow">Parlay EV Analyzer</div>
-        <h2 class="parlay-headline">STOP LOSING<br>MONEY ON<br><span>PARLAYS</span></h2>
-        <p class="parlay-body">Parlay Killer runs the real math on your bets — true probability, expected value, and exactly how much the house is taking from you. Know before you tap confirm.</p>
-      </div>
-
-      <div>
-        <div class="example-wrap">
-          <div class="example-label">&#9679; Live Example — 3-Leg Parlay</div>
-          <div class="ex-legs">
-            <div class="ex-leg">Chiefs -7.5 <span class="ex-odds">-110</span></div>
-            <div class="ex-leg">Celtics ML <span class="ex-odds">-165</span></div>
-            <div class="ex-leg">Over 224.5 <span class="ex-odds">-115</span></div>
+<!-- LIVE DEMO -->
+<div class="wrap">
+  <section class="demo-wrap">
+    <div class="section-label">Live example — OKC vs DEN · Q4 · 6:22</div>
+    <div class="demo-grid">
+      <div class="demo-card">
+        <div class="demo-card-header">
+          <div>
+            <div class="demo-player-name">Shai Gilgeous-Alexander</div>
+            <div class="demo-player-meta">OKC Thunder · SG · Q4 · 6:22 left</div>
           </div>
-          <hr class="ex-divider" />
-          <div class="ex-metrics">
-            <div class="ex-metric">
-              <div class="ex-metric-label">True Win Prob</div>
-              <div class="ex-metric-value green">13.5%</div>
-            </div>
-            <div class="ex-metric">
-              <div class="ex-metric-label">Book Implied</div>
-              <div class="ex-metric-value dim">20.8%</div>
-            </div>
-            <div class="ex-metric">
-              <div class="ex-metric-label">House Edge</div>
-              <div class="ex-metric-value red">35.1%</div>
-            </div>
-            <div class="ex-metric">
-              <div class="ex-metric-label">EV Per $100</div>
-              <div class="ex-metric-value red">-$35.10</div>
-            </div>
+          <div style="background:#007AC1;color:#fff;font-size:9px;font-weight:900;padding:3px 8px;">OKC</div>
+        </div>
+        <div class="demo-stat">31</div>
+        <div class="demo-stat-sub">pts · 6 reb · 5 ast · 34 min</div>
+        <div class="demo-prop-row">
+          <div>
+            <div class="demo-prop-label">Points</div>
+            <div class="demo-prop-line">O/U 34.5 live</div>
           </div>
-          <div class="ex-verdict">&#9888; HIGH RISK — Book takes 35¢ per dollar</div>
+          <div class="demo-prop-result">
+            <div class="demo-pct go">71%</div>
+            <div class="demo-verdict go">Lean Over</div>
+          </div>
+        </div>
+        <div class="demo-prop-row">
+          <div>
+            <div class="demo-prop-label">Rebounds</div>
+            <div class="demo-prop-line">O/U 5.5 live</div>
+          </div>
+          <div class="demo-prop-result">
+            <div class="demo-pct to">51%</div>
+            <div class="demo-verdict to">Toss Up</div>
+          </div>
+        </div>
+        <div class="demo-prop-row">
+          <div>
+            <div class="demo-prop-label">PRA</div>
+            <div class="demo-prop-line">O/U 46.5 live</div>
+          </div>
+          <div class="demo-prop-result">
+            <div class="demo-pct go">64%</div>
+            <div class="demo-verdict go">Lean Over</div>
+          </div>
+        </div>
+        <div class="demo-narrative">
+          <b>Close game, full usage.</b> Needs 3.5 more in 6:22. Q4 close-game rate projects 34.9 vs book's 34.5. Blowout not triggered. Slight over edge.
         </div>
       </div>
-
+      <div class="demo-card" style="background:#0a0a0a;">
+        <div style="font-size:10px;font-weight:700;color:#333;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:20px;">Game Total</div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px;">Book total</div>
+        <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:16px;letter-spacing:-0.02em;">218.5</div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px;">Pace projects</div>
+        <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:20px;letter-spacing:-0.02em;">204.2</div>
+        <div style="height:1px;background:#1e1e1e;margin-bottom:16px;"></div>
+        <div style="font-size:10px;font-weight:700;color:#333;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Alt Lines with Edge</div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1a1a1a;">
+          <span style="font-size:12px;color:#666;">Under 205.5</span>
+          <span style="font-size:12px;font-weight:900;color:#39ff14;">+EV · +480</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1a1a1a;">
+          <span style="font-size:12px;color:#666;">Under 212.5</span>
+          <span style="font-size:12px;font-weight:900;color:#39ff14;">+EV · +195</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;">
+          <span style="font-size:12px;color:#666;">Over 220.5</span>
+          <span style="font-size:12px;font-weight:900;color:#555;">-EV · -220</span>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 
-<!-- ── HOW IT WORKS ── -->
-<section class="section">
-  <div class="wrap">
-    <div class="section-eyebrow">How It Works</div>
-    <h2 class="section-title">Three Steps to Smarter Bets</h2>
-    <p class="section-sub">No fluff, no picks, no predictions. Just the math the sportsbook hopes you never see.</p>
+<!-- HOW IT WORKS -->
+<div class="wrap" id="how">
+  <section class="how-wrap">
+    <div class="section-label">How it works</div>
+    <h2 class="how-headline">Four taps. Zero typing. Instant math.</h2>
     <div class="steps">
       <div class="step">
-        <span class="step-num">01</span>
-        <div class="step-title">Enter Your Parlay</div>
-        <p class="step-desc">Paste in your legs and the odds from any sportsbook. Works with any sportsbook — FanDuel, BetMGM, Caesars, and more.</p>
+        <div class="step-num">Step 01</div>
+        <div class="step-title">See live games</div>
+        <div class="step-desc">Open the app during any NBA or MLB game. Live scores, period, and time remaining are pulled in real time.</div>
       </div>
       <div class="step">
-        <span class="step-num">02</span>
-        <div class="step-title">See the Real Math</div>
-        <p class="step-desc">Instantly see your true win probability, expected value per dollar, and exactly what the house edge is on your slip.</p>
+        <div class="step-num">Step 02</div>
+        <div class="step-title">Tap the game</div>
+        <div class="step-desc">Full live box score loads instantly. Every player on the floor with their current game stats.</div>
       </div>
       <div class="step">
-        <span class="step-num">03</span>
-        <div class="step-title">Bet Smarter</div>
-        <p class="step-desc">Find positive expected value plays, compare legs, and decide if the bet is actually worth making — or skip it entirely.</p>
+        <div class="step-num">Step 03</div>
+        <div class="step-title">Tap a player</div>
+        <div class="step-desc">Player card opens with all live props loaded — Points, Rebounds, Assists, PRA — with current book lines.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">Step 04</div>
+        <div class="step-title">Get the math</div>
+        <div class="step-desc">Bayesian + Poisson models run instantly. You see a probability, a verdict, and a plain English read on the situation.</div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 
-<!-- ── FEATURES ── -->
-<section class="section">
-  <div class="wrap">
-    <div class="section-eyebrow">Features</div>
-    <h2 class="section-title">Everything You Need</h2>
-    <p class="section-sub">Built for serious bettors who want data, not hype.</p>
-    <div class="features-grid">
-      <div class="feature">
-        <span class="feature-icon">&#128200;</span>
-        <div class="feature-title">Parlay EV Analyzer</div>
-        <p class="feature-desc">Enter any parlay and instantly get the true probability, expected value, and implied house take. Know exactly what you're risking before you tap confirm.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">&#9889;</span>
-        <div class="feature-title">Live Sportsbook Odds</div>
-        <p class="feature-desc">Real-time odds pulled from major sportsbooks across NBA, MLB, NFL, NHL, and more. Add any game line to your parlay in one click.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">&#127919;</span>
-        <div class="feature-title">Value Finder</div>
-        <p class="feature-desc">Automatically surfaces plays where the implied probability suggests positive expected value — the spots where the math is actually in your favor.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">&#128248;</span>
-        <div class="feature-title">Live Bet Tracker</div>
-        <p class="feature-desc">Already in a game? Enter the current score and time remaining to get a real-time pace projection for NBA and MLB player props.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── PRICING ── -->
-<section class="section">
-  <div class="wrap">
-    <div class="section-eyebrow">Pricing</div>
-    <h2 class="section-title">Simple, Honest Pricing</h2>
-    <p class="section-sub">Try it free. Upgrade when it saves you money — and it will.</p>
-    <div class="pricing-grid">
-
-      <div class="pricing-card">
-        <div class="pricing-tier">Free</div>
-        <div class="pricing-price"><sup>$</sup>0</div>
-        <div class="pricing-cadence">Forever free</div>
-        <ul class="pricing-features">
-          <li>3 parlay analyses (lifetime)</li>
-          <li>Live sportsbook odds</li>
-          <li>Full EV breakdown</li>
-          <li>Value Finder access</li>
-        </ul>
-        <button class="pricing-cta free-cta" onclick="openModal('modal-signup')">Get Started Free</button>
-      </div>
-
-      <div class="pricing-card featured">
-        <div class="pricing-badge">Most Popular</div>
-        <div class="pricing-tier">Pro</div>
-        <div class="pricing-price"><sup>$</sup>9<span style="font-size:1.6rem">.99</span></div>
-        <div class="pricing-cadence">per month &mdash; or $39.99/year (save 67%)</div>
-        <ul class="pricing-features">
-          <li>Unlimited parlay analyses</li>
-          <li>Live sportsbook odds</li>
-          <li>Full EV breakdown</li>
-          <li>Value Finder — all sports</li>
-          <li>Live Bet Tracker (NBA + MLB)</li>
-          <li>7-day refund guarantee</li>
-        </ul>
-        <button class="pricing-cta pro-cta" onclick="openModal('modal-signup')">Start Pro</button>
-        <div class="pricing-annual">Or <a onclick="openModal('modal-signup')">$39.99/year</a> — save $79.89</div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ── FOOTER ── -->
+<!-- MATH MODELS -->
 <div class="wrap">
-  <footer class="site-footer">
-    <span class="site-footer-copy">&copy; 2026 Parlay Killer. All rights reserved.</span>
-    <nav class="site-footer-links">
-      <a href="/privacy.html">Privacy Policy</a>
-      <a href="/terms.html">Terms of Service</a>
-    </nav>
-    <p class="site-footer-legal">18+ only. Parlay Killer is not a sportsbook, betting advisor, or gambling service. We are a math tool. Use at your own risk. If you have a gambling problem, call 1-800-522-4700.</p>
+  <section class="math-wrap">
+    <div class="section-label">The engine</div>
+    <h2 class="math-headline">Not gut feelings. Actual math.</h2>
+    <p class="math-sub">Eight quantitative models run simultaneously every time you analyze a prop. Here's what's under the hood.</p>
+    <div class="models-grid">
+      <div class="model-card">
+        <div class="model-name">Model 1</div>
+        <div class="model-title">Bayesian Updating</div>
+        <div class="model-desc">Blends season averages with current game performance. Early game = season dominates. Late game = today dominates.</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name">Model 2</div>
+        <div class="model-title">Poisson Distribution</div>
+        <div class="model-desc">Treats scoring as a random process over continuous time. Gives true probability — not just a projection.</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name">Model 3</div>
+        <div class="model-title">Game State Engine</div>
+        <div class="model-desc">Blowout? Close game? 4th quarter? Each situation applies a different multiplier to the adjusted rate.</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name">Model 4</div>
+        <div class="model-title">Hot Hand Detection</div>
+        <div class="model-desc">Measures z-score deviation from season pace. Running hot gets a boost. Running cold gets discounted.</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name">Model 5</div>
+        <div class="model-title">Defensive Rating</div>
+        <div class="model-desc">Opponent defensive rating adjusts the baseline. Elite defense = harder. Weak defense = easier.</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name">Model 6</div>
+        <div class="model-title">Pace Projection</div>
+        <div class="model-desc">Current scoring pace extrapolated to final score. Powers the alt line EV scanner for game totals.</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name">Model 7</div>
+        <div class="model-title">Alt Line EV Scanner</div>
+        <div class="model-desc">Scans every available alt line and flags which ones have positive expected value vs the math's true probability.</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name">Model 8</div>
+        <div class="model-title">Kelly Criterion</div>
+        <div class="model-desc">Calculates optimal bet sizing based on the identified edge. Quarter-Kelly recommended for recreational bettors.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- PRICING -->
+<div class="wrap">
+  <section class="pricing-wrap">
+    <div class="section-label">Pricing</div>
+    <h2 class="pricing-headline">Simple. No surprises.</h2>
+    <div class="pricing-grid">
+      <div class="plan">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">$0</div>
+        <div class="plan-period">Forever</div>
+        <ul class="plan-features">
+          <li>3 live prop analyses</li>
+          <li>Full math breakdown</li>
+          <li>Alt line EV scanner</li>
+          <li>NBA &amp; MLB</li>
+        </ul>
+        <button class="plan-cta ghost" onclick="openModal('signup')">Get Started</button>
+      </div>
+      <div class="plan featured">
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$9.99</div>
+        <div class="plan-period">per month · or $39.99/year</div>
+        <ul class="plan-features">
+          <li>Unlimited analyses</li>
+          <li>All 8 math models</li>
+          <li>Game total scanner</li>
+          <li>Live threshold alerts</li>
+          <li>Priority data refresh</li>
+        </ul>
+        <button class="plan-cta primary" onclick="openModal('signup')">Go Pro</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="wrap">
+  <section class="bottom-cta">
+    <h2 class="bottom-cta-headline">Start with 3 free.<br>No card needed.</h2>
+    <p class="bottom-cta-sub">Open during a live game. Run the math. See if the book's line holds up.</p>
+    <a href="#" class="cta-primary" onclick="openModal('signup');return false;" style="display:inline-block;">Create Free Account</a>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<div class="wrap">
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-logo">PARLAY<span>KILLER</span></div>
+        <div class="footer-disclaimer">
+          Parlay Killer is a math tool only — not betting advice. Must be 18+ to use. Please gamble responsibly.
+          <a href="https://www.ncpgambling.org" target="_blank" rel="noopener" style="color:#444;"> ncpgambling.org</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="mailto:parlay@parlaykillerapp.com">Contact</a>
+      </div>
+    </div>
   </footer>
 </div>
 
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="modal-login" onclick="if(event.target===this)closeModal('login')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('login')">&times;</button>
+    <div class="modal-title">Sign In</div>
+    <div class="modal-error" id="login-error"></div>
+    <button class="modal-google" onclick="window.location.href='/api/auth/google'">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+    <div class="modal-divider">or</div>
+    <div class="modal-field">
+      <label class="modal-label">Email</label>
+      <input class="modal-input" type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Password</label>
+      <input class="modal-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="modal-submit" onclick="submitLogin()">Sign In</button>
+    <div class="modal-switch">No account? <a onclick="switchModal('login','signup')">Sign up free</a></div>
+  </div>
+</div>
+
+<!-- SIGNUP MODAL -->
+<div class="modal-overlay" id="modal-signup" onclick="if(event.target===this)closeModal('signup')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('signup')">&times;</button>
+    <div class="modal-title">Create Account</div>
+    <div class="modal-error" id="signup-error"></div>
+    <button class="modal-google" onclick="window.location.href='/api/auth/google'">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+    <div class="modal-divider">or</div>
+    <div class="modal-field">
+      <label class="modal-label">Name (optional)</label>
+      <input class="modal-input" type="text" id="signup-name" placeholder="Your name" autocomplete="name">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Email</label>
+      <input class="modal-input" type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Password (min 8 chars)</label>
+      <input class="modal-input" type="password" id="signup-password" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <button class="modal-submit" onclick="submitSignup()">Create Account</button>
+    <div class="modal-switch">Already have an account? <a onclick="switchModal('signup','login')">Sign in</a></div>
+  </div>
+</div>
+
 <script>
-  /* ── Modal helpers ── */
-  function openModal(id) {
-    document.getElementById(id).classList.add('open');
-    const first = document.querySelector(`#${id} input`);
-    if (first) setTimeout(() => first.focus(), 60);
-  }
+function openModal(name) {
+  document.getElementById('modal-' + name).classList.add('open');
+  if (name === 'login') setTimeout(() => document.getElementById('login-email').focus(), 60);
+  if (name === 'signup') setTimeout(() => document.getElementById('signup-email').focus(), 60);
+}
+function closeModal(name) {
+  document.getElementById('modal-' + name).classList.remove('open');
+}
+function switchModal(from, to) {
+  closeModal(from);
+  openModal(to);
+}
 
-  function closeModal(id) {
-    document.getElementById(id).classList.remove('open');
-    clearModalError(id === 'modal-login' ? 'login-error' : 'signup-error');
-  }
+async function submitLogin() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!email || !password) { err.textContent = 'Email and password required'; return; }
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await r.json();
+    if (!r.ok) { err.textContent = data.error || 'Login failed'; return; }
+    window.location.href = '/';
+  } catch(e) { err.textContent = 'Something went wrong. Try again.'; }
+}
 
-  function handleOverlayClick(e, id) {
-    if (e.target === document.getElementById(id)) closeModal(id);
-  }
+async function submitSignup() {
+  const name = document.getElementById('signup-name').value;
+  const email = document.getElementById('signup-email').value;
+  const password = document.getElementById('signup-password').value;
+  const err = document.getElementById('signup-error');
+  err.textContent = '';
+  if (!email || !password) { err.textContent = 'Email and password required'; return; }
+  if (password.length < 8) { err.textContent = 'Password must be at least 8 characters'; return; }
+  try {
+    const r = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await r.json();
+    if (!r.ok) { err.textContent = data.error || 'Registration failed'; return; }
+    window.location.href = '/';
+  } catch(e) { err.textContent = 'Something went wrong. Try again.'; }
+}
 
-  function switchModal(from, to) {
-    closeModal(from);
-    openModal(to);
-  }
-
-  function clearModalError(elId) {
-    const el = document.getElementById(elId);
-    if (el) { el.style.display = 'none'; el.textContent = ''; }
-  }
-
-  function showModalError(elId, msg) {
-    const el = document.getElementById(elId);
-    if (el) { el.textContent = msg; el.style.display = 'block'; }
-  }
-
-  function setSubmitLoading(btnId, loading) {
-    const btn = document.getElementById(btnId);
-    if (!btn) return;
-    btn.disabled = loading;
-    if (loading) btn.dataset.orig = btn.textContent;
-    btn.textContent = loading ? 'Please wait\u2026' : (btn.dataset.orig || btn.textContent);
-  }
-
-  function loginWithGoogle() {
-    window.location.href = '/api/auth/google';
-  }
-
-  /* ── Auth ── */
-  async function submitLogin() {
-    clearModalError('login-error');
-    const email    = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) { showModalError('login-error', 'Email and password required.'); return; }
-
-    setSubmitLoading('login-submit', true);
-    try {
-      const res  = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) { showModalError('login-error', data.error || 'Login failed.'); return; }
-      window.location.href = '/';
-    } catch {
-      showModalError('login-error', 'Network error. Try again.');
-    } finally {
-      setSubmitLoading('login-submit', false);
-    }
-  }
-
-  async function submitSignup() {
-    clearModalError('signup-error');
-    const name     = document.getElementById('signup-name').value.trim();
-    const email    = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
-    if (!email) { showModalError('signup-error', 'Email required.'); return; }
-    if (!password || password.length < 8) { showModalError('signup-error', 'Password must be at least 8 characters.'); return; }
-
-    setSubmitLoading('signup-submit', true);
-    try {
-      const res  = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name, email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) { showModalError('signup-error', data.error || 'Registration failed.'); return; }
-      window.location.href = '/';
-    } catch {
-      showModalError('signup-error', 'Network error. Try again.');
-    } finally {
-      setSubmitLoading('signup-submit', false);
-    }
-  }
-
-  async function submitForgotPassword() {
-    document.getElementById('forgot-error').textContent = '';
-    document.getElementById('forgot-success').style.display = 'none';
-    const email = document.getElementById('forgot-email').value.trim();
-    if (!email) { document.getElementById('forgot-error').textContent = 'Email required.'; return; }
-    setSubmitLoading('forgot-submit', true);
-    try {
-      await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      document.getElementById('forgot-success').textContent = 'Check your email for a reset link.';
-      document.getElementById('forgot-success').style.display = 'block';
-      document.getElementById('forgot-email').value = '';
-    } catch {
-      document.getElementById('forgot-error').textContent = 'Network error. Try again.';
-    } finally {
-      setSubmitLoading('forgot-submit', false);
-    }
-  }
-
-  // Enter key in modals
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'Enter') return;
-    if (document.getElementById('modal-login').classList.contains('open'))  submitLogin();
-    if (document.getElementById('modal-signup').classList.contains('open')) submitSignup();
-    if (document.getElementById('modal-forgot').classList.contains('open')) submitForgotPassword();
-  });
-
-  // If user is already logged in, send them to the app
-  fetch('/api/auth/me', { credentials: 'include' })
-    .then(r => r.json())
-    .then(d => { if (d.user) window.location.href = '/'; })
-    .catch(() => {});
+// Check if already logged in — redirect to app
+fetch('/api/auth/me', { credentials: 'include' })
+  .then(r => { if (r.ok) window.location.href = '/'; })
+  .catch(() => {});
 </script>
 </body>
 </html>
