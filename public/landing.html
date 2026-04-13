@@ -3,623 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parlay Killer — Live Prop Math Engine</title>
-  <meta name="description" content="Real-time math on live player props. Know if the book's line makes sense right now — before you place the bet.">
-  <meta property="og:title" content="Parlay Killer — Live Prop Math Engine">
-  <meta property="og:description" content="Real-time math on live player props. Bayesian + Poisson models. Know your edge instantly.">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <title>Parlay Killer Live Edge — Price the next few minutes of the game</title>
+  <meta name="description" content="Real-time live betting edge tool. See what the total should be before the market does.">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #080808;
-      --s1: #0d0d0d;
-      --s2: #111111;
-      --border: #1e1e1e;
-      --burgundy: #860038;
-      --green: #39ff14;
-      --amber: #f5a623;
-      --white: #ffffff;
-      --dim: #555555;
-      --muted: #333333;
+      --bg: #080808; --s1: #0d0d0d; --s2: #111111;
+      --border: #141414; --b2: #1e1e1e;
+      --green: #00e676; --red: #ff453a; --amber: #f5a623;
+      --white: #ffffff; --dim: #555555; --muted: #2a2a2a;
     }
     html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg);
-      color: var(--white);
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 16px;
-      line-height: 1.5;
-      min-height: 100vh;
-      border-top: 3px solid var(--burgundy);
-    }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    body { background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 16px; line-height: 1.6; min-height: 100vh; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
     a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+    /* LOGO */
+    .logo { display: flex; align-items: center; line-height: 1; }
+    .logo-pk { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+    .logo-pk .w { color: #ffffff; }
+    .logo-pk .g { color: #00e676; }
+    .logo-le { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #ff453a; letter-spacing: 0.1em; margin-left: 7px; position: relative; top: 1px; }
 
     /* NAV */
-    .nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-logo {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 0.12em;
-      color: var(--white);
-      text-transform: uppercase;
-    }
-    .nav-logo span { color: var(--burgundy); }
-    .nav-actions { display: flex; gap: 12px; align-items: center; }
-    .btn-ghost {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--dim);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 8px 12px;
-      transition: color 0.15s;
-    }
-    .btn-ghost:hover { color: var(--white); }
-    .btn-primary {
-      font-size: 12px;
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      background: var(--burgundy);
-      border: none;
-      cursor: pointer;
-      padding: 10px 20px;
-      transition: opacity 0.15s;
-    }
-    .btn-primary:hover { opacity: 0.85; }
+    .nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .nav-inner { display: flex; justify-content: space-between; align-items: center; height: 56px; }
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-ghost { font-size: 11px; font-weight: 600; color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; background: none; border: 1px solid var(--b2); padding: 8px 16px; transition: color 0.15s, border-color 0.15s; }
+    .btn-ghost:hover { color: var(--white); border-color: #444; }
+    .btn-green { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #080808; background: var(--green); border: none; padding: 10px 20px; letter-spacing: 0.1em; transition: opacity 0.15s; display: flex; align-items: center; gap: 6px; }
+    .btn-green:hover { opacity: 0.88; }
+    .btn-green svg { flex-shrink: 0; }
+    .nav-signin { display: block; }
+
+    /* SECTIONS */
+    section { padding: 80px 0; border-bottom: 1px solid var(--border); }
+    .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 20px; }
+    .tag-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+    .section-head { font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 5vw, 52px); letter-spacing: 0.04em; line-height: 1.05; margin-bottom: 16px; }
+    .section-sub { font-size: 15px; font-weight: 300; color: #aaa; max-width: 560px; line-height: 1.7; margin-bottom: 40px; }
 
     /* HERO */
-    .hero {
-      padding: 80px 0 60px;
-      border-bottom: 1px solid var(--border);
-    }
-    .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--s2);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--burgundy);
-      padding: 6px 14px;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--dim);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 28px;
-    }
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--burgundy);
-      border-radius: 50%;
-      animation: blink 1.4s ease-in-out infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
-    .hero-headline {
-      font-size: clamp(36px, 7vw, 72px);
-      font-weight: 900;
-      color: var(--white);
-      line-height: 1.0;
-      letter-spacing: -0.02em;
-      margin-bottom: 24px;
-      max-width: 800px;
-    }
-    .hero-headline span { color: var(--burgundy); }
-    .hero-sub {
-      font-size: 18px;
-      color: var(--dim);
-      max-width: 560px;
-      line-height: 1.6;
-      margin-bottom: 40px;
-      font-weight: 400;
-    }
-    .hero-ctas {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 60px;
-    }
-    .cta-primary {
-      font-size: 13px;
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      background: var(--burgundy);
-      border: none;
-      cursor: pointer;
-      padding: 16px 32px;
-      transition: opacity 0.15s;
-      display: inline-block;
-    }
-    .cta-primary:hover { opacity: 0.85; }
-    .cta-secondary {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--dim);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      background: none;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      padding: 16px 32px;
-      transition: all 0.15s;
-      display: inline-block;
-    }
-    .cta-secondary:hover { border-color: var(--white); color: var(--white); }
-    .social-proof {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .social-proof-dot { width: 4px; height: 4px; background: var(--green); border-radius: 50%; }
+    .hero { padding: 72px 0 80px; border-bottom: 1px solid var(--border); }
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+    .eyebrow-pill { display: inline-flex; align-items: center; gap: 8px; border-left: 2px solid var(--red); padding: 5px 12px; background: rgba(255,69,58,0.07); font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--white); margin-bottom: 24px; }
+    .eyebrow-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }
+    .hero-headline { font-family: 'Bebas Neue', sans-serif; font-size: clamp(38px, 5.5vw, 64px); letter-spacing: 0.03em; line-height: 1.0; margin-bottom: 20px; }
+    .hero-headline .hl-green { color: var(--green); }
+    .hero-sub { font-size: 16px; font-weight: 300; color: #aaa; line-height: 1.7; margin-bottom: 32px; max-width: 460px; }
+    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .cta-primary { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.1em; color: #080808; background: var(--green); border: none; padding: 13px 24px; display: inline-flex; align-items: center; gap: 8px; transition: opacity 0.15s; }
+    .cta-primary:hover { opacity: 0.88; }
+    .cta-secondary { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--white); background: none; border: 1px solid var(--b2); padding: 12px 20px; display: inline-flex; align-items: center; gap: 8px; transition: border-color 0.15s; }
+    .cta-secondary:hover { border-color: #555; }
+    .hero-note { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dim); }
 
-    /* LIVE DEMO CARD */
-    .demo-wrap {
-      padding: 60px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .section-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--muted);
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      margin-bottom: 32px;
-    }
-    .demo-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1px;
-      background: var(--border);
-      max-width: 680px;
-    }
-    @media (max-width: 600px) { .demo-grid { grid-template-columns: 1fr; } }
-    .demo-card {
-      background: var(--s1);
-      padding: 20px;
-    }
-    .demo-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 16px;
-    }
-    .demo-player-name {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--white);
-    }
-    .demo-player-meta {
-      font-size: 10px;
-      color: var(--dim);
-      margin-top: 2px;
-    }
-    .demo-stat {
-      font-size: 40px;
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: -0.02em;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .demo-stat-sub {
-      font-size: 10px;
-      color: var(--dim);
-      margin-bottom: 16px;
-    }
-    .demo-prop-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-top: 1px solid var(--border);
-    }
-    .demo-prop-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; }
-    .demo-prop-line { font-size: 13px; font-weight: 700; color: #ccc; margin-top: 2px; }
-    .demo-prop-result { text-align: right; }
-    .demo-pct { font-size: 22px; font-weight: 900; }
-    .demo-verdict { font-size: 8px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
-    .go { color: var(--green); }
-    .un { color: var(--burgundy); }
-    .to { color: var(--amber); }
-    .demo-narrative {
-      background: #0a0a0a;
-      border-left: 2px solid var(--burgundy);
-      padding: 10px 12px;
-      margin-top: 12px;
-      font-size: 10px;
-      color: var(--dim);
-      line-height: 1.7;
-    }
-    .demo-narrative b { color: #aaa; }
+    /* MOCKUP CARD */
+    .mockup-card { background: var(--s1); border: 1px solid var(--b2); border-left: 3px solid var(--green); padding: 20px; }
+    .mc-header { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; }
+    .mc-score-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .mc-team { font-family: 'Bebas Neue', sans-serif; }
+    .mc-team-abbr { font-size: 28px; letter-spacing: 0.04em; color: var(--white); }
+    .mc-team-score { font-size: 42px; letter-spacing: -0.01em; color: var(--white); }
+    .mc-team.right { text-align: right; }
+    .mc-center { text-align: center; }
+    .mc-period { font-size: 10px; font-weight: 600; color: var(--dim); letter-spacing: 0.1em; }
+    .mc-clock { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--white); }
+    .mc-data-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12px; }
+    .mc-data-label { color: var(--dim); font-weight: 400; }
+    .mc-data-val { font-weight: 600; color: var(--white); }
+    .mc-data-val.green { color: var(--green); }
+    .mc-edge-block { background: var(--muted); border: 1px solid var(--b2); padding: 14px; margin: 14px 0; text-align: center; }
+    .mc-edge-num { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.04em; color: var(--green); }
+    .mc-edge-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+    .mc-window-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 12px; }
+    .mc-window-label { color: var(--dim); }
+    .mc-window-val { color: var(--green); font-weight: 600; }
+    .mc-badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--green); padding: 4px 10px; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.1em; color: var(--green); }
+    .mc-badge-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; }
 
-    /* HOW IT WORKS */
-    .how-wrap {
-      padding: 80px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .how-headline {
-      font-size: 32px;
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: -0.01em;
-      margin-bottom: 48px;
-      max-width: 480px;
-    }
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1px;
-      background: var(--border);
-    }
-    .step {
-      background: var(--s1);
-      padding: 28px 24px;
-    }
-    .step-num {
-      font-size: 11px;
-      font-weight: 900;
-      color: var(--burgundy);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .step-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--white);
-      margin-bottom: 8px;
-      line-height: 1.2;
-    }
-    .step-desc {
-      font-size: 13px;
-      color: var(--dim);
-      line-height: 1.6;
-    }
+    /* THE PROBLEM */
+    .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+    .problem-prose { font-size: 15px; font-weight: 300; color: #aaa; line-height: 1.85; font-style: italic; }
+    .line-table { border: 1px solid var(--b2); }
+    .lt-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .lt-row:last-child { border-bottom: none; }
+    .lt-label { color: var(--dim); font-size: 11px; }
+    .lt-val { font-weight: 600; font-size: 14px; }
+    .lt-val.white { color: var(--white); }
+    .lt-val.amber { color: var(--amber); }
+    .lt-val.red { color: var(--red); }
+    .lt-val.muted { color: var(--dim); font-style: italic; font-weight: 400; font-size: 12px; }
 
-    /* MATH MODELS */
-    .math-wrap {
-      padding: 80px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .math-headline {
-      font-size: 32px;
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: -0.01em;
-      margin-bottom: 12px;
-    }
-    .math-sub {
-      font-size: 15px;
-      color: var(--dim);
-      margin-bottom: 40px;
-      max-width: 520px;
-    }
-    .models-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1px;
-      background: var(--border);
-    }
-    .model-card {
-      background: var(--s1);
-      padding: 24px;
-      border-top: 2px solid var(--border);
-      transition: border-color 0.15s;
-    }
-    .model-card:hover { border-top-color: var(--burgundy); }
-    .model-name {
-      font-size: 11px;
-      font-weight: 900;
-      color: var(--burgundy);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-    .model-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--white);
-      margin-bottom: 8px;
-    }
-    .model-desc {
-      font-size: 12px;
-      color: var(--dim);
-      line-height: 1.6;
-    }
+    /* THE SHIFT */
+    .steps-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid var(--b2); }
+    .step { padding: 28px 24px; border-right: 1px solid var(--b2); }
+    .step:last-child { border-right: none; }
+    .step-num { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.16em; color: var(--dim); margin-bottom: 12px; }
+    .step-icon { margin-bottom: 12px; opacity: 0.7; }
+    .step-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 8px; }
+    .step-desc { font-size: 13px; font-weight: 300; color: #aaa; line-height: 1.6; margin-bottom: 14px; }
+    .code-block { background: var(--muted); border: 1px solid var(--b2); padding: 12px 14px; font-size: 12px; font-family: 'DM Mono', monospace; line-height: 1.8; }
+    .cb-green { color: var(--green); }
+
+    /* FEATURES */
+    .features-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--b2); border: 1px solid var(--b2); }
+    .feat-card { background: var(--s1); padding: 28px 24px; }
+    .feat-card.accent { border-top: 2px solid var(--green); }
+    .feat-icon { margin-bottom: 14px; opacity: 0.8; }
+    .feat-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 6px; }
+    .feat-desc { font-size: 13px; font-weight: 300; color: #888; line-height: 1.6; margin-bottom: 14px; }
+    .feat-list { list-style: none; }
+    .feat-list li { font-size: 12px; color: var(--dim); padding: 4px 0; display: flex; align-items: center; gap: 6px; }
+    .feat-list li::before { content: '—'; color: var(--muted); flex-shrink: 0; }
+
+    /* PROOF */
+    .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .proof-card { background: var(--s1); border: 1px solid var(--b2); padding: 24px; }
+    .proof-title { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--dim); margin-bottom: 16px; text-transform: uppercase; }
+    .proof-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .proof-row:last-of-type { border-bottom: none; }
+    .proof-label { color: var(--dim); }
+    .proof-val { font-weight: 600; }
+    .proof-val.green { color: var(--green); }
+    .proof-quote { margin-top: 14px; font-size: 12px; font-style: italic; color: var(--dim); line-height: 1.6; border-left: 2px solid var(--b2); padding-left: 10px; }
+
+    /* WHO */
+    .who-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--b2); border: 1px solid var(--b2); }
+    .who-card { background: var(--s1); padding: 28px 24px; }
+    .who-icon { margin-bottom: 14px; opacity: 0.7; }
+    .who-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 8px; }
+    .who-desc { font-size: 13px; font-weight: 300; color: #888; line-height: 1.6; }
 
     /* PRICING */
-    .pricing-wrap {
-      padding: 80px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .pricing-headline {
-      font-size: 32px;
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: -0.01em;
-      margin-bottom: 40px;
-    }
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1px;
-      background: var(--border);
-      max-width: 560px;
-    }
-    @media (max-width: 480px) { .pricing-grid { grid-template-columns: 1fr; } }
-    .plan {
-      background: var(--s1);
-      padding: 28px 24px;
-    }
-    .plan.featured {
-      background: var(--s2);
-      border-top: 2px solid var(--burgundy);
-    }
-    .plan-name {
-      font-size: 10px;
-      font-weight: 900;
-      color: var(--dim);
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .plan-price {
-      font-size: 36px;
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: -0.02em;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .plan-period {
-      font-size: 11px;
-      color: var(--dim);
-      margin-bottom: 24px;
-    }
-    .plan-features {
-      list-style: none;
-      margin-bottom: 24px;
-    }
-    .plan-features li {
-      font-size: 13px;
-      color: var(--dim);
-      padding: 6px 0;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .plan-features li::before {
-      content: '';
-      width: 4px;
-      height: 4px;
-      background: var(--burgundy);
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .plan-cta {
-      display: block;
-      width: 100%;
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: opacity 0.15s;
-      border: none;
-      font-family: inherit;
-    }
-    .plan-cta.primary { background: var(--burgundy); color: var(--white); }
-    .plan-cta.ghost { background: none; border: 1px solid var(--border); color: var(--dim); }
-    .plan-cta:hover { opacity: 0.85; }
+    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 520px; }
+    .plan { background: var(--s1); border: 1px solid var(--b2); padding: 28px 24px; }
+    .plan.featured { border-top: 2px solid var(--green); background: var(--s2); }
+    .plan-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.1em; color: var(--white); margin-bottom: 4px; }
+    .plan-price { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.02em; color: var(--white); margin-bottom: 4px; }
+    .plan-note { font-size: 11px; color: var(--dim); margin-bottom: 20px; }
+    .plan-list { list-style: none; margin-bottom: 24px; }
+    .plan-list li { font-size: 13px; color: #aaa; padding: 5px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); }
+    .plan-list li:last-child { border-bottom: none; }
+    .plan-list li::before { content: '→'; color: var(--dim); font-size: 10px; flex-shrink: 0; }
+    .plan-btn { width: 100%; padding: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; border: none; }
+    .plan-btn.ghost { background: none; border: 1px solid var(--b2); color: var(--white); }
+    .plan-btn.ghost:hover { border-color: #555; }
+    .plan-btn.green { background: var(--green); color: #080808; }
+    .plan-btn.green:hover { opacity: 0.88; }
 
-    /* BOTTOM CTA */
-    .bottom-cta {
-      padding: 80px 0;
-      text-align: center;
-    }
-    .bottom-cta-headline {
-      font-size: clamp(28px, 5vw, 52px);
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: -0.02em;
-      margin-bottom: 16px;
-    }
-    .bottom-cta-sub {
-      font-size: 16px;
-      color: var(--dim);
-      margin-bottom: 36px;
-    }
+    /* FINAL CTA */
+    .final-cta { border-bottom: none; text-align: center; }
+    .final-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 20px; }
+    .final-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; }
+    .final-headline { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 9vw, 96px); letter-spacing: 0.03em; line-height: 1.0; margin-bottom: 16px; }
+    .final-sub { font-size: 15px; font-weight: 300; color: #aaa; margin-bottom: 32px; }
+    .final-note { font-size: 11px; color: var(--dim); margin-top: 14px; }
 
     /* FOOTER */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px 0;
-    }
-    .footer-inner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .footer-logo {
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: 0.12em;
-      color: var(--white);
-      text-transform: uppercase;
-    }
-    .footer-logo span { color: var(--burgundy); }
-    .footer-links {
-      display: flex;
-      gap: 24px;
-    }
-    .footer-links a {
-      font-size: 12px;
-      color: var(--dim);
-      transition: color 0.15s;
-    }
+    footer { padding: 32px 0 0; }
+    .footer-main { display: flex; justify-content: space-between; align-items: center; padding-bottom: 24px; }
+    .footer-tagline { font-size: 12px; color: var(--dim); margin-top: 6px; }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 12px; color: var(--dim); transition: color 0.15s; }
     .footer-links a:hover { color: var(--white); }
-    .footer-disclaimer {
-      font-size: 10px;
-      color: var(--muted);
-      max-width: 600px;
-      line-height: 1.6;
-      margin-top: 16px;
-    }
-    @media (max-width: 600px) {
-      .hero { padding: 48px 0 40px; }
-      .hero-sub { font-size: 15px; }
-      .cta-primary, .cta-secondary { width: 100%; text-align: center; padding: 14px 24px; }
-      .hero-ctas { flex-direction: column; }
-      .footer-inner { flex-direction: column; }
-    }
+    .footer-disclaimer { border-top: 1px solid var(--border); padding: 16px 0; font-size: 11px; color: var(--dim); line-height: 1.6; }
 
-    /* MODALS */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; align-items: center; justify-content: center; padding: 24px; }
     .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--s1);
-      border: 1px solid var(--border);
-      border-top: 3px solid var(--burgundy);
-      width: 100%;
-      max-width: 400px;
-      padding: 32px;
-      position: relative;
+    .modal { background: var(--s1); border: 1px solid var(--b2); border-top: 3px solid var(--green); width: 100%; max-width: 400px; padding: 32px 28px; position: relative; }
+    .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--dim); font-size: 20px; line-height: 1; padding: 4px; transition: color 0.15s; }
+    .modal-close:hover { color: var(--white); }
+    .modal-logo { margin-bottom: 20px; }
+    .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 20px; }
+    .modal-error { font-size: 12px; color: var(--red); min-height: 16px; margin-bottom: 8px; }
+    .modal-google { width: 100%; background: var(--s2); border: 1px solid var(--b2); color: var(--white); font-size: 13px; font-weight: 500; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; transition: background 0.15s; }
+    .modal-google:hover { background: #1a1a1a; }
+    .modal-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .modal-divider span { font-size: 11px; color: var(--dim); }
+    .modal-divider::before, .modal-divider::after { content: ''; flex: 1; height: 1px; background: var(--b2); }
+    .modal-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+    .modal-input { width: 100%; background: var(--s2); border: 1px solid var(--b2); color: var(--white); font-size: 14px; font-family: 'DM Sans', sans-serif; padding: 11px 12px; outline: none; margin-bottom: 14px; transition: border-color 0.15s; }
+    .modal-input:focus { border-color: var(--green); }
+    .modal-submit { width: 100%; background: var(--green); color: #080808; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.1em; border: none; padding: 14px; margin-top: 4px; transition: opacity 0.15s; }
+    .modal-submit:hover { opacity: 0.88; }
+    .modal-switch { font-size: 12px; color: var(--dim); text-align: center; margin-top: 16px; }
+    .modal-switch a { color: var(--green); cursor: pointer; }
+
+    /* RESPONSIVE */
+    @media(max-width: 720px) {
+      .wrap { padding: 0 20px; }
+      section { padding: 56px 0; }
+      .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+      .hero-grid .mockup-card { order: 2; }
+      .problem-grid { grid-template-columns: 1fr; gap: 36px; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .step { border-right: none; border-bottom: 1px solid var(--b2); }
+      .step:last-child { border-bottom: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .proof-grid { grid-template-columns: 1fr; }
+      .who-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 100%; }
+      .footer-main { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .nav-signin { display: none; }
     }
-    .modal-title {
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--white);
-      letter-spacing: -0.01em;
-      margin-bottom: 24px;
-    }
-    .modal-field { margin-bottom: 16px; }
-    .modal-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--dim);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      display: block;
-      margin-bottom: 6px;
-    }
-    .modal-input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--white);
-      font-size: 15px;
-      padding: 12px 14px;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .modal-input:focus { border-color: var(--burgundy); }
-    .modal-submit {
-      width: 100%;
-      background: var(--burgundy);
-      color: var(--white);
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      border: none;
-      padding: 14px;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity 0.15s;
-      font-family: inherit;
-    }
-    .modal-submit:hover { opacity: 0.85; }
-    .modal-google {
-      width: 100%;
-      background: var(--s2);
-      color: var(--white);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      border: 1px solid var(--border);
-      padding: 13px;
-      cursor: pointer;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: border-color 0.15s;
-      font-family: inherit;
-    }
-    .modal-google:hover { border-color: var(--dim); }
-    .modal-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 16px 0;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .modal-divider::before, .modal-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-    .modal-switch {
-      font-size: 12px;
-      color: var(--dim);
-      text-align: center;
-      margin-top: 16px;
-    }
-    .modal-switch a {
-      color: var(--burgundy);
-      cursor: pointer;
-      font-weight: 700;
-    }
-    .modal-error {
-      font-size: 12px;
-      color: #ff4444;
-      margin-bottom: 12px;
-      min-height: 16px;
-    }
-    .modal-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: none;
-      border: none;
-      color: var(--dim);
-      font-size: 20px;
-      cursor: pointer;
-      line-height: 1;
+    @media(max-width: 480px) {
+      .hero-headline { font-size: 38px; }
+      .hero-ctas { flex-direction: column; width: 100%; }
+      .cta-primary, .cta-secondary { width: 100%; justify-content: center; }
+      .final-cta .cta-primary { width: 100%; justify-content: center; }
+      .hero { padding: 48px 0 56px; }
     }
   </style>
 </head>
@@ -628,10 +225,18 @@
 <!-- NAV -->
 <div class="wrap">
   <nav class="nav">
-    <div class="nav-logo">PARLAY<span>KILLER</span></div>
-    <div class="nav-actions">
-      <button class="btn-ghost" onclick="openModal('login')">Sign In</button>
-      <button class="btn-primary" onclick="openModal('signup')">Get Started Free</button>
+    <div class="nav-inner">
+      <div class="logo">
+        <div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div>
+        <div class="logo-le">Live Edge</div>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-ghost nav-signin" onclick="openModal('login')">Sign In</button>
+        <button class="btn-green" onclick="openModal('signup')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6l3.5 3.5L11 2" stroke="#080808" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Get Early Access
+        </button>
+      </div>
     </div>
   </nav>
 </div>
@@ -639,177 +244,242 @@
 <!-- HERO -->
 <div class="wrap">
   <section class="hero">
-    <div class="hero-eyebrow">
-      <span class="live-dot"></span>
-      Live Prop Math Engine — NBA &amp; MLB
-    </div>
-    <h1 class="hero-headline">
-      The math on<br>live props.<br><span>In real time.</span>
-    </h1>
-    <p class="hero-sub">
-      You're watching a game. You see a prop. Parlay Killer runs Bayesian + Poisson models on that exact live situation — game state, pace, hot hand, blowout risk — and tells you if the book's line makes sense right now.
-    </p>
-    <div class="hero-ctas">
-      <a href="#" class="cta-primary" onclick="openModal('signup');return false;">Create Free Account</a>
-      <a href="#how" class="cta-secondary">See How It Works</a>
-    </div>
-    <div class="social-proof">
-      <span class="social-proof-dot"></span>
-      3 free analyses — no credit card required
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow-pill">
+          <span class="eyebrow-dot"></span>
+          NBA · MLB · Live Now
+        </div>
+        <h1 class="hero-headline">See what the live total<br><span class="hl-green">should be</span><br>before the market does.</h1>
+        <p class="hero-sub">Real-time projections for the next few minutes of the game. Find the edge. Act before it disappears.</p>
+        <div class="hero-ctas">
+          <a href="#" class="cta-primary" onclick="openModal('signup');return false;">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 6.5l3.5 4L11.5 2" stroke="#080808" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Get Early Access
+          </a>
+          <a href="#shift" class="cta-secondary">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><polygon points="3,2 11,6.5 3,11" fill="currentColor"/></svg>
+            See It in Action
+          </a>
+        </div>
+        <div class="hero-note">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#555" stroke-width="1"/><path d="M6 3.5V6l1.5 1.5" stroke="#555" stroke-width="1" stroke-linecap="round"/></svg>
+          No account required to preview
+        </div>
+      </div>
+      <div>
+        <div class="mockup-card">
+          <div class="mc-header">KNICKS @ CELTICS &nbsp;/&nbsp; Q4 · 6:31 · ESPN</div>
+          <div class="mc-score-row">
+            <div class="mc-team">
+              <div class="mc-team-abbr">NYK</div>
+              <div class="mc-team-score">90</div>
+            </div>
+            <div class="mc-center">
+              <div class="mc-period">Q4</div>
+              <div class="mc-clock">6:31</div>
+            </div>
+            <div class="mc-team right">
+              <div class="mc-team-abbr">BOS</div>
+              <div class="mc-team-score">111</div>
+            </div>
+          </div>
+          <div class="mc-data-row"><span class="mc-data-label">Live Total</span><span class="mc-data-val">200.5</span></div>
+          <div class="mc-data-row"><span class="mc-data-label">Model Fair</span><span class="mc-data-val green">206.9</span></div>
+          <div class="mc-edge-block">
+            <div class="mc-edge-num">EDGE: +6.4 OVER</div>
+            <div class="mc-edge-sub">Market is 6.4 pts behind reality</div>
+          </div>
+          <div class="mc-window-row">
+            <span class="mc-window-label">Next window</span>
+            <span class="mc-window-val">6:31 → 17.8 pts</span>
+          </div>
+          <div class="mc-badge"><span class="mc-badge-dot"></span>HEATING</div>
+        </div>
+      </div>
     </div>
   </section>
 </div>
 
-<!-- LIVE DEMO -->
+<!-- THE PROBLEM -->
 <div class="wrap">
-  <section class="demo-wrap">
-    <div class="section-label">Live example — OKC vs DEN · Q4 · 6:22</div>
-    <div class="demo-grid">
-      <div class="demo-card">
-        <div class="demo-card-header">
-          <div>
-            <div class="demo-player-name">Shai Gilgeous-Alexander</div>
-            <div class="demo-player-meta">OKC Thunder · SG · Q4 · 6:22 left</div>
-          </div>
-          <div style="background:#007AC1;color:#fff;font-size:9px;font-weight:900;padding:3px 8px;">OKC</div>
-        </div>
-        <div class="demo-stat">31</div>
-        <div class="demo-stat-sub">pts · 6 reb · 5 ast · 34 min</div>
-        <div class="demo-prop-row">
-          <div>
-            <div class="demo-prop-label">Points</div>
-            <div class="demo-prop-line">O/U 34.5 live</div>
-          </div>
-          <div class="demo-prop-result">
-            <div class="demo-pct go">71%</div>
-            <div class="demo-verdict go">Lean Over</div>
-          </div>
-        </div>
-        <div class="demo-prop-row">
-          <div>
-            <div class="demo-prop-label">Rebounds</div>
-            <div class="demo-prop-line">O/U 5.5 live</div>
-          </div>
-          <div class="demo-prop-result">
-            <div class="demo-pct to">51%</div>
-            <div class="demo-verdict to">Toss Up</div>
-          </div>
-        </div>
-        <div class="demo-prop-row">
-          <div>
-            <div class="demo-prop-label">PRA</div>
-            <div class="demo-prop-line">O/U 46.5 live</div>
-          </div>
-          <div class="demo-prop-result">
-            <div class="demo-pct go">64%</div>
-            <div class="demo-verdict go">Lean Over</div>
-          </div>
-        </div>
-        <div class="demo-narrative">
-          <b>Close game, full usage.</b> Needs 3.5 more in 6:22. Q4 close-game rate projects 34.9 vs book's 34.5. Blowout not triggered. Slight over edge.
-        </div>
+  <section>
+    <div class="tag">The problem</div>
+    <h2 class="section-head">Live betting feels like guessing.</h2>
+    <div class="problem-grid">
+      <div class="problem-prose">
+        <p>You're watching the game. The total moves. You hesitate.</p>
+        <br>
+        <p>Is the number right? Is this a run — or just noise?</p>
+        <br>
+        <p>By the time you decide — the line is gone.</p>
       </div>
-      <div class="demo-card" style="background:#0a0a0a;">
-        <div style="font-size:10px;font-weight:700;color:#333;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:20px;">Game Total</div>
-        <div style="font-size:11px;color:#555;margin-bottom:6px;">Book total</div>
-        <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:16px;letter-spacing:-0.02em;">218.5</div>
-        <div style="font-size:11px;color:#555;margin-bottom:6px;">Pace projects</div>
-        <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:20px;letter-spacing:-0.02em;">204.2</div>
-        <div style="height:1px;background:#1e1e1e;margin-bottom:16px;"></div>
-        <div style="font-size:10px;font-weight:700;color:#333;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Alt Lines with Edge</div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1a1a1a;">
-          <span style="font-size:12px;color:#666;">Under 205.5</span>
-          <span style="font-size:12px;font-weight:900;color:#39ff14;">+EV · +480</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1a1a1a;">
-          <span style="font-size:12px;color:#666;">Under 212.5</span>
-          <span style="font-size:12px;font-weight:900;color:#39ff14;">+EV · +195</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;">
-          <span style="font-size:12px;color:#666;">Over 220.5</span>
-          <span style="font-size:12px;font-weight:900;color:#555;">-EV · -220</span>
+      <div>
+        <div class="line-table">
+          <div class="lt-row">
+            <span class="lt-label">Total opens</span>
+            <span class="lt-val white">214.5</span>
+          </div>
+          <div class="lt-row">
+            <span class="lt-label">Q3 ends, total moves</span>
+            <span class="lt-val amber">208.5 ↓</span>
+          </div>
+          <div class="lt-row">
+            <span class="lt-label">You consider the under</span>
+            <span class="lt-val amber">205.5 ↓↓</span>
+          </div>
+          <div class="lt-row">
+            <span class="lt-label">You hesitate</span>
+            <span class="lt-val red">200.5 ↓↓↓</span>
+          </div>
+          <div class="lt-row">
+            <span class="lt-label">Line closes</span>
+            <span class="lt-val muted">Opportunity gone</span>
+          </div>
         </div>
       </div>
     </div>
   </section>
 </div>
 
-<!-- HOW IT WORKS -->
-<div class="wrap" id="how">
-  <section class="how-wrap">
-    <div class="section-label">How it works</div>
-    <h2 class="how-headline">Four taps. Zero typing. Instant math.</h2>
-    <div class="steps">
+<!-- THE SHIFT -->
+<div class="wrap" id="shift">
+  <section>
+    <div class="tag">The shift</div>
+    <h2 class="section-head">What if you could price<br>the game in real time?</h2>
+    <p class="section-sub">Parlay Killer Live Edge doesn't just show odds. It shows what the total should be, how many points are likely in the next few minutes, and exactly where the market is wrong.</p>
+    <div class="steps-grid">
       <div class="step">
-        <div class="step-num">Step 01</div>
-        <div class="step-title">See live games</div>
-        <div class="step-desc">Open the app during any NBA or MLB game. Live scores, period, and time remaining are pulled in real time.</div>
+        <div class="step-num">STEP 01 · TRACK</div>
+        <div class="step-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="#555" stroke-width="1.5"/><path d="M14 8v6l3 3" stroke="#555" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="step-title">We track the game state</div>
+        <div class="step-desc">Score, pace, efficiency, fouls, timeouts — everything that actually drives scoring, updated every 30 seconds.</div>
       </div>
       <div class="step">
-        <div class="step-num">Step 02</div>
-        <div class="step-title">Tap the game</div>
-        <div class="step-desc">Full live box score loads instantly. Every player on the floor with their current game stats.</div>
+        <div class="step-num">STEP 02 · PROJECT</div>
+        <div class="step-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><polyline points="4,20 10,12 16,16 22,6" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="step-title">We project what happens next</div>
+        <div class="step-desc">Not just the final total — the next 2, 5, or 6 minutes. Foul state, blowout risk, garbage time all factored in.</div>
       </div>
       <div class="step">
-        <div class="step-num">Step 03</div>
-        <div class="step-title">Tap a player</div>
-        <div class="step-desc">Player card opens with all live props loaded — Points, Rebounds, Assists, PRA — with current book lines.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">Step 04</div>
-        <div class="step-title">Get the math</div>
-        <div class="step-desc">Bayesian + Poisson models run instantly. You see a probability, a verdict, and a plain English read on the situation.</div>
+        <div class="step-num">STEP 03 · EDGE</div>
+        <div class="step-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><polygon points="14,4 17,11 24,11 18.5,15.5 20.5,23 14,18.5 7.5,23 9.5,15.5 4,11 11,11" stroke="#555" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div class="step-title">We show where the market is wrong</div>
+        <div class="step-desc">When the book lags behind reality, you see it instantly.</div>
+        <div class="code-block">
+          <div>Market: 200.5</div>
+          <div class="cb-green">Model: 206.9</div>
+          <div class="cb-green">Edge: +6.4 OVER</div>
+        </div>
       </div>
     </div>
   </section>
 </div>
 
-<!-- MATH MODELS -->
+<!-- FEATURES -->
 <div class="wrap">
-  <section class="math-wrap">
-    <div class="section-label">The engine</div>
-    <h2 class="math-headline">Not gut feelings. Actual math.</h2>
-    <p class="math-sub">Eight quantitative models run simultaneously every time you analyze a prop. Here's what's under the hood.</p>
-    <div class="models-grid">
-      <div class="model-card">
-        <div class="model-name">Model 1</div>
-        <div class="model-title">Bayesian Updating</div>
-        <div class="model-desc">Blends season averages with current game performance. Early game = season dominates. Late game = today dominates.</div>
+  <section>
+    <div class="tag">Built for live decisions</div>
+    <h2 class="section-head">Everything you need.<br>Nothing you don't.</h2>
+    <div class="features-grid">
+      <div class="feat-card accent">
+        <div class="feat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" stroke="#555" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" stroke="#555" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" stroke="#555" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" stroke="#555" stroke-width="1.5"/></svg>
+        </div>
+        <div class="feat-title">The Board</div>
+        <div class="feat-desc">All live games ranked by edge. Spot the best opportunity the moment it opens.</div>
+        <ul class="feat-list">
+          <li>Sorted by edge strength</li>
+          <li>Market vs model visible instantly</li>
+          <li>Heating · Closing badges</li>
+        </ul>
       </div>
-      <div class="model-card">
-        <div class="model-name">Model 2</div>
-        <div class="model-title">Poisson Distribution</div>
-        <div class="model-desc">Treats scoring as a random process over continuous time. Gives true probability — not just a projection.</div>
+      <div class="feat-card">
+        <div class="feat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polyline points="3,18 8,11 13,14 18,6" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="feat-title">Game View</div>
+        <div class="feat-desc">Market vs model visualized. Next-window projections. Signals that explain why.</div>
+        <ul class="feat-list">
+          <li>Dynamic clock-based windows</li>
+          <li>Alt line availability tracker</li>
+          <li>Playable-to number</li>
+        </ul>
       </div>
-      <div class="model-card">
-        <div class="model-name">Model 3</div>
-        <div class="model-title">Game State Engine</div>
-        <div class="model-desc">Blowout? Close game? 4th quarter? Each situation applies a different multiplier to the adjusted rate.</div>
+      <div class="feat-card">
+        <div class="feat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 8a6 6 0 0112 0v4l2 3H4l2-3V8z" stroke="#555" stroke-width="1.5"/><path d="M10 20a2 2 0 004 0" stroke="#555" stroke-width="1.5"/></svg>
+        </div>
+        <div class="feat-title">Alerts</div>
+        <div class="feat-desc">You don't have to watch every second. We do it for you.</div>
+        <ul class="feat-list">
+          <li>Edge crosses your threshold</li>
+          <li>Model flips direction</li>
+          <li>Push, in-app, or email</li>
+        </ul>
       </div>
-      <div class="model-card">
-        <div class="model-name">Model 4</div>
-        <div class="model-title">Hot Hand Detection</div>
-        <div class="model-desc">Measures z-score deviation from season pace. Running hot gets a boost. Running cold gets discounted.</div>
+    </div>
+  </section>
+</div>
+
+<!-- PROOF -->
+<div class="wrap">
+  <section>
+    <div class="tag">Proof</div>
+    <h2 class="section-head">When it hits, you'll know.</h2>
+    <p class="section-sub">It's not about being perfect. It's about seeing the edge before everyone else does.</p>
+    <div class="proof-grid">
+      <div class="proof-card">
+        <div class="proof-title">Window projection vs actual</div>
+        <div class="proof-row"><span class="proof-label">Projected (next 5:00)</span><span class="proof-val">13.2 pts</span></div>
+        <div class="proof-row"><span class="proof-label">Actual scored</span><span class="proof-val green">14 pts ✓</span></div>
+        <div class="proof-row"><span class="proof-label">Variance</span><span class="proof-val green">+0.8</span></div>
+        <div class="proof-quote">"Third time in a row the 5-minute window came within 1.5 pts."</div>
       </div>
-      <div class="model-card">
-        <div class="model-name">Model 5</div>
-        <div class="model-title">Defensive Rating</div>
-        <div class="model-desc">Opponent defensive rating adjusts the baseline. Elite defense = harder. Weak defense = easier.</div>
+      <div class="proof-card">
+        <div class="proof-title">Edge capture</div>
+        <div class="proof-row"><span class="proof-label">Model edge at entry</span><span class="proof-val green">+5.8 OVER</span></div>
+        <div class="proof-row"><span class="proof-label">Closing edge</span><span class="proof-val">+2.1</span></div>
+        <div class="proof-row"><span class="proof-label">Result</span><span class="proof-val green">Over hit ✓</span></div>
+        <div class="proof-quote">"Saw it at +5.8. By the time I placed it the edge was already shrinking. Got in just in time."</div>
       </div>
-      <div class="model-card">
-        <div class="model-name">Model 6</div>
-        <div class="model-title">Pace Projection</div>
-        <div class="model-desc">Current scoring pace extrapolated to final score. Powers the alt line EV scanner for game totals.</div>
+    </div>
+  </section>
+</div>
+
+<!-- WHO -->
+<div class="wrap">
+  <section>
+    <div class="tag">Who it's for</div>
+    <h2 class="section-head">Not picks. Not trends.<br>Not guesses.</h2>
+    <p class="section-sub">This isn't another betting app. We don't tell you what might happen. We show you what the number should be — right now.</p>
+    <div class="who-grid">
+      <div class="who-card">
+        <div class="who-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4c5.5 0 10 4.5 10 10s-4.5 10-10 10S4 19.5 4 14" stroke="#555" stroke-width="1.5" stroke-linecap="round"/><path d="M4 8l0 6 6 0" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="who-title">Live bettors who act fast</div>
+        <div class="who-desc">You need a read in under 10 seconds. The board gives you one.</div>
       </div>
-      <div class="model-card">
-        <div class="model-name">Model 7</div>
-        <div class="model-title">Alt Line EV Scanner</div>
-        <div class="model-desc">Scans every available alt line and flags which ones have positive expected value vs the math's true probability.</div>
+      <div class="who-card">
+        <div class="who-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="#555" stroke-width="1.5"/><path d="M14 9v5l3 3" stroke="#555" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="who-title">People tired of guessing totals</div>
+        <div class="who-desc">The model tells you when the book is wrong. You decide what to do with it.</div>
       </div>
-      <div class="model-card">
-        <div class="model-name">Model 8</div>
-        <div class="model-title">Kelly Criterion</div>
-        <div class="model-desc">Calculates optimal bet sizing based on the identified edge. Quarter-Kelly recommended for recreational bettors.</div>
+      <div class="who-card">
+        <div class="who-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="10" r="4" stroke="#555" stroke-width="1.5"/><path d="M6 24c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="#555" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="who-title">Anyone who watches games differently</div>
+        <div class="who-desc">Once you see the model vs market gap, you can't unsee it.</div>
       </div>
     </div>
   </section>
@@ -817,64 +487,71 @@
 
 <!-- PRICING -->
 <div class="wrap">
-  <section class="pricing-wrap">
-    <div class="section-label">Pricing</div>
-    <h2 class="pricing-headline">Simple. No surprises.</h2>
+  <section>
+    <div class="tag">Pricing</div>
+    <h2 class="section-head">Simple. No surprises.</h2>
     <div class="pricing-grid">
       <div class="plan">
         <div class="plan-name">Free</div>
         <div class="plan-price">$0</div>
-        <div class="plan-period">Forever</div>
-        <ul class="plan-features">
-          <li>3 live prop analyses</li>
-          <li>Full math breakdown</li>
-          <li>Alt line EV scanner</li>
-          <li>NBA &amp; MLB</li>
+        <div class="plan-note">Always free</div>
+        <ul class="plan-list">
+          <li>Limited board access</li>
+          <li>Delayed updates</li>
+          <li>3 edge analyses</li>
         </ul>
-        <button class="plan-cta ghost" onclick="openModal('signup')">Get Started</button>
+        <button class="plan-btn ghost" onclick="openModal('signup')">Get Started</button>
       </div>
       <div class="plan featured">
-        <div class="plan-name">Pro</div>
-        <div class="plan-price">$9.99</div>
-        <div class="plan-period">per month · or $39.99/year</div>
-        <ul class="plan-features">
+        <div class="plan-name">Live Edge</div>
+        <div class="plan-price">TBD</div>
+        <div class="plan-note">Revealed at launch</div>
+        <ul class="plan-list">
+          <li>Real-time projections</li>
+          <li>Full board access</li>
           <li>Unlimited analyses</li>
-          <li>All 8 math models</li>
-          <li>Game total scanner</li>
-          <li>Live threshold alerts</li>
-          <li>Priority data refresh</li>
+          <li>Push alerts</li>
+          <li>Alt line tracker</li>
         </ul>
-        <button class="plan-cta primary" onclick="openModal('signup')">Go Pro</button>
+        <button class="plan-btn green" onclick="openModal('signup')">Join Waitlist</button>
       </div>
     </div>
   </section>
 </div>
 
-<!-- BOTTOM CTA -->
+<!-- FINAL CTA -->
 <div class="wrap">
-  <section class="bottom-cta">
-    <h2 class="bottom-cta-headline">Start with 3 free.<br>No card needed.</h2>
-    <p class="bottom-cta-sub">Open during a live game. Run the math. See if the book's line holds up.</p>
-    <a href="#" class="cta-primary" onclick="openModal('signup');return false;" style="display:inline-block;">Create Free Account</a>
+  <section class="final-cta">
+    <div class="final-eyebrow"><span class="final-dot"></span>The edge doesn't wait</div>
+    <h2 class="final-headline">The edge doesn't last.</h2>
+    <p class="final-sub">Get access before the market catches up.</p>
+    <a href="#" class="cta-primary" onclick="openModal('signup');return false;" style="display:inline-flex;">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 6.5l3.5 4L11.5 2" stroke="#080808" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Join the Waitlist
+    </a>
+    <div class="final-note">No credit card · No commitment · Early access pricing locked in</div>
   </section>
 </div>
 
 <!-- FOOTER -->
 <div class="wrap">
   <footer>
-    <div class="footer-inner">
+    <div class="footer-main">
       <div>
-        <div class="footer-logo">PARLAY<span>KILLER</span></div>
-        <div class="footer-disclaimer">
-          Parlay Killer is a math tool only — not betting advice. Must be 18+ to use. Please gamble responsibly.
-          <a href="https://www.ncpgambling.org" target="_blank" rel="noopener" style="color:#444;"> ncpgambling.org</a>
+        <div class="logo">
+          <div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div>
+          <div class="logo-le">Live Edge</div>
         </div>
+        <div class="footer-tagline">Price the next few minutes of the game.</div>
       </div>
       <div class="footer-links">
-        <a href="/privacy.html">Privacy</a>
-        <a href="/terms.html">Terms</a>
-        <a href="mailto:parlay@parlaykillerapp.com">Contact</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="mailto:hello@parlaykillerapp.com">Contact</a>
       </div>
+    </div>
+    <div class="footer-disclaimer">
+      Parlay Killer Live Edge is a math tool only — not betting advice. Must be 21+ in applicable jurisdictions. Please gamble responsibly. <a href="https://www.ncpgambling.org" style="color:var(--dim);text-decoration:underline;">ncpgambling.org</a>
     </div>
   </footer>
 </div>
@@ -883,18 +560,21 @@
 <div class="modal-overlay" id="modal-login" onclick="if(event.target===this)closeModal('login')">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('login')">&times;</button>
+    <div class="modal-logo">
+      <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+    </div>
     <div class="modal-title">Sign In</div>
     <div class="modal-error" id="login-error"></div>
     <button class="modal-google" onclick="window.location.href='/api/auth/google'">
-      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.68 8.18c0-.57-.05-1.11-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.6c1.52-1.4 2.4-3.46 2.4-5.87z" fill="#4285F4"/><path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.78 4.78 0 01-2.7.75 4.74 4.74 0 01-4.46-3.28H.88v2.06A8 8 0 008 16z" fill="#34A853"/><path d="M3.54 9.53A4.8 4.8 0 013.3 8c0-.53.1-1.04.25-1.53V4.41H.88A8 8 0 000 8c0 1.29.31 2.51.88 3.59l2.66-2.06z" fill="#FBBC05"/><path d="M8 3.18c1.22 0 2.31.42 3.17 1.24l2.38-2.38A8 8 0 00.88 4.41l2.66 2.06A4.74 4.74 0 018 3.18z" fill="#EA4335"/></svg>
       Continue with Google
     </button>
-    <div class="modal-divider">or</div>
-    <div class="modal-field">
+    <div class="modal-divider"><span>or</span></div>
+    <div>
       <label class="modal-label">Email</label>
       <input class="modal-input" type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
     </div>
-    <div class="modal-field">
+    <div>
       <label class="modal-label">Password</label>
       <input class="modal-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
     </div>
@@ -907,22 +587,25 @@
 <div class="modal-overlay" id="modal-signup" onclick="if(event.target===this)closeModal('signup')">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('signup')">&times;</button>
+    <div class="modal-logo">
+      <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+    </div>
     <div class="modal-title">Create Account</div>
     <div class="modal-error" id="signup-error"></div>
     <button class="modal-google" onclick="window.location.href='/api/auth/google'">
-      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.68 8.18c0-.57-.05-1.11-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.6c1.52-1.4 2.4-3.46 2.4-5.87z" fill="#4285F4"/><path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.78 4.78 0 01-2.7.75 4.74 4.74 0 01-4.46-3.28H.88v2.06A8 8 0 008 16z" fill="#34A853"/><path d="M3.54 9.53A4.8 4.8 0 013.3 8c0-.53.1-1.04.25-1.53V4.41H.88A8 8 0 000 8c0 1.29.31 2.51.88 3.59l2.66-2.06z" fill="#FBBC05"/><path d="M8 3.18c1.22 0 2.31.42 3.17 1.24l2.38-2.38A8 8 0 00.88 4.41l2.66 2.06A4.74 4.74 0 018 3.18z" fill="#EA4335"/></svg>
       Continue with Google
     </button>
-    <div class="modal-divider">or</div>
-    <div class="modal-field">
-      <label class="modal-label">Name (optional)</label>
+    <div class="modal-divider"><span>or</span></div>
+    <div>
+      <label class="modal-label">Name</label>
       <input class="modal-input" type="text" id="signup-name" placeholder="Your name" autocomplete="name">
     </div>
-    <div class="modal-field">
+    <div>
       <label class="modal-label">Email</label>
       <input class="modal-input" type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
     </div>
-    <div class="modal-field">
+    <div>
       <label class="modal-label">Password (min 8 chars)</label>
       <input class="modal-input" type="password" id="signup-password" placeholder="••••••••" autocomplete="new-password">
     </div>
@@ -944,7 +627,6 @@ function switchModal(from, to) {
   closeModal(from);
   openModal(to);
 }
-
 async function submitLogin() {
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
@@ -953,17 +635,14 @@ async function submitLogin() {
   if (!email || !password) { err.textContent = 'Email and password required'; return; }
   try {
     const r = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', body: JSON.stringify({ email, password }),
     });
     const data = await r.json();
     if (!r.ok) { err.textContent = data.error || 'Login failed'; return; }
     window.location.href = '/';
   } catch(e) { err.textContent = 'Something went wrong. Try again.'; }
 }
-
 async function submitSignup() {
   const name = document.getElementById('signup-name').value;
   const email = document.getElementById('signup-email').value;
@@ -974,18 +653,15 @@ async function submitSignup() {
   if (password.length < 8) { err.textContent = 'Password must be at least 8 characters'; return; }
   try {
     const r = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ name, email, password }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', body: JSON.stringify({ name, email, password }),
     });
     const data = await r.json();
     if (!r.ok) { err.textContent = data.error || 'Registration failed'; return; }
     window.location.href = '/';
   } catch(e) { err.textContent = 'Something went wrong. Try again.'; }
 }
-
-// Check if already logged in — redirect to app
+// Auth check — redirect if already logged in
 fetch('/api/auth/me', { credentials: 'include' })
   .then(r => { if (r.ok) window.location.href = '/'; })
   .catch(() => {});

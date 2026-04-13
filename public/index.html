@@ -1,2087 +1,1085 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Parlay Killer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Parlay Killer Live Edge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:       #0d0d0d;
-      --s1:       #111111;
-      --s2:       #161616;
-      --s3:       #1c1c1c;
-      --border:   #222222;
-      --border2:  #2a2a2a;
-      --primary:  #860038;
-      --over:     #39ff14;
-      --under:    #860038;
-      --toss:     #f5a623;
-      --white:    #ffffff;
-      --dim:      #888888;
-      --muted:    #444444;
-      --font:     'Inter', sans-serif;
+      --bg: #080808; --s1: #0d0d0d; --s2: #111111;
+      --border: #141414; --b2: #1e1e1e;
+      --green: #00e676; --red: #ff453a; --amber: #f5a623;
+      --white: #ffffff; --dim: #555555; --muted: #2a2a2a;
     }
+    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-serif; }
 
-    html, body {
-      background: var(--bg);
-      color: var(--white);
-      font-family: var(--font);
-      height: 100%;
-      overflow: hidden;
-    }
+    /* LOGO */
+    .logo { display: flex; align-items: center; line-height: 1; }
+    .logo-pk { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+    .logo-pk .w { color: #ffffff; }
+    .logo-pk .g { color: #00e676; }
+    .logo-le { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #ff453a; letter-spacing: 0.1em; margin-left: 7px; position: relative; top: 1px; }
 
-    /* ── Screens ─────────────────────────────────────────── */
-    .screen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-      will-change: transform;
-    }
-    .screen.hidden { transform: translateX(100%); pointer-events: none; }
-    .screen.slide-left { transform: translateX(-30%); pointer-events: none; }
+    /* APP SHELL */
+    #app { position: fixed; inset: 0; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
+    #screens { position: relative; flex: 1; overflow: hidden; }
 
-    /* ── Top Nav ─────────────────────────────────────────── */
-    .top-nav {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      height: 52px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      z-index: 10;
-    }
-    .nav-logo {
-      font-size: 1rem;
-      font-weight: 900;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--white);
-      line-height: 1;
-    }
-    .nav-logo span { color: var(--primary); }
-    .nav-back {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: none;
-      border: none;
-      color: var(--white);
-      font-family: var(--font);
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 0;
-    }
-    .nav-back svg { flex-shrink: 0; }
-    .nav-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: var(--white);
-      cursor: pointer;
-      border: 2px solid var(--primary);
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
+    /* SCREENS */
+    .scr { position: absolute; inset: 0; background: var(--bg); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1); overflow-y: auto; overflow-x: hidden; padding-bottom: 56px; }
+    .scr.active { transform: translateX(0); }
+    .scr.behind { transform: translateX(-25%); pointer-events: none; }
+    .scr.inactive { transform: translateX(100%); }
 
-    /* ── Bottom Nav ──────────────────────────────────────── */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      align-items: stretch;
-      background: var(--s1);
-      border-top: 1px solid var(--border);
-      height: 56px;
-      z-index: 100;
-    }
-    .bottom-nav-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-family: var(--font);
-      font-size: 0.65rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      cursor: pointer;
-      transition: color 0.15s;
-    }
-    .bottom-nav-item.active { color: var(--primary); }
-    .bottom-nav-item svg { stroke: currentColor; }
+    /* TOP BAR */
+    .top-bar { display: flex; justify-content: space-between; align-items: center; height: 50px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+    .top-bar-left { display: flex; align-items: center; gap: 8px; }
+    .top-bar-right { display: flex; align-items: center; gap: 8px; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); background: none; border: none; cursor: pointer; padding: 0; }
+    .back-btn svg { flex-shrink: 0; }
+    .share-btn { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--red); background: none; border: none; cursor: pointer; }
+    .live-count { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--white); }
+    .live-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
 
-    /* ── Scrollable body area ────────────────────────────── */
-    .screen-body {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 56px; /* reserve space for fixed bottom nav */
-    }
+    /* TABS */
+    .tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; position: sticky; top: 50px; z-index: 9; background: var(--bg); }
+    .tab { flex: 1; padding: 11px 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; background: none; border-left: none; border-right: none; border-top: none; }
+    .tab.active { color: var(--white); border-bottom-color: var(--green); }
 
-    /* ── Live badge ──────────────────────────────────────── */
-    .live-dot {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: var(--over);
-      text-transform: uppercase;
-    }
-    .live-dot::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--over);
-      animation: pulse 1.2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
+    /* GAME CARD */
+    .game-card { border-left: 3px solid transparent; border-bottom: 1px solid var(--border); padding: 14px 16px; cursor: pointer; transition: background 0.12s; }
+    .game-card:active { background: var(--s1); }
+    .game-card.edge-over { border-left-color: var(--green); }
+    .game-card.edge-under { border-left-color: var(--red); }
+    .gc-score-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .gc-team { }
+    .gc-team.right { text-align: right; }
+    .gc-abbr { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: var(--white); line-height: 1; }
+    .gc-score { font-family: 'Bebas Neue', sans-serif; font-size: 38px; letter-spacing: -0.01em; color: var(--white); line-height: 1; }
+    .gc-rec { font-size: 10px; color: var(--dim); margin-top: 2px; }
+    .gc-center { text-align: center; }
+    .gc-sep { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--dim); line-height: 1; }
+    .gc-period { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: var(--dim); }
+    .gc-clock { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--white); }
+    .gc-network { font-size: 9px; color: var(--dim); margin-top: 2px; }
+    .gc-edge-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .gc-edge-nums { font-size: 12px; color: var(--dim); }
+    .gc-edge-nums .edge-val { font-weight: 600; }
+    .gc-edge-nums .edge-val.green { color: var(--green); }
+    .gc-edge-nums .edge-val.red { color: var(--red); }
+    .gc-badge { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.1em; padding: 2px 7px; border: 1px solid; }
+    .gc-badge.heating { color: var(--green); border-color: var(--green); }
+    .gc-badge.closing { color: var(--amber); border-color: var(--amber); }
+    .gc-windows { display: flex; gap: 0; margin-bottom: 10px; border: 1px solid var(--border); }
+    .gc-win { flex: 1; text-align: center; padding: 7px 4px; border-right: 1px solid var(--border); }
+    .gc-win:last-child { border-right: none; }
+    .gc-win-label { font-size: 9px; color: var(--dim); margin-bottom: 2px; }
+    .gc-win-pts { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.04em; color: var(--white); }
+    .gc-win.full .gc-win-label { color: var(--green); }
+    .gc-win.full .gc-win-pts { color: var(--green); }
+    .gc-signals { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .signal-pill { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; padding: 3px 8px; background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+    .signal-pill.warn { background: rgba(245,166,35,0.1); color: var(--amber); border-color: rgba(245,166,35,0.2); }
+    .gc-actions { display: flex; gap: 8px; }
+    .gc-btn { flex: 1; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 0; background: none; border: 1px solid var(--b2); color: var(--white); cursor: pointer; transition: background 0.12s; }
+    .gc-btn:active { background: var(--s1); }
+    .gc-btn.primary { background: var(--green); color: #080808; border-color: var(--green); }
+    .gc-btn.primary:active { opacity: 0.85; }
 
-    /* ── Game Strips (Home Screen) ───────────────────────── */
-    .section-label {
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--dim);
-      padding: 16px 16px 8px;
-    }
-    .game-strip {
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      gap: 0;
-      transition: background 0.12s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .game-strip:active { background: var(--s2); }
-    .team-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .team-col.right { align-items: flex-end; }
-    .team-name {
-      font-size: 11px;
-      font-weight: 800;
-      color: #ffffff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100px;
-    }
-    .team-abbr {
-      font-size: 10px;
-      font-weight: 700;
-      color: #555;
-      letter-spacing: 0.08em;
-    }
-    .game-card {
-      background: #141414;
-      border-left: 3px solid #2a2a2a;
-      padding: 14px 16px;
-      cursor: pointer;
-      transition: background 0.15s;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    .game-card.live { border-left-color: #860038; }
-    .game-card:active { background: #1a1a1a; }
-    .game-card-left { text-align: left; }
-    .game-card-right { text-align: right; }
-    .game-card-center { text-align: center; }
-    .gc-score { font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.01em; white-space: nowrap; }
-    .gc-status { font-size: 9px; font-weight: 700; color: #860038; letter-spacing: 0.08em; margin-top: 3px; }
-    .gc-network { font-size: 8px; color: #333; margin-top: 2px; }
-    .gc-time { font-size: 9px; color: #555; margin-top: 3px; }
-    .score-col {
-      width: 80px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-    .score-line {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--white);
-      font-variant-numeric: tabular-nums;
-    }
-    .score-sep {
-      font-size: 1rem;
-      color: var(--muted);
-    }
-    .game-status {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      color: var(--dim);
-      text-transform: uppercase;
-    }
-    .game-status.live { color: var(--over); }
+    /* EMPTY STATE */
+    .empty-state { padding: 60px 24px; text-align: center; }
+    .empty-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.3; }
+    .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.06em; color: var(--dim); margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; font-weight: 300; color: var(--dim); }
 
-    /* ── Box Score Screen ────────────────────────────────── */
-    .score-header {
-      padding: 0;
-      background: var(--s1);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .score-matchup {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 16px 8px;
-    }
-    .score-team-left { text-align: left; }
-    .score-team-right { text-align: right; }
-    .score-abbr {
-      font-size: 11px;
-      font-weight: 900;
-      color: #ffffff;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-    .score-num {
-      font-size: 38px;
-      font-weight: 900;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-      line-height: 1;
-    }
-    .score-record {
-      font-size: 8px;
-      color: #444;
-      margin-top: 2px;
-    }
-    .score-center {
-      text-align: center;
-      padding: 0 4px;
-    }
-    .score-period {
-      font-size: 11px;
-      font-weight: 900;
-      color: #860038;
-      letter-spacing: 0.06em;
-    }
-    .score-clock {
-      font-size: 10px;
-      color: #555;
-      margin-top: 3px;
-    }
-    .score-live-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: #860038;
-      padding: 2px 7px;
-      font-size: 8px;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: 0.1em;
-      margin-top: 5px;
-    }
-    .quarter-chart {
-      display: flex;
-      gap: 2px;
-      margin-top: 8px;
-    }
-    .qtr-block {
-      flex: 1;
-      height: 28px;
-      background: var(--s3);
-      border-radius: 2px;
-      display: flex;
-      align-items: flex-end;
-      overflow: hidden;
-      position: relative;
-    }
-    .qtr-fill {
-      width: 100%;
-      background: var(--primary);
-      transition: height 0.4s ease;
-    }
-    .qtr-fill.away { background: var(--s2); border: 1px solid var(--border2); }
-    .qtr-label {
-      font-size: 0.6rem;
-      color: var(--dim);
-      text-align: center;
-      margin-top: 3px;
-    }
+    /* SECTION LABEL */
+    .section-label { padding: 10px 16px 6px; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
 
-    /* ── Player Table ────────────────────────────────────── */
-    .player-table-tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      background: var(--s1);
-      flex-shrink: 0;
-    }
-    .ptab {
-      flex: 1;
-      padding: 10px 0;
-      text-align: center;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--dim);
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      font-family: var(--font);
-      transition: color 0.15s, border-color 0.15s;
-    }
-    .ptab.active { color: var(--white); border-bottom-color: var(--primary); }
+    /* ── GAME VIEW ─────────────────────────────── */
+    .score-header { padding: 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sh-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .sh-team { }
+    .sh-team.right { text-align: right; }
+    .sh-abbr { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.04em; color: var(--white); line-height: 1; }
+    .sh-score { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: -0.02em; color: var(--white); line-height: 1; }
+    .sh-rec { font-size: 10px; color: var(--dim); margin-top: 3px; }
+    .sh-center { text-align: center; }
+    .sh-period { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--white); letter-spacing: 0.04em; }
+    .sh-clock { font-size: 22px; font-weight: 300; color: var(--white); }
+    .sh-live { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; color: var(--green); display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 4px; }
+    .sh-live-dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; }
+    .qtr-chart { display: flex; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .qtr-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .qtr-bars { display: flex; gap: 2px; align-items: flex-end; height: 28px; }
+    .qtr-bar-away { background: #444; width: 8px; }
+    .qtr-bar-home { background: rgba(0,230,118,0.6); width: 8px; }
+    .qtr-label { font-size: 6px; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; }
 
-    .player-row {
-      display: flex;
-      align-items: center;
-      padding: 11px 16px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      gap: 12px;
-      transition: background 0.12s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .player-row:active { background: var(--s2); }
-    .player-num {
-      font-size: 0.7rem;
-      color: var(--muted);
-      width: 16px;
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .player-info { flex: 1; min-width: 0; }
-    .player-row-name {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--white);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .player-row-pos {
-      font-size: 0.65rem;
-      color: var(--dim);
-    }
-    .player-stats-mini {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .mini-stat {
-      text-align: center;
-      min-width: 28px;
-    }
-    .mini-stat-val {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--white);
-    }
-    .mini-stat-lbl {
-      font-size: 0.55rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .sparkline-wrap {
-      flex-shrink: 0;
-      opacity: 0.7;
-    }
+    /* EDGE TAB */
+    .edge-tab-content { padding: 16px; }
+    .clock-strip { display: flex; align-items: center; gap: 10px; padding: 10px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .clock-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: var(--dim); text-transform: uppercase; flex-shrink: 0; }
+    .clock-slider { flex: 1; accent-color: var(--green); }
+    .clock-display { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.06em; flex-shrink: 0; min-width: 40px; text-align: right; }
+    .edge-hero { background: var(--s1); border: 1px solid var(--b2); padding: 16px; margin-bottom: 14px; }
+    .eh-row1 { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); gap: 4px; }
+    .eh-col-label { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+    .eh-score-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--white); }
+    .eh-market-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--white); }
+    .eh-model-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+    .eh-model-val.green { color: var(--green); }
+    .eh-model-val.red { color: var(--red); }
+    .eh-edge { text-align: center; }
+    .eh-edge-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; }
+    .eh-edge-num.green { color: var(--green); }
+    .eh-edge-num.red { color: var(--red); }
+    .eh-playable { font-size: 11px; color: var(--dim); margin-top: 4px; }
+    .eh-playable span { color: var(--white); font-weight: 600; }
+    .conf-bar-wrap { margin-bottom: 14px; }
+    .conf-bar-header { display: flex; justify-content: space-between; align-items: center; font-size: 10px; margin-bottom: 6px; }
+    .conf-bar-label { font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; }
+    .conf-bar-pct { font-weight: 700; }
+    .conf-bar-bg { height: 4px; background: var(--muted); }
+    .conf-bar-fill { height: 4px; transition: width 0.4s ease; }
+    .conf-bar-fill.green { background: var(--green); }
+    .conf-bar-fill.amber { background: var(--amber); }
+    .market-chart { margin-bottom: 14px; }
+    .market-chart-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+    .windows-section { margin-bottom: 14px; }
+    .ws-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+    .win-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .win-tab { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; padding: 5px 10px; border: 1px solid var(--b2); color: var(--dim); cursor: pointer; background: none; transition: all 0.12s; }
+    .win-tab.active { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.06); }
+    .win-detail { background: var(--s1); border: 1px solid var(--b2); padding: 12px 14px; }
+    .wd-pts { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.02em; color: var(--white); }
+    .wd-range { font-size: 11px; color: var(--dim); margin-top: 2px; }
+    .wd-note { font-size: 11px; color: var(--dim); margin-top: 4px; font-style: italic; }
+    .alt-line { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; padding: 5px 10px; border: 1px solid; margin-bottom: 14px; }
+    .alt-line.full { color: var(--green); border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.05); }
+    .alt-line.thin { color: var(--amber); border-color: rgba(245,166,35,0.3); background: rgba(245,166,35,0.05); }
+    .alt-line.gone { color: var(--red); border-color: rgba(255,69,58,0.3); background: rgba(255,69,58,0.05); }
+    .signals-section { margin-bottom: 14px; }
+    .sig-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .sig-row:last-child { border-bottom: none; }
+    .sig-name { color: var(--dim); }
+    .sig-val { font-weight: 600; }
+    .sig-val.green { color: var(--green); }
+    .sig-val.amber { color: var(--amber); }
+    .sig-val.red { color: var(--red); }
+    .action-block { padding: 14px; background: var(--s1); border: 1px solid var(--b2); margin-bottom: 14px; }
+    .ab-playable { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.04em; color: var(--white); margin-bottom: 4px; }
+    .ab-note { font-size: 11px; color: var(--dim); margin-bottom: 14px; }
+    .ab-btns { display: flex; gap: 8px; }
+    .ab-btn { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 0; border: 1px solid var(--b2); color: var(--white); background: none; cursor: pointer; transition: background 0.12s; }
+    .ab-btn.primary { background: var(--green); color: #080808; border-color: var(--green); }
+    .ab-btn.danger { border-color: var(--red); color: var(--red); }
+    .ab-btn:active { opacity: 0.85; }
 
-    /* ── Player Card Screen ──────────────────────────────── */
-    .player-card-header {
-      position: relative;
-      overflow: hidden;
-      background: var(--s1);
-      border-bottom: 1px solid var(--border);
-    }
-    .player-color-stripe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-    }
-    .player-card-body {
-      display: flex;
-      align-items: flex-end;
-      padding: 20px 16px 16px;
-      gap: 14px;
-    }
-    .player-photo {
-      width: 72px;
-      height: 54px;
-      object-fit: cover;
-      object-position: top center;
-      border-radius: 2px;
-      flex-shrink: 0;
-      background: var(--s3);
-    }
-    .player-card-info { flex: 1; min-width: 0; }
-    .player-card-name {
-      font-size: 1.3rem;
-      font-weight: 900;
-      color: var(--white);
-      line-height: 1.1;
-    }
-    .player-card-meta {
-      font-size: 0.72rem;
-      color: var(--dim);
-      margin-top: 2px;
-    }
-    .player-card-live {
-      margin-top: 6px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--white);
-    }
+    /* BOX SCORE */
+    .bs-content { padding: 0 0 16px; }
+    .bs-team-header { padding: 10px 16px 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border); background: var(--s1); }
+    .bs-col-headers { display: grid; grid-template-columns: 1fr 40px 40px 40px 44px; padding: 6px 16px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border); }
+    .bs-row { display: grid; grid-template-columns: 1fr 40px 40px 40px 44px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; }
+    .bs-row:last-child { border-bottom: none; }
+    .bs-name { font-size: 13px; font-weight: 700; color: var(--white); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .bs-pos { font-size: 9px; color: var(--dim); font-weight: 400; }
+    .hot-pill { font-family: 'Bebas Neue', sans-serif; font-size: 9px; letter-spacing: 0.08em; color: #080808; background: var(--green); padding: 1px 5px; }
+    .bs-stat { font-size: 13px; text-align: center; color: var(--white); }
+    .bs-stat.hot { color: var(--green); font-weight: 700; }
 
-    .prop-list {
-      padding: 8px 0;
-    }
-    .prop-row {
-      display: flex;
-      flex-direction: column;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: background 0.12s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .prop-row:active { background: var(--s2); }
-    .prop-row.selected { background: #111; border-left: 2px solid #860038; }
-    .prop-main-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 16px 6px;
-    }
-    .prop-type-label {
-      font-size: 9px;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .prop-line-val {
-      font-size: 13px;
-      font-weight: 700;
-      color: #ddd;
-      margin-top: 2px;
-    }
-    .books-row {
-      display: flex;
-      gap: 4px;
-      padding: 0 16px 10px;
-    }
-    .book-chips {
-      display: flex;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-    .book-chip {
-      flex: 1;
-      background: #111;
-      padding: 5px 4px;
-      text-align: center;
-      border: none;
-      border-radius: 0;
-    }
-    .book-chip.best { background: #0a1a00; }
-    .book-name {
-      font-size: 7px;
-      color: #333;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      margin-bottom: 2px;
-    }
-    .book-odds {
-      font-size: 11px;
-      font-weight: 900;
-      color: #666;
-    }
-    .book-chip.best .book-odds { color: #39ff14; }
-    .best-tag {
-      font-size: 6px;
-      color: #39ff14;
-      font-weight: 700;
-      margin-top: 1px;
-      letter-spacing: 0.06em;
-    }
-    .hot-pill {
-      background: #0d1f00;
-      border: 1px solid #39ff14;
-      color: #39ff14;
-      font-size: 7px;
-      font-weight: 900;
-      padding: 1px 4px;
-      letter-spacing: 0.06em;
-    }
-    .cold-pill {
-      background: #1a0500;
-      border: 1px solid #5a2000;
-      color: #864000;
-      font-size: 7px;
-      font-weight: 900;
-      padding: 1px 4px;
-      letter-spacing: 0.06em;
-    }
+    /* SNAPSHOT */
+    .snapshot-wrap { padding: 16px; }
+    .share-card { border: 1px solid var(--b2); border-top: 3px solid var(--red); background: var(--s1); padding: 20px; margin-bottom: 16px; }
+    .sc-logo { margin-bottom: 14px; }
+    .sc-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 2px; }
+    .sc-meta { font-size: 10px; color: var(--dim); margin-bottom: 14px; }
+    .sc-score { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: -0.01em; color: var(--white); text-align: center; margin-bottom: 14px; }
+    .sc-row { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); gap: 4px; }
+    .sc-row-label { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 3px; }
+    .sc-row-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--white); }
+    .sc-row-val.green { color: var(--green); }
+    .sc-edge { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.04em; text-align: center; margin-bottom: 10px; }
+    .sc-edge.green { color: var(--green); }
+    .sc-edge.red { color: var(--red); }
+    .sc-window { font-size: 11px; text-align: center; color: var(--dim); margin-bottom: 12px; }
+    .sc-window span { color: var(--green); font-weight: 600; }
+    .sc-badge-row { text-align: center; margin-bottom: 12px; }
+    .sc-badge { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; padding: 4px 12px; border: 1px solid; }
+    .sc-badge.heating { color: var(--green); border-color: var(--green); }
+    .sc-badge.closing { color: var(--amber); border-color: var(--amber); }
+    .sc-watermark { font-size: 9px; text-align: center; color: rgba(255,255,255,0.08); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 12px; font-weight: 700; }
+    .share-note { font-size: 11px; color: var(--dim); text-align: center; margin-bottom: 16px; }
+    .share-btns { display: flex; gap: 10px; }
+    .share-btn-el { flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; padding: 12px; border: none; cursor: pointer; }
+    .share-btn-el.green { background: var(--green); color: #080808; }
+    .share-btn-el.ghost { background: none; border: 1px solid var(--b2); color: var(--white); }
 
-    .run-btn {
-      display: block;
-      width: calc(100% - 32px);
-      margin: 16px auto;
-      padding: 15px;
-      background: var(--primary);
-      border: none;
-      border-radius: 3px;
-      color: var(--white);
-      font-family: var(--font);
-      font-size: 0.9rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    .run-btn:active { opacity: 0.8; }
-    .run-btn:disabled { opacity: 0.5; cursor: default; }
+    /* ACCOUNT */
+    .account-wrap { padding: 24px 16px; }
+    .acc-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; color: var(--white); margin-bottom: 2px; }
+    .acc-email { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
+    .acc-plan-badge { display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.1em; padding: 4px 10px; border: 1px solid; margin-bottom: 24px; }
+    .acc-plan-badge.free { color: var(--amber); border-color: var(--amber); }
+    .acc-plan-badge.pro { color: var(--green); border-color: var(--green); }
+    .acc-stats { border: 1px solid var(--b2); margin-bottom: 20px; }
+    .acc-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .acc-stat-row:last-child { border-bottom: none; }
+    .acc-stat-label { color: var(--dim); }
+    .acc-stat-val { font-weight: 600; color: var(--white); }
+    .acc-btn { width: 100%; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.1em; padding: 14px; border: none; cursor: pointer; margin-bottom: 10px; }
+    .acc-btn.green { background: var(--green); color: #080808; }
+    .acc-btn.outline { background: none; border: 1px solid var(--b2); color: var(--dim); }
+    .acc-btn.outline:hover { color: var(--white); border-color: #555; }
 
-    /* ── Analysis Screen ─────────────────────────────────── */
-    .verdict-block {
-      padding: 20px 16px 16px;
-      border-bottom: 1px solid var(--border);
-      background: var(--s1);
-    }
-    .verdict-label {
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--dim);
-      margin-bottom: 6px;
-    }
-    .verdict-main {
-      font-size: 2.2rem;
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-    .verdict-main.over { color: var(--over); }
-    .verdict-main.under { color: #ff6688; }
-    .verdict-main.toss { color: var(--toss); }
-    .confidence-bar-wrap {
-      margin-top: 12px;
-    }
-    .conf-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--dim);
-      margin-bottom: 5px;
-    }
-    .conf-bar-bg {
-      height: 6px;
-      background: var(--s3);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .conf-bar-fill {
-      height: 100%;
-      background: var(--primary);
-      border-radius: 3px;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .conf-bar-fill.over { background: var(--over); }
-    .conf-bar-fill.under { background: #ff4444; }
+    /* BOTTOM NAV */
+    #bottom-nav { display: flex; background: #060606; border-top: 1px solid var(--border); flex-shrink: 0; position: relative; z-index: 20; }
+    .bn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 8px 0; cursor: pointer; transition: opacity 0.12s; border: none; background: none; -webkit-tap-highlight-color: transparent; }
+    .bn svg { display: block; }
+    .bn span { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2a2a2a; }
+    .bn.active span { color: var(--green); }
+    .bn.active svg { opacity: 1; }
+    .bn svg { opacity: 0.2; }
+    .bn.active svg { opacity: 1; }
+    .bn-icon-color { fill: none; stroke: var(--white); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .bn.active .bn-icon-color { stroke: var(--green); }
 
-    .narrative-block {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .narrative-text {
-      font-size: 0.88rem;
-      line-height: 1.65;
-      color: #cccccc;
-    }
-
-    .math-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border);
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .math-toggle-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--dim);
-    }
-    .math-toggle-arrow {
-      color: var(--dim);
-      transition: transform 0.2s;
-    }
-    .math-toggle.open .math-toggle-arrow { transform: rotate(180deg); }
-
-    .math-detail {
-      display: none;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      background: var(--s1);
-    }
-    .math-detail.open { display: block; }
-    .model-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .model-row:last-child { border-bottom: none; }
-    .model-name {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--dim);
-    }
-    .model-value {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--white);
-    }
-
-    .alert-card {
-      margin: 12px 16px;
-      padding: 12px 14px;
-      background: rgba(134,0,56,0.12);
-      border: 1px solid rgba(134,0,56,0.35);
-      border-radius: 3px;
-    }
-    .alert-title {
-      font-size: 0.72rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #ff6688;
-      margin-bottom: 4px;
-    }
-    .alert-body {
-      font-size: 0.8rem;
-      line-height: 1.5;
-      color: #cc9999;
-    }
-
-    .share-row {
-      padding: 16px;
-      display: flex;
-      gap: 10px;
-    }
-    .share-btn {
-      flex: 1;
-      padding: 12px;
-      background: var(--s2);
-      border: 1px solid var(--border2);
-      border-radius: 3px;
-      color: var(--white);
-      font-family: var(--font);
-      font-size: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      transition: background 0.15s;
-    }
-    .share-btn:active { background: var(--s3); }
-
-    /* ── Loading spinner ─────────────────────────────────── */
-    .spinner-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 16px;
-      gap: 12px;
-    }
-    .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid var(--border2);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner-label {
-      font-size: 0.78rem;
-      color: var(--dim);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    /* ── Empty state ─────────────────────────────────────── */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 56px 24px;
-      gap: 8px;
-      text-align: center;
-    }
-    .empty-icon { font-size: 2rem; opacity: 0.3; }
-    .empty-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--dim);
-    }
-    .empty-sub {
-      font-size: 0.78rem;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    /* ── Search / History / Account screens ─────────────── */
-    .search-input {
-      display: block;
-      width: calc(100% - 32px);
-      margin: 16px auto;
-      padding: 12px 14px;
-      background: var(--s2);
-      border: 1px solid var(--border2);
-      border-radius: 3px;
-      color: var(--white);
-      font-family: var(--font);
-      font-size: 0.9rem;
-      outline: none;
-    }
-    .search-input::placeholder { color: var(--muted); }
-    .search-input:focus { border-color: var(--primary); }
-
-    .history-item {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-    .history-name {
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--white);
-    }
-    .history-meta {
-      font-size: 0.7rem;
-      color: var(--dim);
-      margin-top: 2px;
-    }
-    .history-verdict {
-      font-size: 0.78rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .account-section {
-      margin: 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .account-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .account-row:last-child { border-bottom: none; }
-    .account-row-label {
-      font-size: 0.88rem;
-      font-weight: 500;
-      color: var(--white);
-    }
-    .account-row-val {
-      font-size: 0.88rem;
-      color: var(--dim);
-    }
-    .account-section-title {
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--dim);
-      padding: 16px 16px 6px;
-    }
-
-    .pill-badge {
-      padding: 3px 8px;
-      border-radius: 3px;
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .pill-badge.pro { background: rgba(134,0,56,0.2); color: #ff8aaa; border: 1px solid rgba(134,0,56,0.5); }
-    .pill-badge.free { background: var(--s3); color: var(--dim); border: 1px solid var(--border2); }
-
-    .upgrade-banner {
-      margin: 16px;
-      padding: 14px;
-      background: var(--s1);
-      border: 1px solid rgba(134,0,56,0.4);
-      border-radius: 3px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .upgrade-banner-title {
-      font-size: 0.88rem;
-      font-weight: 800;
-      color: var(--white);
-    }
-    .upgrade-banner-sub {
-      font-size: 0.78rem;
-      color: #cccccc;
-      line-height: 1.5;
-    }
-    .upgrade-btn {
-      display: block;
-      width: 100%;
-      padding: 11px;
-      background: var(--primary);
-      border: none;
-      border-radius: 3px;
-      color: var(--white);
-      font-family: var(--font);
-      font-size: 0.8rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-    }
-
-    /* ── toast ───────────────────────────────────────────── */
-    #toast {
-      position: fixed;
-      bottom: 72px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--s1);
-      border: 1px solid var(--border2);
-      border-radius: 3px;
-      padding: 10px 18px;
-      font-size: 0.8rem;
-      color: var(--white);
-      white-space: nowrap;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-      pointer-events: none;
-    }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; align-items: flex-end; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--s1); border: 1px solid var(--b2); border-top: 3px solid var(--green); width: 100%; max-width: 480px; padding: 24px 20px 32px; position: relative; }
+    .modal-logo { margin-bottom: 14px; }
+    .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 4px; }
+    .modal-game-info { font-size: 12px; color: var(--dim); margin-bottom: 16px; }
+    .modal-edge { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.04em; margin-bottom: 16px; }
+    .modal-edge.green { color: var(--green); }
+    .modal-edge.red { color: var(--red); }
+    .modal-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+    .modal-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .modal-pill { font-size: 11px; font-weight: 500; padding: 7px 12px; border: 1px solid var(--b2); color: var(--dim); cursor: pointer; background: none; transition: all 0.12s; }
+    .modal-pill.on { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.08); }
+    .modal-btns { display: flex; gap: 8px; margin-top: 6px; }
+    .modal-btn { flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.1em; padding: 12px; border: none; cursor: pointer; }
+    .modal-btn.cancel { background: none; border: 1px solid var(--b2); color: var(--dim); }
+    .modal-btn.primary { background: var(--green); color: #080808; }
+    .confirm-modal .modal { text-align: center; }
+    .confirm-icon { font-size: 40px; margin-bottom: 14px; display: block; }
+    .confirm-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.06em; color: var(--green); margin-bottom: 8px; }
+    .confirm-msg { font-size: 13px; font-weight: 300; color: #aaa; margin-bottom: 20px; }
   </style>
 </head>
 <body>
+<div id="app">
+  <div id="screens">
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  SCREEN 1 — HOME                                      -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div id="screen-home" class="screen">
-  <div class="top-nav">
-    <div class="nav-logo">PARLAY <span>KILLER</span></div>
-    <div id="nav-avatar" style="display:flex;align-items:center;"></div>
-  </div>
-  <div class="screen-body" id="home-body">
-    <div class="spinner-wrap"><div class="spinner"></div><div class="spinner-label">Loading games…</div></div>
-  </div>
-</div>
+    <!-- SCREEN: HOME/BOARD -->
+    <div class="scr active" id="s-home">
+      <div class="top-bar">
+        <div class="logo">
+          <div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div>
+          <div class="logo-le">Live Edge</div>
+        </div>
+        <div class="live-count"><span class="live-dot"></span><span id="live-count-label">2 LIVE</span></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" id="tab-live" onclick="switchHomeTab('live')">Live</button>
+        <button class="tab" id="tab-favs" onclick="switchHomeTab('favs')">Favorites</button>
+        <button class="tab" id="tab-alerts" onclick="switchHomeTab('alerts')">Alerts</button>
+      </div>
+      <div id="home-content"></div>
+    </div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  SCREEN 2 — BOX SCORE                                 -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div id="screen-boxscore" class="screen hidden">
-  <div class="top-nav">
-    <button class="nav-back" onclick="goBack('home')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Games
+    <!-- SCREEN: GAME VIEW -->
+    <div class="scr inactive" id="s-game">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button class="back-btn" onclick="goBack('s-home')">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Board
+          </button>
+        </div>
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        <button class="share-btn" onclick="openSnapshot()">Share</button>
+      </div>
+      <div id="game-view-content"></div>
+    </div>
+
+    <!-- SCREEN: SNAPSHOT -->
+    <div class="scr inactive" id="s-snapshot">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button class="back-btn" onclick="goBack('s-game')">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Game
+          </button>
+        </div>
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        <div></div>
+      </div>
+      <div id="snapshot-content"></div>
+    </div>
+
+    <!-- SCREEN: ACCOUNT -->
+    <div class="scr inactive" id="s-account">
+      <div class="top-bar">
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+      </div>
+      <div id="account-content"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <button class="bn active" id="bn-board" onclick="navTo('board')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path class="bn-icon-color" d="M2 8L9 2L16 8V16H12V12H6V16H2V8Z"/></svg>
+      <span>Board</span>
     </button>
-    <div id="bs-live-badge"></div>
-  </div>
-  <div id="bs-score-header" class="score-header"></div>
-  <div class="player-table-tabs" id="bs-tabs"></div>
-  <div class="screen-body" id="bs-body"></div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  SCREEN 3 — PLAYER CARD                               -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div id="screen-playercard" class="screen hidden">
-  <div class="top-nav">
-    <button class="nav-back" onclick="goBack('boxscore')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Box Score
+    <button class="bn" id="bn-favs" onclick="navTo('favs')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path class="bn-icon-color" d="M9 2l1.8 3.6L15 6.3l-3 2.9.7 4.1L9 11.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z"/></svg>
+      <span>Favs</span>
     </button>
-    <div></div>
-  </div>
-  <div class="screen-body" id="pc-body"></div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  SCREEN 4 — FULL ANALYSIS                             -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div id="screen-analysis" class="screen hidden">
-  <div class="top-nav">
-    <button class="nav-back" onclick="goBack('playercard')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Player
+    <button class="bn" id="bn-alerts" onclick="navTo('alerts')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path class="bn-icon-color" d="M9 2a5 5 0 00-5 5v3L2.5 13h13L14 10V7a5 5 0 00-5-5z"/><path class="bn-icon-color" d="M7 15a2 2 0 004 0"/></svg>
+      <span>Alerts</span>
     </button>
-    <div></div>
-  </div>
-  <div class="screen-body" id="an-body"></div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  SCREEN — SEARCH                                      -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div id="screen-search" class="screen hidden">
-  <div class="top-nav">
-    <div class="nav-logo">PARLAY <span>KILLER</span></div>
-    <div id="search-avatar" class="nav-avatar" onclick="navTo('account')">?</div>
-  </div>
-  <div class="screen-body">
-    <input type="text" class="search-input" id="search-input" placeholder="Search player…" oninput="onSearchInput(this.value)" />
-    <div id="search-results"></div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  SCREEN — HISTORY                                     -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div id="screen-history" class="screen hidden">
-  <div class="top-nav">
-    <div class="nav-logo">PARLAY <span>KILLER</span></div>
-    <div></div>
-  </div>
-  <div class="screen-body" id="history-body"></div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  SCREEN — ACCOUNT                                     -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div id="screen-account" class="screen hidden">
-  <div class="top-nav">
-    <button class="nav-back" onclick="goBack('home')">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Back
+    <button class="bn" id="bn-account" onclick="navTo('account')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle class="bn-icon-color" cx="9" cy="6" r="3"/><path class="bn-icon-color" d="M2 16c0-3 3.1-5 7-5s7 2 7 5"/></svg>
+      <span>Account</span>
     </button>
-    <div></div>
-  </div>
-  <div class="screen-body" id="account-body"></div>
+  </nav>
+
+  <!-- MODAL LAYER -->
+  <div id="modal-layer"></div>
 </div>
-
-<!-- Global Bottom Nav -->
-<nav class="bottom-nav" id="global-bottom-nav">
-  <button class="bottom-nav-item active" onclick="navTo('home')" id="bnav-home">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9L10 3L17 9V18H13V13H7V18H3V9Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span>Home</span>
-  </button>
-  <button class="bottom-nav-item" onclick="navTo('search')" id="bnav-search">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="6"/><path d="M14 14L18 18" stroke-linecap="round"/></svg>
-    <span>Search</span>
-  </button>
-  <button class="bottom-nav-item" onclick="navTo('history')" id="bnav-history">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="1"/><path d="M6 8H14M6 11H11" stroke-linecap="round"/></svg>
-    <span>History</span>
-  </button>
-  <button class="bottom-nav-item" onclick="navTo('account')" id="bnav-account">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3"/><path d="M3 18C3 15 6.1 13 10 13s7 2 7 5" stroke-linecap="round"/></svg>
-    <span>Account</span>
-  </button>
-</nav>
-
-<!-- toast -->
-<div id="toast"></div>
 
 <script>
-'use strict';
+/* ── MATH ──────────────────────────────────────────────── */
+function fmt(s) { return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 
-// ── Data ─────────────────────────────────────────────────
-const TEAM_COLORS = {
-  OKC: '#007AC1', DEN: '#0E2240', BOS: '#007A33', NYK: '#006BB6',
-  LAL: '#552583', MIL: '#00471B', PHX: '#1D1160', MIA: '#98002E',
-  GSW: '#1D428A', CLE: '#860038', ATL: '#C8102E', CHI: '#CE1141',
-  NYY: '#003087', LAD: '#005A9C', HOU: '#EB6E1F', CHC: '#0E3386',
-  BOS_MLB: '#BD3039', SF: '#FD5A1E', ATL_MLB: '#CE1141',
-};
-
-const PLAYERS = {
-  // OKC
-  'shai-gilgeous-alexander': { id:'shai-gilgeous-alexander', name:'Shai Gilgeous-Alexander', team:'OKC', pos:'G', number:'2', nbaId:'1628983', season:{ pts:32.7, reb:5.5, ast:6.4 }, spark:[28,35,22,31,22] },
-  'jalen-williams': { id:'jalen-williams', name:'Jalen Williams', team:'OKC', pos:'F', number:'8', nbaId:'1631108', season:{ pts:23.2, reb:4.5, ast:5.9 }, spark:[18,24,21,19,14] },
-  'chet-holmgren': { id:'chet-holmgren', name:'Chet Holmgren', team:'OKC', pos:'C', number:'7', nbaId:'1631096', season:{ pts:18.1, reb:7.9, ast:2.0 }, spark:[14,22,16,18,11] },
-  'lu-dort': { id:'lu-dort', name:'Lu Dort', team:'OKC', pos:'G', number:'5', nbaId:'1629652', season:{ pts:14.2, reb:3.8, ast:1.8 }, spark:[12,8,16,11,8] },
-  'isaiah-joe': { id:'isaiah-joe', name:'Isaiah Joe', team:'OKC', pos:'G', number:'11', nbaId:'1630557', season:{ pts:8.4, reb:2.1, ast:1.4 }, spark:[6,9,4,8,6] },
-  'kenrich-williams': { id:'kenrich-williams', name:'Kenrich Williams', team:'OKC', pos:'F', number:'34', nbaId:'1629016', season:{ pts:5.8, reb:3.2, ast:1.6 }, spark:[4,8,6,5,3] },
-  'aaron-wiggins': { id:'aaron-wiggins', name:'Aaron Wiggins', team:'OKC', pos:'G', number:'21', nbaId:'1641747', season:{ pts:6.2, reb:2.4, ast:0.8 }, spark:[8,4,7,5,9] },
-  'alex-caruso': { id:'alex-caruso', name:'Alex Caruso', team:'OKC', pos:'G', number:'6', nbaId:'1628960', season:{ pts:7.4, reb:3.1, ast:3.8 }, spark:[6,10,5,8,7] },
-  // DEN
-  'nikola-jokic': { id:'nikola-jokic', name:'Nikola Jokic', team:'DEN', pos:'C', number:'15', nbaId:'203999', season:{ pts:26.4, reb:12.4, ast:9.0 }, spark:[32,24,28,38,18] },
-  'jamal-murray': { id:'jamal-murray', name:'Jamal Murray', team:'DEN', pos:'G', number:'27', nbaId:'1627750', season:{ pts:21.2, reb:4.1, ast:6.5 }, spark:[18,24,14,22,19] },
-  'michael-porter-jr': { id:'michael-porter-jr', name:'Michael Porter Jr.', team:'DEN', pos:'F', number:'1', nbaId:'1629008', season:{ pts:16.4, reb:7.2, ast:1.4 }, spark:[14,19,11,16,14] },
-  'aaron-gordon': { id:'aaron-gordon', name:'Aaron Gordon', team:'DEN', pos:'F', number:'50', nbaId:'203932', season:{ pts:13.8, reb:6.8, ast:3.4 }, spark:[12,8,14,10,11] },
-  'kentavious-caldwell-pope': { id:'kentavious-caldwell-pope', name:'KCP', team:'DEN', pos:'G', number:'5', nbaId:'203484', season:{ pts:9.8, reb:2.8, ast:1.8 }, spark:[8,12,6,10,9] },
-  'christian-braun': { id:'christian-braun', name:'Christian Braun', team:'DEN', pos:'G', number:'0', nbaId:'1631217', season:{ pts:8.2, reb:3.4, ast:1.8 }, spark:[6,10,8,5,8] },
-  'reggie-jackson': { id:'reggie-jackson', name:'Reggie Jackson', team:'DEN', pos:'G', number:'7', nbaId:'202704', season:{ pts:6.4, reb:2.1, ast:3.8 }, spark:[4,8,6,9,6] },
-  'peyton-watson': { id:'peyton-watson', name:'Peyton Watson', team:'DEN', pos:'F', number:'8', nbaId:'1631250', season:{ pts:5.2, reb:3.8, ast:1.2 }, spark:[6,4,8,3,5] },
-  // BOS
-  'jayson-tatum': { id:'jayson-tatum', name:'Jayson Tatum', team:'BOS', pos:'F', number:'0', nbaId:'1628369', season:{ pts:26.9, reb:8.1, ast:5.0 }, spark:[18,31,24,27,16] },
-  'jaylen-brown': { id:'jaylen-brown', name:'Jaylen Brown', team:'BOS', pos:'G', number:'7', nbaId:'1627759', season:{ pts:23.0, reb:5.5, ast:3.6 }, spark:[22,15,19,21,19] },
-  'kristaps-porzingis': { id:'kristaps-porzingis', name:'Kristaps Porzingis', team:'BOS', pos:'C', number:'8', nbaId:'2585516', season:{ pts:20.1, reb:7.2, ast:2.0 }, spark:[14,22,18,16,13] },
-  'payton-pritchard': { id:'payton-pritchard', name:'Payton Pritchard', team:'BOS', pos:'G', number:'11', nbaId:'1630029', season:{ pts:14.9, reb:3.2, ast:4.8 }, spark:[8,12,9,14,11] },
-  'al-horford': { id:'al-horford', name:'Al Horford', team:'BOS', pos:'C', number:'42', nbaId:'201143', season:{ pts:9.8, reb:6.4, ast:2.8 }, spark:[8,14,10,12,10] },
-  'derrick-white': { id:'derrick-white', name:'Derrick White', team:'BOS', pos:'G', number:'9', nbaId:'1628401', season:{ pts:15.2, reb:4.2, ast:5.2 }, spark:[12,18,14,16,12] },
-  'sam-hauser': { id:'sam-hauser', name:'Sam Hauser', team:'BOS', pos:'F', number:'30', nbaId:'1630545', season:{ pts:10.8, reb:3.4, ast:1.8 }, spark:[8,14,10,6,12] },
-  'luke-kornet': { id:'luke-kornet', name:'Luke Kornet', team:'BOS', pos:'C', number:'2', nbaId:'1628952', season:{ pts:5.8, reb:4.8, ast:1.2 }, spark:[4,8,6,5,3] },
-  // NYK
-  'jalen-brunson': { id:'jalen-brunson', name:'Jalen Brunson', team:'NYK', pos:'G', number:'11', nbaId:'1628386', season:{ pts:29.0, reb:3.5, ast:6.8 }, spark:[24,31,28,22,19] },
-  'karl-anthony-towns': { id:'karl-anthony-towns', name:'Karl-Anthony Towns', team:'NYK', pos:'C', number:'32', nbaId:'1626157', season:{ pts:24.5, reb:13.7, ast:3.3 }, spark:[22,18,25,19,21] },
-  'mikal-bridges': { id:'mikal-bridges', name:'Mikal Bridges', team:'NYK', pos:'F', number:'0', nbaId:'1628384', season:{ pts:19.6, reb:4.5, ast:3.9 }, spark:[15,19,13,18,16] },
-  'og-anunoby': { id:'og-anunoby', name:'OG Anunoby', team:'NYK', pos:'F', number:'8', nbaId:'1628384', season:{ pts:15.7, reb:5.7, ast:2.3 }, spark:[14,11,16,13,15] },
-  'josh-hart': { id:'josh-hart', name:'Josh Hart', team:'NYK', pos:'G', number:'3', nbaId:'1628404', season:{ pts:12.4, reb:8.8, ast:5.2 }, spark:[10,14,12,8,14] },
-  'donte-divincenzo': { id:'donte-divincenzo', name:'Donte DiVincenzo', team:'NYK', pos:'G', number:'0', nbaId:'1628978', season:{ pts:14.8, reb:4.2, ast:3.8 }, spark:[12,18,10,16,14] },
-  'precious-achiuwa': { id:'precious-achiuwa', name:'Precious Achiuwa', team:'NYK', pos:'F', number:'5', nbaId:'1630173', season:{ pts:6.8, reb:5.8, ast:1.2 }, spark:[4,8,6,10,6] },
-  'miles-mcbride': { id:'miles-mcbride', name:'Miles McBride', team:'NYK', pos:'G', number:'2', nbaId:'1630540', season:{ pts:8.2, reb:2.4, ast:2.8 }, spark:[6,10,8,4,8] },
-  // LAL
-  'lebron-james': { id:'lebron-james', name:'LeBron James', team:'LAL', pos:'F', number:'23', nbaId:'2544', season:{ pts:23.7, reb:8.0, ast:9.4 }, spark:[26,22,31,18,10] },
-  'anthony-davis': { id:'anthony-davis', name:'Anthony Davis', team:'LAL', pos:'C', number:'3', nbaId:'203076', season:{ pts:24.7, reb:12.6, ast:3.5 }, spark:[28,19,24,22,18] },
-  'austin-reaves': { id:'austin-reaves', name:'Austin Reaves', team:'LAL', pos:'G', number:'15', nbaId:'1630559', season:{ pts:15.9, reb:4.2, ast:4.8 }, spark:[14,11,18,9,12] },
-  'rui-hachimura': { id:'rui-hachimura', name:'Rui Hachimura', team:'LAL', pos:'F', number:'28', nbaId:'1629628', season:{ pts:13.2, reb:4.4, ast:1.4 }, spark:[10,16,14,8,12] },
-  'max-christie': { id:'max-christie', name:'Max Christie', team:'LAL', pos:'G', number:'10', nbaId:'1631217', season:{ pts:8.8, reb:2.8, ast:1.8 }, spark:[6,10,8,12,8] },
-  'dalton-knecht': { id:'dalton-knecht', name:'Dalton Knecht', team:'LAL', pos:'G', number:'4', nbaId:'1641828', season:{ pts:9.2, reb:3.2, ast:1.2 }, spark:[8,12,6,10,8] },
-  'dorian-finney-smith': { id:'dorian-finney-smith', name:'Dorian Finney-Smith', team:'LAL', pos:'F', number:'17', nbaId:'1627827', season:{ pts:7.4, reb:4.2, ast:1.8 }, spark:[6,8,4,10,6] },
-  'gabe-vincent': { id:'gabe-vincent', name:'Gabe Vincent', team:'LAL', pos:'G', number:'7', nbaId:'1629216', season:{ pts:6.2, reb:2.1, ast:2.8 }, spark:[4,8,6,4,6] },
-};
-
-const LIVE_GAMES = [
-  {
-    id:'okc-den', sport:'NBA',
-    homeTeam:'Oklahoma City Thunder', homeAbbr:'OKC',
-    awayTeam:'Denver Nuggets', awayAbbr:'DEN',
-    homeScore:87, awayScore:84,
-    period:'Q4', timeRemaining:'6:22', status:'inprogress',
-    network:'TNT', awayRec:'48-22', homeRec:'45-25',
-    qtrs:[[28,24],[26,22],[18,20],[15,18]],
-    players:{
-      OKC:['shai-gilgeous-alexander','jalen-williams','chet-holmgren','lu-dort','isaiah-joe','kenrich-williams','aaron-wiggins','alex-caruso'],
-      DEN:['nikola-jokic','jamal-murray','michael-porter-jr','aaron-gordon','kentavious-caldwell-pope','christian-braun','reggie-jackson','peyton-watson'],
-    },
-    liveStats:{
-      'shai-gilgeous-alexander':{ pts:31, reb:6, ast:5, min:34 },
-      'jalen-williams':{ pts:18, reb:4, ast:3, min:32 },
-      'chet-holmgren':{ pts:14, reb:9, ast:2, min:30 },
-      'lu-dort':{ pts:8, reb:3, ast:1, min:28 },
-      'isaiah-joe':{ pts:6, reb:2, ast:4, min:22 },
-      'kenrich-williams':{ pts:4, reb:3, ast:1, min:18 },
-      'aaron-wiggins':{ pts:4, reb:2, ast:0, min:16 },
-      'alex-caruso':{ pts:2, reb:2, ast:2, min:14 },
-      'nikola-jokic':{ pts:26, reb:11, ast:8, min:34 },
-      'jamal-murray':{ pts:19, reb:3, ast:6, min:32 },
-      'michael-porter-jr':{ pts:14, reb:7, ast:1, min:30 },
-      'aaron-gordon':{ pts:10, reb:6, ast:3, min:28 },
-      'kentavious-caldwell-pope':{ pts:8, reb:2, ast:1, min:24 },
-      'christian-braun':{ pts:5, reb:3, ast:1, min:20 },
-      'reggie-jackson':{ pts:2, reb:1, ast:3, min:14 },
-      'peyton-watson':{ pts:0, reb:2, ast:0, min:8 },
-    },
-  },
-  {
-    id:'bos-nyk', sport:'NBA',
-    homeTeam:'New York Knicks', homeAbbr:'NYK',
-    awayTeam:'Boston Celtics', awayAbbr:'BOS',
-    homeScore:68, awayScore:71,
-    period:'Q3', timeRemaining:'2:41', status:'inprogress',
-    network:'ESPN', awayRec:'52-18', homeRec:'44-26',
-    qtrs:[[30,28],[22,24],[19,16]],
-    players:{
-      BOS:['jayson-tatum','jaylen-brown','kristaps-porzingis','derrick-white','al-horford','payton-pritchard','sam-hauser','luke-kornet'],
-      NYK:['jalen-brunson','karl-anthony-towns','mikal-bridges','og-anunoby','josh-hart','donte-divincenzo','precious-achiuwa','miles-mcbride'],
-    },
-    liveStats:{
-      'jayson-tatum':{ pts:24, reb:7, ast:3, min:29 },
-      'jaylen-brown':{ pts:19, reb:4, ast:2, min:28 },
-      'kristaps-porzingis':{ pts:16, reb:6, ast:1, min:26 },
-      'derrick-white':{ pts:12, reb:3, ast:4, min:25 },
-      'al-horford':{ pts:8, reb:7, ast:2, min:22 },
-      'payton-pritchard':{ pts:6, reb:2, ast:3, min:18 },
-      'sam-hauser':{ pts:4, reb:2, ast:0, min:14 },
-      'luke-kornet':{ pts:2, reb:3, ast:0, min:10 },
-      'jalen-brunson':{ pts:22, reb:3, ast:5, min:29 },
-      'karl-anthony-towns':{ pts:18, reb:10, ast:2, min:28 },
-      'mikal-bridges':{ pts:14, reb:4, ast:2, min:27 },
-      'og-anunoby':{ pts:6, reb:4, ast:1, min:24 },
-      'josh-hart':{ pts:8, reb:7, ast:3, min:22 },
-      'donte-divincenzo':{ pts:10, reb:3, ast:2, min:20 },
-      'precious-achiuwa':{ pts:4, reb:4, ast:0, min:14 },
-      'miles-mcbride':{ pts:2, reb:1, ast:2, min:10 },
-    },
-  },
-  {
-    id:'lal-gsw', sport:'NBA',
-    homeTeam:'Los Angeles Lakers', homeAbbr:'LAL',
-    awayTeam:'Golden State Warriors', awayAbbr:'GSW',
-    homeScore:0, awayScore:0,
-    period:'', timeRemaining:'', status:'upcoming',
-    network:'ABC', scheduledTime:'7:30 PM ET', awayRec:'40-30', homeRec:'38-32',
-    qtrs:[],
-    players:{
-      LAL:['lebron-james','anthony-davis','austin-reaves','rui-hachimura','max-christie','dalton-knecht','dorian-finney-smith','gabe-vincent'],
-      GSW:[],
-    },
-    liveStats:{
-      'lebron-james':{ pts:0, reb:0, ast:0, min:0 },
-      'anthony-davis':{ pts:0, reb:0, ast:0, min:0 },
-      'austin-reaves':{ pts:0, reb:0, ast:0, min:0 },
-      'rui-hachimura':{ pts:0, reb:0, ast:0, min:0 },
-      'max-christie':{ pts:0, reb:0, ast:0, min:0 },
-      'dalton-knecht':{ pts:0, reb:0, ast:0, min:0 },
-      'dorian-finney-smith':{ pts:0, reb:0, ast:0, min:0 },
-      'gabe-vincent':{ pts:0, reb:0, ast:0, min:0 },
-    },
-  },
-];
-
-function generateMockProps(player, liveStats) {
-  const s = player.season;
-  const pts = liveStats?.pts ?? 0;
-  const reb = liveStats?.reb ?? 0;
-  const ast = liveStats?.ast ?? 0;
-  const minsPlayed = liveStats?.min ?? 1;
-
-  function roundToHalf(n) { return Math.round(n * 2) / 2; }
-
-  function makeLine(seasonAvg, current, mins) {
-    const pace = mins > 3 ? (current / mins) * 32 : seasonAvg;
-    const raw = (pace * 0.88 + seasonAvg * 0.12);
-    return roundToHalf(Math.max(0.5, raw));
-  }
-
-  const ptsLine = makeLine(s.pts, pts, minsPlayed);
-  const rebLine = makeLine(s.reb, reb, minsPlayed);
-  const astLine = makeLine(s.ast, ast, minsPlayed);
-  const praLine = makeLine(s.pts + s.reb + s.ast, pts + reb + ast, minsPlayed);
-
-  function calcProb(current, line, seasonRate, mins) {
-    if (current > line) return 0.97;
-    if (mins >= 38 && current < line - 3) return 0.06;
-    const needed = line - current;
-    const minsRemaining = Math.max(1, 32 - mins);
-    const blendedRate = mins > 6
-      ? (current / mins) * 0.7 + (seasonRate / 32) * 0.3
-      : seasonRate / 32;
-    const lambda = blendedRate * minsRemaining;
-    if (lambda <= 0) return 0.05;
-    if (needed <= 0) return 0.97;
-    let cumulative = 0;
-    const maxK = Math.floor(needed) - 1;
-    for (let k = 0; k <= maxK; k++) {
-      let term = Math.exp(-lambda);
-      for (let i = 1; i <= k; i++) term *= lambda / i;
-      cumulative += term;
-    }
-    return Math.max(0.04, Math.min(0.97, 1 - cumulative));
-  }
-
-  const ptsProb = calcProb(pts, ptsLine, s.pts, minsPlayed);
-  const rebProb = calcProb(reb, rebLine, s.reb, minsPlayed);
-  const astProb = calcProb(ast, astLine, s.ast, minsPlayed);
-  const praProb = calcProb(pts+reb+ast, praLine, s.pts+s.reb+s.ast, minsPlayed);
-
-  function toVerdict(p) {
-    if (p >= 0.97) return { v:'LOCKED OVER', c:'go' };
-    if (p >= 0.72) return { v:'STRONG OVER', c:'go' };
-    if (p >= 0.57) return { v:'LEAN OVER', c:'go' };
-    if (p >= 0.43) return { v:'TOSS UP', c:'toss' };
-    if (p >= 0.28) return { v:'LEAN UNDER', c:'un' };
-    if (p <= 0.05) return { v:'LOCKED UNDER', c:'un' };
-    return { v:'STRONG UNDER', c:'un' };
-  }
-
-  function bestOdds(prob) {
-    const dk = prob > 0.6 ? -114 : prob > 0.5 ? -110 : -108;
-    const fd = prob > 0.6 ? -116 : prob > 0.5 ? -112 : -106;
-    return { dk, fd };
-  }
-
-  return [
-    { id:`${player.id}-pts`, label:'Points', line:ptsLine, prob:ptsProb, ...toVerdict(ptsProb), statKey:'pts', ...bestOdds(ptsProb), pp:ptsLine },
-    { id:`${player.id}-reb`, label:'Rebounds', line:rebLine, prob:rebProb, ...toVerdict(rebProb), statKey:'reb', ...bestOdds(rebProb), pp:rebLine },
-    { id:`${player.id}-ast`, label:'Assists', line:astLine, prob:astProb, ...toVerdict(astProb), statKey:'ast', ...bestOdds(astProb), pp:astLine },
-    { id:`${player.id}-pra`, label:'PRA', line:praLine, prob:praProb, ...toVerdict(praProb), statKey:'pra', ...bestOdds(praProb), pp:praLine },
-  ];
+function calcModel(game, secs) {
+  const minsPlayed = 48 - secs/60;
+  const pace = minsPlayed > 0 ? game.totalSoFar/minsPlayed : 5.1;
+  const diff = Math.abs(game.homeScore - game.awayScore);
+  const foulAdj = secs<240&&diff<8 ? 1.10 : secs<120&&diff<6 ? 1.18 : 1.0;
+  const blowoutDamp = diff>15 ? 0.78 : diff>10 ? 0.88 : 1.0;
+  const timeRatio = Math.max(0.15, secs/game.maxSecs);
+  const edgeNow = Math.round(game.baseEdge * timeRatio * 10) / 10;
+  const modelFair = Math.round((game.marketTotal + edgeNow) * 10) / 10;
+  const playableTo = Math.round((modelFair - 1.5) * 2) / 2;
+  const conf = Math.min(92, Math.max(48, Math.round(50 + Math.abs(edgeNow) * 3.8)));
+  const adjPace = pace * foulAdj * blowoutDamp;
+  return { model:modelFair, edge:edgeNow, playableTo, conf, pace:Math.round(adjPace*10)/10 };
 }
 
-// ── State ─────────────────────────────────────────────────
-let currentUser = null;
-let currentScreen = 'home';
-let screenHistory = [];
+function projWindow(game, secs, windowSecs) {
+  const useSecs = Math.min(windowSecs, secs);
+  const minsPlayed = 48 - secs/60;
+  const pace = minsPlayed > 0 ? game.totalSoFar/minsPlayed : 5.1;
+  const diff = Math.abs(game.homeScore - game.awayScore);
+  const foul = secs<240&&diff<8 ? 1.08 : 1.0;
+  const blow = diff>15 ? 0.80 : diff>10 ? 0.90 : 1.0;
+  const pts = Math.round(pace*(useSecs/60)*foul*blow*10)/10;
+  return { pts, lo:Math.round(pts*0.83*10)/10, hi:Math.round(pts*1.17*10)/10 };
+}
+
+function getWindows(secs) {
+  const m = secs/60, w = [];
+  if(m>10){ w.push({l:'3:00',s:180}); w.push({l:'5:00',s:300}); w.push({l:'9:00',s:540}); }
+  else if(m>6){ w.push({l:'2:00',s:120}); w.push({l:'3:30',s:210}); w.push({l:'5:00',s:300}); }
+  else if(m>3.5){ w.push({l:'1:30',s:90}); w.push({l:'3:00',s:180}); }
+  else if(m>1){ w.push({l:'1:00',s:60}); }
+  w.push({l:fmt(secs)+' ★',s:secs,full:true});
+  return w;
+}
+
+function getAltState(secs) {
+  const m = secs/60;
+  if(m>3.5) return {l:'Full board available',cls:'full'};
+  if(m>1.5) return {l:'Lines thinning',cls:'thin'};
+  return {l:'Main only · -110 both ways',cls:'gone'};
+}
+
+/* ── MOCK DATA ──────────────────────────────────────────── */
+const GAMES = {
+  kc: {
+    id:'kc', title:'Knicks @ Celtics', away:'NYK', home:'BOS',
+    awayScore:90, homeScore:111, awayRec:'44-26', homeRec:'52-18',
+    period:'Q4', clock:'6:31', maxSecs:720, secsRemaining:391,
+    totalSoFar:201, marketTotal:200.5, baseEdge:6.4, side:'OVER',
+    edgeColor:'#00e676', badge:'HEATING', network:'ESPN', status:'live',
+    qtrs:[[28,30],[24,26],[22,30],[16,25]],
+    awayPlayers:[
+      {n:'J. Brunson',p:'PG',pts:22,r:3,a:5,hot:true,seasonPts:29.0},
+      {n:'K-A. Towns',p:'C',pts:18,r:10,a:2,hot:false,seasonPts:24.5},
+      {n:'M. Bridges',p:'SF',pts:14,r:4,a:2,hot:false,seasonPts:19.6},
+      {n:'OG Anunoby',p:'PF',pts:6,r:4,a:1,hot:false,seasonPts:15.7},
+      {n:'J. Hart',p:'G',pts:8,r:7,a:3,hot:false,seasonPts:12.4},
+      {n:'D. DiVincenzo',p:'G',pts:10,r:3,a:2,hot:false,seasonPts:14.8},
+      {n:'M. McBride',p:'G',pts:4,r:1,a:2,hot:false,seasonPts:8.2},
+    ],
+    homePlayers:[
+      {n:'J. Tatum',p:'SF',pts:30,r:7,a:3,hot:true,seasonPts:26.9},
+      {n:'J. Brown',p:'SG',pts:24,r:4,a:2,hot:false,seasonPts:23.0},
+      {n:'K. Porzingis',p:'C',pts:14,r:6,a:1,hot:false,seasonPts:20.1},
+      {n:'D. White',p:'PG',pts:12,r:3,a:4,hot:false,seasonPts:15.2},
+      {n:'A. Horford',p:'C',pts:8,r:7,a:2,hot:false,seasonPts:9.8},
+      {n:'P. Pritchard',p:'G',pts:11,r:2,a:3,hot:false,seasonPts:14.9},
+      {n:'S. Hauser',p:'F',pts:6,r:2,a:0,hot:false,seasonPts:10.8},
+    ]
+  },
+  ls: {
+    id:'ls', title:'Lakers @ Suns', away:'LAL', home:'PHX',
+    awayScore:88, homeScore:103, awayRec:'40-30', homeRec:'36-34',
+    period:'Q3', clock:'2:47', maxSecs:2880, secsRemaining:887,
+    totalSoFar:191, marketTotal:215.5, baseEdge:-6.4, side:'UNDER',
+    edgeColor:'#ff4444', badge:'CLOSING', network:'TNT', status:'live',
+    qtrs:[[28,30],[26,28],[20,25]],
+    awayPlayers:[
+      {n:'LeBron James',p:'SF',pts:22,r:6,a:7,hot:false,seasonPts:23.7},
+      {n:'A. Davis',p:'C',pts:24,r:10,a:2,hot:true,seasonPts:24.7},
+      {n:'A. Reaves',p:'G',pts:12,r:3,a:4,hot:false,seasonPts:15.9},
+      {n:'R. Hachimura',p:'F',pts:6,r:3,a:1,hot:false,seasonPts:13.2},
+      {n:'D. Knecht',p:'G',pts:8,r:2,a:1,hot:false,seasonPts:9.2},
+    ],
+    homePlayers:[
+      {n:'K. Durant',p:'F',pts:28,r:6,a:3,hot:true,seasonPts:27.1},
+      {n:'D. Booker',p:'G',pts:22,r:4,a:5,hot:false,seasonPts:25.6},
+      {n:'B. Beal',p:'G',pts:14,r:3,a:4,hot:false,seasonPts:18.2},
+      {n:'J. Nurkic',p:'C',pts:8,r:9,a:2,hot:false,seasonPts:11.4},
+      {n:'R. Ingram',p:'G',pts:7,r:2,a:2,hot:false,seasonPts:9.8},
+    ]
+  }
+};
+
+/* ── STATE ──────────────────────────────────────────────── */
 let activeGame = null;
-let activeTeam = 'home';
-let activePlayer = null;
-let activeProp = null;
-let lastAnalysis = null;
+let activeGameSecs = 0;
+let activeTab = 'edge';
+let activeWinIdx = 0;
+let homeTab = 'live';
+let favorites = [];
+let alerts = [];
 
-// ── Auth ──────────────────────────────────────────────────
-async function checkAuth() {
-  try {
-    const r = await fetch('/api/auth/me', { credentials: 'include' });
-    if (r.ok) {
-      currentUser = await r.json();
-    } else {
-      currentUser = null;
-    }
-  } catch {
-    currentUser = null;
-  }
-  updateAvatars();
-  updateNavUsage(currentUser);
+/* ── NAV ────────────────────────────────────────────────── */
+const screenStack = [];
+
+function goTo(id) {
+  const cur = document.querySelector('.scr.active');
+  if (cur) { cur.classList.remove('active'); cur.classList.add('behind'); }
+  document.getElementById(id).classList.remove('inactive');
+  document.getElementById(id).classList.add('active');
+  screenStack.push(id);
 }
 
-function updateNavUsage(user) {
-  const avatar = document.getElementById('nav-avatar');
-  if (!avatar) return;
-  if (!user) {
-    avatar.innerHTML = `<button onclick="window.location.href='/landing.html'" style="font-size:10px;font-weight:900;color:#fff;background:#860038;border:none;padding:6px 12px;cursor:pointer;letter-spacing:0.08em;">SIGN IN</button>`;
-    return;
-  }
-  const usage = user.todayUsage || 0;
-  const plan = user.plan || 'free';
-  const remaining = 3 - usage;
-  const initial = (user.name || user.email || 'U')[0].toUpperCase();
-  if (plan === 'free' && remaining <= 1) {
-    avatar.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:9px;font-weight:900;color:#860038;letter-spacing:0.06em;background:#1a0010;border:1px solid #860038;padding:3px 8px;">${remaining} LEFT</div><div style="width:28px;height:28px;background:#860038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;cursor:pointer;" onclick="navTo('account')">${initial}</div></div>`;
-  } else if (plan === 'free') {
-    avatar.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:9px;color:#555;letter-spacing:0.06em;">${remaining}/3 free</div><div style="width:28px;height:28px;background:#860038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;cursor:pointer;" onclick="navTo('account')">${initial}</div></div>`;
-  } else {
-    avatar.innerHTML = `<div style="width:28px;height:28px;background:#860038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;cursor:pointer;" onclick="navTo('account')">${initial}</div>`;
-  }
-}
-
-function showUsageBanner(message, isSignIn) {
-  const existing = document.getElementById('usage-banner');
-  if (existing) existing.remove();
-  const banner = document.createElement('div');
-  banner.id = 'usage-banner';
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#860038;color:#fff;font-size:11px;font-weight:700;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:999;letter-spacing:0.06em;';
-  banner.innerHTML = `<span>${message}</span><button onclick="${isSignIn ? "window.location.href='/landing.html'" : "navTo('account')"};document.getElementById('usage-banner').remove();" style="background:#fff;color:#860038;border:none;font-size:10px;font-weight:900;padding:4px 10px;cursor:pointer;letter-spacing:0.08em;">${isSignIn ? 'SIGN IN' : 'UPGRADE'}</button>`;
-  document.body.prepend(banner);
-  setTimeout(() => banner?.remove(), 6000);
-}
-
-function updateAvatars() {
-  const searchAvatar = document.getElementById('search-avatar');
-  if (!searchAvatar) return;
-  if (currentUser) {
-    const initial = (currentUser.name || currentUser.email || '?')[0].toUpperCase();
-    searchAvatar.textContent = initial;
-    searchAvatar.onclick = () => navTo('account');
-    searchAvatar.style.cursor = 'pointer';
-  } else {
-    searchAvatar.innerHTML = 'IN';
-    searchAvatar.title = 'Sign In';
-    searchAvatar.style.cursor = 'pointer';
-    searchAvatar.onclick = () => { window.location.href = '/'; };
-  }
-}
-
-async function signOut() {
-  try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
-  currentUser = null;
-  window.location.href = '/';
-}
-
-async function logout() { await signOut(); }
-
-// ── Navigation ────────────────────────────────────────────
-const SCREEN_IDS = {
-  home: 'screen-home',
-  boxscore: 'screen-boxscore',
-  playercard: 'screen-playercard',
-  analysis: 'screen-analysis',
-  search: 'screen-search',
-  history: 'screen-history',
-  account: 'screen-account',
-};
-
-const BOTTOM_NAV_SCREENS = ['home', 'search', 'history', 'account'];
-
-function navTo(name, pushHistory = true) {
-  if (name === currentScreen) return;
-  const prev = currentScreen;
-  if (pushHistory && BOTTOM_NAV_SCREENS.includes(prev)) {
-    screenHistory = [];
-  }
-  if (pushHistory) screenHistory.push(prev);
-
-  const prevEl = document.getElementById(SCREEN_IDS[prev]);
-  const nextEl = document.getElementById(SCREEN_IDS[name]);
-  if (!nextEl) return;
-
-  prevEl?.classList.add('slide-left');
-  nextEl.classList.remove('hidden', 'slide-left');
-
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      prevEl?.classList.add('hidden');
-      prevEl?.classList.remove('slide-left');
-    }, 280);
+function goBack(to) {
+  document.querySelectorAll('.scr').forEach(s => {
+    s.classList.remove('active','behind');
+    s.classList.add('inactive');
   });
-
-  currentScreen = name;
-
-  // Update global bottom nav active state
-  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
-  const activeBtn = document.getElementById('bnav-' + name);
-  if (activeBtn) activeBtn.classList.add('active');
-
-  if (name === 'history') renderHistoryScreen();
-  if (name === 'account') renderAccountScreen();
-  if (name === 'search') renderSearchScreen();
+  const target = document.getElementById(to);
+  target.classList.remove('inactive');
+  target.classList.add('active');
+  screenStack.length = 0;
 }
 
-function goBack(fallback) {
-  const prev = screenHistory.pop();
-  const target = prev || fallback || 'home';
-  const prevEl = document.getElementById(SCREEN_IDS[currentScreen]);
-  const nextEl = document.getElementById(SCREEN_IDS[target]);
-  if (!nextEl) return;
-
-  prevEl?.classList.add('hidden');
-  nextEl.classList.remove('hidden', 'slide-left');
-  currentScreen = target;
+function navTo(name) {
+  document.querySelectorAll('.bn').forEach(b => b.classList.remove('active'));
+  if (name === 'board') {
+    document.getElementById('bn-board').classList.add('active');
+    goBack('s-home');
+  } else if (name === 'favs') {
+    document.getElementById('bn-favs').classList.add('active');
+    switchHomeTab('favs');
+    goBack('s-home');
+  } else if (name === 'alerts') {
+    document.getElementById('bn-alerts').classList.add('active');
+    switchHomeTab('alerts');
+    goBack('s-home');
+  } else if (name === 'account') {
+    document.getElementById('bn-account').classList.add('active');
+    renderAccount();
+    goTo('s-account');
+  }
 }
 
-// ── Home Screen ───────────────────────────────────────────
-function renderHome() {
-  const body = document.getElementById('home-body');
-  if (!body) return;
+/* ── HOME / BOARD ───────────────────────────────────────── */
+function switchHomeTab(t) {
+  homeTab = t;
+  ['live','favs','alerts'].forEach(id => {
+    document.getElementById('tab-'+id).classList.toggle('active', id === t);
+  });
+  renderHomeContent();
+}
 
-  const live = LIVE_GAMES.filter(g => g.status === 'inprogress');
-  const upcoming = LIVE_GAMES.filter(g => g.status !== 'inprogress');
-
-  let html = '';
-
-  if (live.length) {
-    html += `<div class="section-label"><span class="live-dot">Live</span></div>`;
-    live.forEach(g => { html += gameStripHTML(g); });
+function renderHomeContent() {
+  const el = document.getElementById('home-content');
+  if (homeTab === 'live') {
+    const games = Object.values(GAMES).filter(g => g.status === 'live');
+    document.getElementById('live-count-label').textContent = games.length + ' LIVE';
+    el.innerHTML = '<div class="section-label">Live Now</div>' + games.map(gameCardHTML).join('');
+  } else if (homeTab === 'favs') {
+    if (!favorites.length) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">★</div><div class="empty-title">No favorites yet</div><div class="empty-sub">Tap Track on any game to save it here.</div></div>`;
+    } else {
+      el.innerHTML = favorites.map(id => GAMES[id] ? gameCardHTML(GAMES[id]) : '').join('');
+    }
+  } else {
+    if (!alerts.length) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-title">No alerts yet</div><div class="empty-sub">Set an alert on any live game.</div></div>`;
+    } else {
+      el.innerHTML = alerts.map(a => `<div class="game-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;"></span><span style="font-size:13px;font-weight:600;">${a.title}</span></div><div style="font-size:11px;color:var(--dim);">${a.msg}</div><div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div><button class="gc-btn" style="margin-top:10px;max-width:80px;" onclick="openGameView('${a.gameId}')">View</button></div>`).join('');
+    }
   }
+}
 
-  if (upcoming.length) {
-    html += `<div class="section-label">Upcoming</div>`;
-    upcoming.forEach(g => { html += gameStripHTML(g); });
-  }
+function gameCardHTML(g) {
+  const m = calcModel(g, g.secsRemaining);
+  const wins = getWindows(g.secsRemaining);
+  const edgeClass = g.side === 'OVER' ? 'edge-over' : 'edge-under';
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const badgeClass = g.badge === 'HEATING' ? 'heating' : 'closing';
 
-  if (!LIVE_GAMES.length) {
-    html = `<div class="empty-state">
-      <div class="empty-icon">🏀</div>
-      <div class="empty-title">No games today</div>
-      <div class="empty-sub">Check back when games start.</div>
+  const winCols = wins.map((w, i) => {
+    const p = projWindow(g, g.secsRemaining, w.s);
+    return `<div class="gc-win${w.full?' full':''}">
+      <div class="gc-win-label">${w.l}</div>
+      <div class="gc-win-pts">${p.pts}</div>
     </div>`;
-  }
+  }).join('');
 
-  body.innerHTML = html;
-}
+  const diff = Math.abs(g.homeScore - g.awayScore);
+  const signals = [];
+  const minsPlayed = 48 - g.secsRemaining/60;
+  const pace = minsPlayed > 0 ? g.totalSoFar/minsPlayed : 5.1;
+  if (pace > 5.5) signals.push({l:'Pace ↑', warn:false});
+  else if (pace < 4.5) signals.push({l:'Pace ↓', warn:true});
+  if (g.secsRemaining < 240 && diff < 8) signals.push({l:'Foul Risk ↑', warn:true});
+  else signals.push({l:'Efficiency ↑', warn:false});
+  if (diff > 15) signals.push({l:'Blowout Risk', warn:true});
 
-function gameStripHTML(g) {
-  const isLive = g.status === 'inprogress';
-  const aScore = g.awayScore !== null ? g.awayScore : '';
-  const hScore = g.homeScore !== null ? g.homeScore : '';
-  const scoreStr = (isLive || g.status === 'final') ? `${aScore} – ${hScore}` : 'vs';
-  return `<div class="game-card ${isLive ? 'live' : ''}" onclick="openBoxScore('${g.id}')">
-    <div class="game-card-left">
-      <div class="team-name">${esc(g.awayAbbr)}</div>
-      <div class="team-abbr">${esc(g.awayRec || '')}</div>
+  return `<div class="game-card ${edgeClass}" onclick="openGameView('${g.id}')">
+    <div class="gc-score-row">
+      <div class="gc-team">
+        <div class="gc-abbr">${g.away}</div>
+        <div class="gc-score">${g.awayScore}</div>
+        <div class="gc-rec">${g.awayRec}</div>
+      </div>
+      <div class="gc-center">
+        <div class="gc-sep">–</div>
+        <div class="gc-period">${g.period}</div>
+        <div class="gc-clock">${g.clock}</div>
+        <div class="gc-network">${g.network}</div>
+      </div>
+      <div class="gc-team right">
+        <div class="gc-abbr">${g.home}</div>
+        <div class="gc-score">${g.homeScore}</div>
+        <div class="gc-rec">${g.homeRec}</div>
+      </div>
     </div>
-    <div class="game-card-center">
-      <div class="gc-score">${scoreStr}</div>
-      ${isLive
-        ? `<div class="gc-status">${esc(g.period||'')} · ${esc(g.timeRemaining||'')}</div>`
-        : `<div class="gc-time">${esc(g.scheduledTime || '')}</div>`}
-      <div class="gc-network">${esc(g.network || '')}</div>
+    <div class="gc-edge-row">
+      <span class="gc-edge-nums">Live: ${g.marketTotal} &nbsp; Fair: <span class="edge-val ${edgeColor}">${m.model}</span> (<span class="edge-val ${edgeColor}">${edgeSign}${m.edge} ${g.side}</span>)</span>
+      <span class="gc-badge ${badgeClass}">${g.badge}</span>
     </div>
-    <div class="game-card-right">
-      <div class="team-name">${esc(g.homeAbbr)}</div>
-      <div class="team-abbr">${esc(g.homeRec || '')}</div>
+    <div class="gc-windows">${winCols}</div>
+    <div class="gc-signals">${signals.map(s=>`<span class="signal-pill${s.warn?' warn':''}">${s.l}</span>`).join('')}</div>
+    <div class="gc-actions">
+      <button class="gc-btn primary" onclick="event.stopPropagation();openGameView('${g.id}')">View Game</button>
+      <button class="gc-btn" onclick="event.stopPropagation();openTrackModal('${g.id}')">Track</button>
+      <button class="gc-btn" onclick="event.stopPropagation();openAlertModal('${g.id}')">Alert</button>
     </div>
   </div>`;
 }
 
-function openBoxScore(gameId) {
-  activeGame = LIVE_GAMES.find(g => g.id === gameId);
+/* ── GAME VIEW ──────────────────────────────────────────── */
+function openGameView(gameId) {
+  activeGame = GAMES[gameId];
+  activeGameSecs = activeGame.secsRemaining;
+  activeTab = 'edge';
+  activeWinIdx = 0;
+  renderGameView();
+  goTo('s-game');
+}
+
+function renderGameView() {
   if (!activeGame) return;
-  renderBoxScore(activeGame);
-  navTo('boxscore');
-}
+  const g = activeGame;
+  const el = document.getElementById('game-view-content');
 
-// ── Box Score Screen ──────────────────────────────────────
-function renderBoxScore(game) {
-  // Score header
-  const header = document.getElementById('bs-score-header');
-  const badge = document.getElementById('bs-live-badge');
-  const isLive = game.status === 'inprogress';
-
-  badge.innerHTML = isLive ? '<span class="live-dot">Live</span>' : '';
-
-  const qLabels = ['Q1', 'Q2', 'Q3', 'Q4'];
-  const qtrsData = game.qtrs || [];
-  const qChart = qLabels.map((q, i) => {
-    const homeQ = qtrsData[i]?.[0] ?? 0;
-    const awayQ = qtrsData[i]?.[1] ?? 0;
-    const maxQ = Math.max(homeQ, awayQ, 1);
-    const fillH = Math.round((homeQ / maxQ) * 26);
-    const fillA = Math.round((awayQ / maxQ) * 26);
-    const isActive = qtrsData[i] !== undefined;
-    return `<div style="flex:1">
-      <div class="qtr-block" style="background:${isActive ? 'var(--s3)' : 'var(--border)'}">
-        <div class="qtr-fill" style="height:${isActive ? fillH : 0}px"></div>
+  const maxSecs = g.secsRemaining;
+  const qtrBars = g.qtrs.map((q, i) => {
+    const maxQ = Math.max(...g.qtrs.flat(), 1);
+    const awayH = Math.round((q[0]/maxQ)*28);
+    const homeH = Math.round((q[1]/maxQ)*28);
+    return `<div class="qtr-col">
+      <div class="qtr-bars">
+        <div class="qtr-bar-away" style="height:${awayH}px;"></div>
+        <div class="qtr-bar-home" style="height:${homeH}px;"></div>
       </div>
-      <div class="qtr-label">${q}</div>
+      <div class="qtr-label">Q${i+1}</div>
     </div>`;
   }).join('');
 
-  header.innerHTML = `
-    <div class="score-matchup">
-      <div class="score-team-left">
-        <div class="score-abbr">${game.awayAbbr}</div>
-        <div class="score-num">${isLive || game.awayScore > 0 ? game.awayScore : '—'}</div>
-        <div class="score-record">${game.awayRec || ''}</div>
-      </div>
-      <div class="score-center">
-        <div class="score-period">${isLive ? game.period : (game.homeScore > 0 ? 'FINAL' : '')}</div>
-        <div class="score-clock">${isLive ? game.timeRemaining : (game.scheduledTime || '')}</div>
-        ${isLive ? '<div class="score-live-pill"><span style="width:4px;height:4px;background:#fff;border-radius:50%;display:inline-block;"></span>LIVE</div>' : ''}
-      </div>
-      <div class="score-team-right">
-        <div class="score-abbr">${game.homeAbbr}</div>
-        <div class="score-num">${isLive || game.homeScore > 0 ? game.homeScore : '—'}</div>
-        <div class="score-record">${game.homeRec || ''}</div>
+  el.innerHTML = `
+    <div class="score-header">
+      <div class="sh-grid">
+        <div class="sh-team">
+          <div class="sh-abbr">${g.away}</div>
+          <div class="sh-score">${g.awayScore}</div>
+          <div class="sh-rec">${g.awayRec}</div>
+        </div>
+        <div class="sh-center">
+          <div class="sh-period">${g.period}</div>
+          <div class="sh-clock">${g.clock}</div>
+          <div class="sh-live"><span class="sh-live-dot"></span>LIVE</div>
+        </div>
+        <div class="sh-team" style="text-align:right;">
+          <div class="sh-abbr">${g.home}</div>
+          <div class="sh-score">${g.homeScore}</div>
+          <div class="sh-rec">${g.homeRec}</div>
+        </div>
       </div>
     </div>
-    <div style="display:flex;gap:4px;padding:4px 16px 10px;">${qChart}</div>
+    <div class="qtr-chart">${qtrBars}</div>
+    <div class="tabs">
+      <button class="tab active" id="gtab-edge" onclick="switchGameTab('edge')">Edge</button>
+      <button class="tab" id="gtab-box" onclick="switchGameTab('box')">Box Score</button>
+    </div>
+    <div id="game-tab-content"></div>
   `;
 
-  // Team tabs
-  const tabs = document.getElementById('bs-tabs');
-  tabs.innerHTML = `
-    <button class="ptab ${activeTeam === 'away' ? 'active' : ''}" onclick="switchBsTeam('away')">${game.awayAbbr}</button>
-    <button class="ptab ${activeTeam === 'home' ? 'active' : ''}" onclick="switchBsTeam('home')">${game.homeAbbr}</button>
-  `;
-
-  renderPlayerTable();
+  renderGameTabContent();
 }
 
-function switchBsTeam(side) {
-  activeTeam = side;
-  renderBoxScore(activeGame);
+function switchGameTab(t) {
+  activeTab = t;
+  document.getElementById('gtab-edge').classList.toggle('active', t === 'edge');
+  document.getElementById('gtab-box').classList.toggle('active', t === 'box');
+  renderGameTabContent();
 }
 
-function renderPlayerTable() {
-  const body = document.getElementById('bs-body');
-  const teamAbbr = activeTeam === 'home' ? activeGame.homeAbbr : activeGame.awayAbbr;
-  const playerIds = activeGame.players[teamAbbr] || [];
-  const liveStats = activeGame.liveStats || {};
+function renderGameTabContent() {
+  const el = document.getElementById('game-tab-content');
+  if (!el) return;
+  if (activeTab === 'edge') renderEdgeTab(el);
+  else renderBoxTab(el);
+}
 
-  if (!playerIds.length) {
-    body.innerHTML = `<div class="empty-state"><div class="empty-title">No player data</div></div>`;
-    return;
-  }
+function renderEdgeTab(el) {
+  const g = activeGame;
+  const secs = activeGameSecs;
+  const m = calcModel(g, secs);
+  const wins = getWindows(secs);
+  const alt = getAltState(secs);
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const confColor = m.conf >= 70 ? 'green' : 'amber';
 
-  let html = '';
-  playerIds.forEach((pid) => {
-    const p = PLAYERS[pid];
-    if (!p) return;
-    const ls = liveStats[pid] || {};
-    const pts = ls.pts !== undefined ? ls.pts : '—';
-    const reb = ls.reb !== undefined ? ls.reb : '—';
-    const ast = ls.ast !== undefined ? ls.ast : '—';
-    const minsPlayed = ls.min || 1;
-    const ptsPerMin = typeof pts === 'number' ? pts / minsPlayed : 0;
-    const seasonPtsPerMin = p.season.pts / 32;
-    const isHot = ptsPerMin > seasonPtsPerMin * 1.15 && minsPlayed > 8;
-    const isCold = ptsPerMin < seasonPtsPerMin * 0.80 && minsPlayed > 8;
-    const hotColdHtml = isHot ? '<span class="hot-pill">🔥 HOT</span>' : isCold ? '<span class="cold-pill">❄ COLD</span>' : '';
-    const sparkData = p.spark || generateSparkData(p.season.pts, pts);
-    html += `<div class="player-row" onclick="openPlayerCard('${pid}')" style="flex-direction:row;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);gap:12px;">
-      <div class="player-num">${p.number}</div>
-      <div class="player-info">
-        <div class="player-row-name">${esc(p.name)} ${hotColdHtml}</div>
-        <div class="player-row-pos">${p.pos} · ${teamAbbr}</div>
-      </div>
-      <div class="player-stats-mini">
-        <div class="mini-stat">
-          <div class="mini-stat-val">${pts}</div>
-          <div class="mini-stat-lbl">PTS</div>
-        </div>
-        <div class="mini-stat">
-          <div class="mini-stat-val">${reb}</div>
-          <div class="mini-stat-lbl">REB</div>
-        </div>
-        <div class="mini-stat">
-          <div class="mini-stat-val">${ast}</div>
-          <div class="mini-stat-lbl">AST</div>
-        </div>
-      </div>
-      <div class="sparkline-wrap">${sparklineSVG(sparkData)}</div>
-    </div>`;
+  if (activeWinIdx >= wins.length) activeWinIdx = wins.length - 1;
+  const selWin = wins[activeWinIdx];
+  const selProj = projWindow(g, secs, selWin.s);
+
+  const winTabsHtml = wins.map((w, i) =>
+    `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`
+  ).join('');
+
+  // Simple SVG chart
+  const chartW = 280, chartH = 52;
+  const pts = 8;
+  const mStart = g.marketTotal;
+  const modelStart = g.marketTotal + g.baseEdge;
+  const svgPoints = Array.from({length:pts}, (_,i) => {
+    const x = Math.round((i/(pts-1)) * chartW);
+    const marketY = Math.round(chartH/2);
+    const ratio = i/(pts-1);
+    const mY = Math.round(chartH/2 - (modelStart - mStart) * ratio * 1.2);
+    return { x, marketY, modelY: Math.min(chartH-2, Math.max(2, mY)) };
   });
+  const marketPath = svgPoints.map((p,i) => `${i?'L':'M'}${p.x},${p.marketY}`).join(' ');
+  const modelPath = svgPoints.map((p,i) => `${i?'L':'M'}${p.x},${p.modelY}`).join(' ');
+  const nowX = Math.round(chartW * (1 - secs/g.maxSecs));
 
-  body.innerHTML = html;
-}
-
-function generateSparkData(season, current) {
-  // Generate fake-but-realistic 5-game sparkline values
-  const base = season || 20;
-  return [
-    Math.round(base * (0.8 + Math.random() * 0.4)),
-    Math.round(base * (0.8 + Math.random() * 0.4)),
-    Math.round(base * (0.8 + Math.random() * 0.4)),
-    Math.round(base * (0.8 + Math.random() * 0.4)),
-    typeof current === 'number' ? current : Math.round(base),
-  ];
-}
-
-function sparklineSVG(vals) {
-  const w = 44, h = 20, pad = 2;
-  const min = Math.min(...vals);
-  const max = Math.max(...vals) || 1;
-  const xStep = (w - pad * 2) / (vals.length - 1);
-  const points = vals.map((v, i) => {
-    const x = pad + i * xStep;
-    const y = h - pad - ((v - min) / (max - min || 1)) * (h - pad * 2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-    <polyline points="${points}" fill="none" stroke="#860038" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${(pad + (vals.length-1)*xStep).toFixed(1)}" cy="${(h - pad - ((vals[vals.length-1]-min)/(max-min||1))*(h-pad*2)).toFixed(1)}" r="2" fill="#860038"/>
-  </svg>`;
-}
-
-function openPlayerCard(playerId) {
-  activePlayer = PLAYERS[playerId];
-  if (!activePlayer) return;
-  renderPlayerCard(activePlayer);
-  navTo('playercard');
-}
-
-// ── Player Card Screen ────────────────────────────────────
-function renderPlayerCard(player) {
-  const body = document.getElementById('pc-body');
-  const ls = activeGame?.liveStats?.[player.id] || {};
-  const teamColor = TEAM_COLORS[player.team] || '#860038';
-  const props = generateMockProps(player, ls);
-  const photoUrl = `https://cdn.nba.com/headshots/nba/latest/260x190/${player.nbaId}.png`;
-
-  const propsHtml = props.map(prop => {
-    const isSelected = activeProp?.id === prop.id;
-    const pctColor = prop.c === 'go' ? '#39ff14' : prop.c === 'un' ? '#ff6688' : '#f5a623';
-    const bestBook = prop.dk >= prop.fd ? 'DK' : 'FD';
-    return `<div class="prop-row ${isSelected ? 'selected' : ''}" onclick="selectProp('${prop.id}', '${player.id}')">
-      <div class="prop-main-row">
-        <div>
-          <div class="prop-type-label">${esc(prop.label)}</div>
-          <div class="prop-line-val">O/U ${prop.line} live</div>
+  el.innerHTML = `
+    <div class="edge-tab-content">
+      <div class="clock-strip">
+        <span class="clock-label">Clock</span>
+        <input type="range" class="clock-slider" min="0" max="${g.maxSecs}" value="${secs}" oninput="onClockSlide(this.value)">
+        <span class="clock-display" id="clock-disp">${fmt(secs)}</span>
+      </div>
+      <div class="edge-hero">
+        <div class="eh-row1">
+          <div><div class="eh-col-label">Score</div><div class="eh-score-val">${g.awayScore}–${g.homeScore}</div></div>
+          <div><div class="eh-col-label">Market</div><div class="eh-market-val">${g.marketTotal}</div></div>
+          <div><div class="eh-col-label">Model</div><div class="eh-model-val ${edgeColor}" id="model-val">${m.model}</div></div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:22px;font-weight:900;color:${pctColor}">${Math.round(prop.prob*100)}%</div>
-          <div style="font-size:8px;font-weight:900;letter-spacing:0.1em;color:${pctColor}">${prop.v}</div>
+        <div class="eh-edge">
+          <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
+          <div class="eh-playable">Over playable to: <span id="playable-to">${m.playableTo}</span></div>
         </div>
       </div>
-      <div class="books-row">
-        <div class="book-chip ${bestBook==='DK'?'best':''}">
-          <div class="book-name">DRAFTKINGS</div>
-          <div class="book-odds">${prop.dk > 0 ? '+'+prop.dk : prop.dk}</div>
-          ${bestBook==='DK'?'<div class="best-tag">BEST</div>':''}
+      <div class="conf-bar-wrap">
+        <div class="conf-bar-header">
+          <span class="conf-bar-label">Confidence</span>
+          <span class="conf-bar-pct" id="conf-pct" style="color:var(--${confColor})">${m.conf}%</span>
         </div>
-        <div class="book-chip ${bestBook==='FD'?'best':''}">
-          <div class="book-name">FANDUEL</div>
-          <div class="book-odds">${prop.fd > 0 ? '+'+prop.fd : prop.fd}</div>
-          ${bestBook==='FD'?'<div class="best-tag">BEST</div>':''}
-        </div>
-        <div class="book-chip">
-          <div class="book-name">PRIZEPICKS</div>
-          <div class="book-odds">${prop.pp}</div>
+        <div class="conf-bar-bg"><div class="conf-bar-fill ${confColor}" id="conf-fill" style="width:${m.conf}%"></div></div>
+      </div>
+      <div class="market-chart">
+        <div class="market-chart-label">Market vs Model</div>
+        <svg width="${chartW}" height="${chartH}" viewBox="0 0 ${chartW} ${chartH}" style="display:block;border:1px solid var(--border);background:var(--s1);">
+          <path d="${marketPath}" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.4"/>
+          <path d="${modelPath}" stroke="${m.edge>=0?'#00e676':'#ff453a'}" stroke-width="1.5" fill="none"/>
+          <line x1="${nowX}" y1="0" x2="${nowX}" y2="${chartH}" stroke="#555" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="4" y="10" font-size="7" fill="#555" font-family="DM Sans">Market</text>
+          <text x="4" y="20" font-size="7" fill="${m.edge>=0?'#00e676':'#ff453a'}" font-family="DM Sans">Model</text>
+        </svg>
+      </div>
+      <div class="windows-section">
+        <div class="ws-label">Next window projections</div>
+        <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
+        <div class="win-detail" id="win-detail">
+          <div class="wd-pts">${selProj.pts} pts</div>
+          <div class="wd-range">Range: ${selProj.lo} – ${selProj.hi}</div>
+          <div class="wd-note">${selWin.full ? 'Full remaining game' : 'Isolated window projection'}</div>
         </div>
       </div>
-    </div>`;
-  }).join('');
-
-  const ptsDisplay = ls.pts !== undefined ? `${ls.pts} PTS` : '';
-  const minDisplay = ls.min !== undefined ? `${ls.min} MIN` : '';
-  const liveLine = ptsDisplay ? `${ptsDisplay} · ${minDisplay}` : '';
-
-  body.innerHTML = `
-    <div class="player-card-header">
-      <div class="player-color-stripe" style="background:${teamColor}"></div>
-      <div class="player-card-body">
-        <div style="width:64px;height:64px;flex-shrink:0;position:relative;">
-          ${photoUrl ? `<img src="${photoUrl}" alt="${esc(player.name)}" style="width:64px;height:64px;object-fit:cover;object-position:top;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />` : ''}
-          <div style="display:${photoUrl ? 'none' : 'flex'};width:64px;height:64px;background:${teamColor};align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0;">${player.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
-        </div>
-        <div class="player-card-info">
-          <div class="player-card-name">${esc(player.name)}</div>
-          <div class="player-card-meta">${player.pos} · ${player.team}${activeGame ? ' · ' + (activeGame.period || '') + ' ' + (activeGame.timeRemaining || '') : ''}</div>
-          ${liveLine ? `<div class="player-card-live">${esc(liveLine)}</div>` : ''}
+      <div class="alt-line ${alt.cls}" id="alt-line">${alt.l}</div>
+      <div class="signals-section">
+        <div class="sig-row"><span class="sig-name">Pace</span><span class="sig-val ${m.pace>5.5?'green':m.pace<4.5?'red':'amber'}">${m.pace>5.5?'HIGH ↑':m.pace<4.5?'LOW ↓':'MODERATE'}</span></div>
+        <div class="sig-row"><span class="sig-name">Foul environment</span><span class="sig-val ${secs<240&&Math.abs(g.homeScore-g.awayScore)<8?'amber':'green'}">${secs<240&&Math.abs(g.homeScore-g.awayScore)<8?'ACTIVE':'NORMAL'}</span></div>
+        <div class="sig-row"><span class="sig-name">Timeout risk</span><span class="sig-val amber">MEDIUM</span></div>
+        <div class="sig-row"><span class="sig-name">Blowout risk</span><span class="sig-val ${Math.abs(g.homeScore-g.awayScore)>15?'red':'green'}">${Math.abs(g.homeScore-g.awayScore)>15?'HIGH':'LOW'}</span></div>
+        <div class="sig-row"><span class="sig-name">Garbage time</span><span class="sig-val ${Math.abs(g.homeScore-g.awayScore)>20?'amber':'green'}">${Math.abs(g.homeScore-g.awayScore)>20?'MODERATE RISK':'LOW'}</span></div>
+      </div>
+      <div class="action-block">
+        <div class="ab-playable">Over playable to: <span style="color:var(--green)" id="ab-playable">${m.playableTo}</span></div>
+        <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
+        <div class="ab-btns">
+          <button class="ab-btn primary" onclick="openTrackModal('${g.id}')">Track</button>
+          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Set Alert</button>
+          <button class="ab-btn danger" onclick="openSnapshot()">Snapshot</button>
         </div>
       </div>
-    </div>
-    <div class="prop-list">${propsHtml}</div>
-    <button class="run-btn" id="run-btn" onclick="runAnalysis()" ${!activeProp ? 'disabled' : ''}>
-      ${activeProp ? `Run Analysis — ${activeProp.label} O/U ${activeProp.line}` : 'Select a prop above to analyze'}
-    </button>
-  `;
-}
-
-function selectProp(propId, playerId) {
-  const ls = activeGame?.liveStats?.[playerId] || {};
-  const props = generateMockProps(PLAYERS[playerId], ls);
-  activeProp = props.find(p => p.id === propId) || null;
-  renderPlayerCard(activePlayer);
-}
-
-// ── Run Analysis ──────────────────────────────────────────
-async function runAnalysis() {
-  if (!activeProp || !activePlayer || !activeGame) return;
-
-  const btn = document.getElementById('run-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Analyzing…'; }
-
-  const ls = activeGame.liveStats?.[activePlayer.id] || {};
-  const currentStat = (() => {
-    switch (activeProp.statKey) {
-      case 'pts': return ls.pts || 0;
-      case 'reb': return ls.reb || 0;
-      case 'ast': return ls.ast || 0;
-      case 'pra': return (ls.pts || 0) + (ls.reb || 0) + (ls.ast || 0);
-      default: return 0;
-    }
-  })();
-
-  const payload = {
-    playerName: activePlayer.name,
-    sport: activeGame.sport,
-    statType: activeProp.statKey,
-    currentStat,
-    propLine: activeProp.line,
-    period: activeGame.period,
-    timeRemaining: activeGame.timeRemaining,
-    homeScore: activeGame.homeScore,
-    awayScore: activeGame.awayScore,
-  };
-
-  try {
-    const r = await fetch('/api/liveunder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload),
-    });
-    const data = await r.json();
-    if (r.status === 401 || r.status === 403) {
-      const prob = activeProp?.prob ?? 0.5;
-      lastAnalysis = mockAnalysis(currentStat, activeProp.line, prob);
-    } else if (!r.ok) {
-      const prob = activeProp?.prob ?? 0.5;
-      lastAnalysis = mockAnalysis(currentStat, activeProp.line, prob);
-    } else if (data.requiresAuth) {
-      showUsageBanner('Sign in for 3 free analyses — no card required', true);
-      const prob = activeProp?.prob ?? 0.5;
-      lastAnalysis = mockAnalysis(currentStat, activeProp.line, prob);
-    } else if (data.limitReached) {
-      showUsageBanner("You've used your 3 free analyses. Upgrade to Pro for unlimited.", false);
-      if (btn) { btn.disabled = false; btn.textContent = `Run Analysis — ${activeProp.label} O/U ${activeProp.line}`; }
-      return;
-    } else {
-      lastAnalysis = data;
-    }
-  } catch (err) {
-    const prob = activeProp?.prob ?? 0.5;
-    lastAnalysis = mockAnalysis(currentStat, activeProp.line, prob);
-  }
-
-  renderResult(lastAnalysis);
-  saveToHistory();
-  navTo('analysis');
-}
-
-function mockAnalysis(currentStat, propLine, prob) {
-  const needed = Math.max(0, propLine - currentStat);
-  const isOver = prob >= 0.57;
-  const isUnder = prob <= 0.43;
-  const confidence = Math.round(isOver ? prob * 100 : isUnder ? (1 - prob) * 100 : 50);
-  const recommendation = prob >= 0.97 ? 'LOCKED OVER' :
-                         prob >= 0.72 ? 'STRONG OVER' :
-                         prob >= 0.57 ? 'LEAN OVER' :
-                         prob >= 0.43 ? 'TOSS UP' :
-                         prob >= 0.28 ? 'LEAN UNDER' :
-                         prob <= 0.05 ? 'LOCKED UNDER' : 'STRONG UNDER';
-  const ls = activeGame?.liveStats?.[activePlayer?.id] || {};
-  const minsPlayed = ls.min || 1;
-  const minsRemaining = Math.max(1, 32 - minsPlayed);
-  const currentRate = currentStat / minsPlayed;
-  const blowoutRisk = Math.abs((activeGame?.homeScore||0) - (activeGame?.awayScore||0)) >= 15;
-  let narrative = '';
-  if (currentStat > propLine) {
-    narrative = `${activePlayer?.name} has already cleared the ${propLine} line with ${currentStat} ${activeProp?.label?.toLowerCase()}. This is effectively locked barring DNP. Book has this mispriced — the over is a near certainty.`;
-  } else {
-    narrative = `${activePlayer?.name} needs ${needed.toFixed(1)} more ${activeProp?.label?.toLowerCase()} to clear ${propLine}. ` +
-      `At current pace of ${currentRate.toFixed(2)}/min with ${minsRemaining.toFixed(0)} minutes remaining, ` +
-      `the math projects ${(currentStat + currentRate * minsRemaining).toFixed(1)} total. ` +
-      (blowoutRisk ? `Blowout risk detected — pace may slow significantly. ` : `Competitive game — full usage expected. `) +
-      (prob >= 0.72 ? `Strong mathematical edge on the over.` :
-       prob >= 0.57 ? `Slight lean toward the over.` :
-       prob <= 0.43 ? `Math favors the under.` : `Too close to call — toss up.`);
-  }
-  const impliedProb = 0.5238;
-  const edge = (prob - impliedProb) * 100;
-  const lambda = currentRate * minsRemaining;
-  return {
-    recommendation,
-    probability: prob,
-    confidence,
-    projectedFinal: parseFloat((currentStat + currentRate * minsRemaining).toFixed(1)),
-    needed: parseFloat(needed.toFixed(1)),
-    minsRemaining: parseFloat(minsRemaining.toFixed(0)),
-    ev: parseFloat(((prob / impliedProb - 1) * 100).toFixed(1)),
-    narrative,
-    models: {
-      bayesian: parseFloat(prob.toFixed(3)),
-      poisson: parseFloat(Math.min(0.97, Math.max(0.03, prob + (Math.random()-0.5)*0.04)).toFixed(3)),
-      gameState: blowoutRisk ? 0.82 : 1.0,
-      hotHand: currentRate > (activePlayer?.season?.pts||20)/32 ? 1.08 : 0.94,
-      lambda: parseFloat(lambda.toFixed(2)),
-    },
-    kelly: {
-      edge: parseFloat(edge.toFixed(1)),
-      unitSize: parseFloat((Math.max(0, edge) * 0.25).toFixed(1)),
-    },
-    bestBook: activeProp?.dk > activeProp?.fd ? 'FanDuel' : 'DraftKings',
-    bestOdds: activeProp?.dk > activeProp?.fd ? activeProp?.fd : activeProp?.dk,
-    statType: activeProp?.label,
-    propLine,
-    currentStat,
-  };
-}
-
-// ── Analysis Screen ───────────────────────────────────────
-function renderResult(data) {
-  const body = document.getElementById('an-body');
-  if (!data || !activeProp || !activePlayer) return;
-
-  const verdict = data.verdict || 'TOSS';
-  const prob = data.probability || 0.5;
-  const conf = data.confidence || Math.abs(prob - 0.5) * 2;
-  const confPct = Math.round(conf * 100);
-  const verdictClass = verdict === 'OVER' ? 'over' : verdict === 'UNDER' ? 'under' : 'toss';
-  const confFillClass = verdict === 'OVER' ? 'over' : verdict === 'UNDER' ? 'under' : '';
-  const ev = data.ev || 0;
-  const evStr = ev > 0 ? `+${ev.toFixed(1)}%` : `${ev.toFixed(1)}%`;
-  const kelly = data.kelly || {};
-  const models = data.models || {};
-  const narrative = data.narrative || `Math analysis for ${activePlayer.name} ${activeProp.label} ${activeProp.line}.`;
-
-  // Book chips
-  const booksForDisplay = [
-    { name: 'DK', odds: activeProp.dk },
-    { name: 'FD', odds: activeProp.fd },
-    { name: 'PP', odds: activeProp.pp },
-  ];
-  const bookHtml = booksForDisplay.map(({ name, odds }) => {
-    const isNum = typeof odds === 'number';
-    const cls = isNum && odds > 0 ? 'positive' : isNum && odds < -115 ? 'negative' : '';
-    const display = isNum ? (odds > 0 ? `+${odds}` : odds) : odds;
-    return `<span class="book-chip ${cls}" style="padding:3px 8px;font-size:0.65rem;font-weight:700;letter-spacing:0.04em;">${name} ${display}</span>`;
-  }).join('');
-
-  // Model rows
-  const modelRows = [
-    ['Bayesian Blend', models.bayesian ? (models.bayesian * 100).toFixed(1) + '%' : '—'],
-    ['Poisson CDF', models.poisson ? (models.poisson * 100).toFixed(1) + '%' : '—'],
-    ['Game State', models.gameState ? `×${models.gameState.toFixed(2)}` : '—'],
-    ['Hot Hand', models.hotHand ? `×${models.hotHand.toFixed(2)}` : '—'],
-    ['Pace Projection', models.pace ? `${models.pace} pts/min` : 'N/A'],
-    ['Kelly Edge', kelly.edge !== undefined ? `${kelly.edge > 0 ? '+' : ''}${kelly.edge}%` : '—'],
-    ['Unit Size', kelly.unitSize !== undefined ? `${kelly.unitSize}% of bankroll` : '—'],
-  ].map(([name, val]) => `<div class="model-row">
-    <span class="model-name">${name}</span>
-    <span class="model-value">${val}</span>
-  </div>`).join('');
-
-  // Alert if toss or negative EV
-  let alertHtml = '';
-  if (verdict === 'TOSS' || ev < -3) {
-    alertHtml = `<div class="alert-card">
-      <div class="alert-title">${verdict === 'TOSS' ? 'Too Close to Call' : 'Negative Expected Value'}</div>
-      <div class="alert-body">${verdict === 'TOSS'
-        ? 'The models don\'t have enough edge here. Avoid or size down.'
-        : `Expected value is ${evStr}. Book has the edge. Skip this one.`}</div>
-    </div>`;
-  }
-
-  body.innerHTML = `
-    <div class="verdict-block">
-      <div class="verdict-label">${esc(activePlayer.name)} · ${esc(activeProp.label)} ${activeProp.line}</div>
-      <div class="verdict-main ${verdictClass}">${verdict}</div>
-      <div style="font-size:0.8rem;color:var(--dim);margin-top:4px">
-        ${Math.round(prob * 100)}% probability · EV ${evStr}
-      </div>
-      <div class="confidence-bar-wrap">
-        <div class="conf-label"><span>Confidence</span><span>${confPct}%</span></div>
-        <div class="conf-bar-bg"><div class="conf-bar-fill ${confFillClass}" style="width:${confPct}%"></div></div>
-      </div>
-    </div>
-    <div class="narrative-block">
-      <div class="narrative-text">${esc(narrative)}</div>
-    </div>
-    ${alertHtml}
-    <div class="math-toggle" onclick="toggleMath(this)">
-      <span class="math-toggle-label">See the Math</span>
-      <span class="math-toggle-arrow">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
-    </div>
-    <div class="math-detail" id="math-detail">${modelRows}</div>
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
-      <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Lines</div>
-      <div class="book-chips">${bookHtml}</div>
-    </div>
-    <div class="share-row">
-      <button class="share-btn" onclick="shareAnalysis()">Share</button>
-      <button class="share-btn" onclick="navTo('home')">New Game</button>
     </div>
   `;
 }
 
-function toggleMath(el) {
-  el.classList.toggle('open');
-  const detail = document.getElementById('math-detail');
-  if (detail) detail.classList.toggle('open');
-}
+function onClockSlide(val) {
+  activeGameSecs = parseInt(val);
+  const g = activeGame;
+  const secs = activeGameSecs;
+  const m = calcModel(g, secs);
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const confColor = m.conf >= 70 ? 'green' : 'amber';
+  const alt = getAltState(secs);
 
-function shareAnalysis() {
-  if (!lastAnalysis || !activeProp || !activePlayer) return;
-  const text = `${activePlayer.name} ${activeProp.label} ${activeProp.line} — ${lastAnalysis.verdict} (${Math.round((lastAnalysis.probability||0.5)*100)}% · EV ${lastAnalysis.ev>0?'+':''}${(lastAnalysis.ev||0).toFixed(1)}%) via Parlay Killer`;
-  if (navigator.share) {
-    navigator.share({ text }).catch(() => {});
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+  const cd = document.getElementById('clock-disp');
+  const mv = document.getElementById('model-val');
+  const en = document.getElementById('edge-num');
+  const pt = document.getElementById('playable-to');
+  const abp = document.getElementById('ab-playable');
+  const cp = document.getElementById('conf-pct');
+  const cf = document.getElementById('conf-fill');
+  const al = document.getElementById('alt-line');
+
+  if (cd) cd.textContent = fmt(secs);
+  if (mv) { mv.textContent = m.model; mv.className = 'eh-model-val ' + edgeColor; }
+  if (en) { en.textContent = `EDGE: ${edgeSign}${m.edge} ${g.side}`; en.className = 'eh-edge-num ' + edgeColor; }
+  if (pt) pt.textContent = m.playableTo;
+  if (abp) abp.textContent = m.playableTo;
+  if (cp) { cp.textContent = m.conf + '%'; cp.style.color = `var(--${confColor})`; }
+  if (cf) { cf.style.width = m.conf + '%'; cf.className = 'conf-bar-fill ' + confColor; }
+  if (al) { al.textContent = alt.l; al.className = 'alt-line ' + alt.cls; }
+
+  // Update window tabs
+  const wins = getWindows(secs);
+  if (activeWinIdx >= wins.length) activeWinIdx = wins.length - 1;
+  const wt = document.getElementById('win-tabs');
+  const wd = document.getElementById('win-detail');
+  if (wt) wt.innerHTML = wins.map((w,i) => `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`).join('');
+  if (wd) {
+    const sel = wins[activeWinIdx];
+    const p = projWindow(g, secs, sel.s);
+    wd.innerHTML = `<div class="wd-pts">${p.pts} pts</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated window projection'}</div>`;
   }
 }
 
-// ── History ───────────────────────────────────────────────
-function saveToHistory() {
-  if (!activePlayer || !activeProp || !lastAnalysis) return;
-  const history = JSON.parse(localStorage.getItem('pk_history') || '[]');
-  history.unshift({
-    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    player: activePlayer.name,
-    prop: `${activeProp.label} ${activeProp.line}`,
-    verdict: lastAnalysis.verdict || 'TOSS',
-    prob: Math.round((lastAnalysis.probability || 0.5) * 100),
-    ev: lastAnalysis.ev || 0,
-  });
-  localStorage.setItem('pk_history', JSON.stringify(history.slice(0, 20)));
+function selectWindow(idx) {
+  activeWinIdx = idx;
+  const wins = getWindows(activeGameSecs);
+  document.querySelectorAll('.win-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  const sel = wins[idx];
+  const p = projWindow(activeGame, activeGameSecs, sel.s);
+  const wd = document.getElementById('win-detail');
+  if (wd) wd.innerHTML = `<div class="wd-pts">${p.pts} pts</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated window projection'}</div>`;
 }
 
-function renderHistoryScreen() {
-  const body = document.getElementById('history-body');
-  const history = JSON.parse(localStorage.getItem('pk_history') || '[]');
+function renderBoxTab(el) {
+  const g = activeGame;
+  const minsPlayed = 48 - g.secsRemaining/60;
 
-  if (!history.length) {
-    body.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📋</div>
-      <div class="empty-title">No analyses yet</div>
-      <div class="empty-sub">Run your first analysis from a live game.</div>
-    </div>`;
-    return;
-  }
-
-  const items = history.map(h => {
-    const vc = h.verdict === 'OVER' ? '#39ff14' : h.verdict === 'UNDER' ? '#ff6688' : '#f5a623';
-    const evStr = h.ev > 0 ? `+${h.ev.toFixed(1)}%` : `${h.ev.toFixed(1)}%`;
-    return `<div class="history-item">
-      <div>
-        <div class="history-name">${esc(h.player)}</div>
-        <div class="history-meta">${esc(h.prop)} · ${esc(h.date)}</div>
-      </div>
-      <div>
-        <div class="history-verdict" style="color:${vc}">${h.verdict}</div>
-        <div style="font-size:0.68rem;color:var(--dim);text-align:right">${h.prob}% · ${evStr}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  body.innerHTML = `<div class="section-label">Recent Analyses</div>${items}`;
-}
-
-// ── Search Screen ─────────────────────────────────────────
-function renderSearchScreen() {
-  const results = document.getElementById('search-results');
-  results.innerHTML = '';
-}
-
-function onSearchInput(val) {
-  const results = document.getElementById('search-results');
-  const q = val.toLowerCase().trim();
-  if (!q) { results.innerHTML = ''; return; }
-
-  const matches = Object.values(PLAYERS).filter(p =>
-    p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)
-  );
-
-  if (!matches.length) {
-    results.innerHTML = `<div class="empty-state"><div class="empty-title">No players found</div></div>`;
-    return;
-  }
-
-  results.innerHTML = matches.map(p => `
-    <div class="player-row" onclick="openPlayerFromSearch('${p.id}')">
-      <div class="player-info">
-        <div class="player-row-name">${esc(p.name)}</div>
-        <div class="player-row-pos">${p.pos} · ${p.team}</div>
-      </div>
-      <div class="player-stats-mini">
-        <div class="mini-stat">
-          <div class="mini-stat-val">${p.season.pts}</div>
-          <div class="mini-stat-lbl">PTS</div>
-        </div>
-        <div class="mini-stat">
-          <div class="mini-stat-val">${p.season.reb}</div>
-          <div class="mini-stat-lbl">REB</div>
-        </div>
-        <div class="mini-stat">
-          <div class="mini-stat-val">${p.season.ast}</div>
-          <div class="mini-stat-lbl">AST</div>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-function openPlayerFromSearch(playerId) {
-  // Find the game this player is in
-  const game = LIVE_GAMES.find(g =>
-    Object.values(g.players || {}).flat().includes(playerId)
-  );
-  if (game) {
-    activeGame = game;
-    const teamAbbr = Object.entries(game.players).find(([, ids]) => ids.includes(playerId))?.[0];
-    activeTeam = teamAbbr === game.homeAbbr ? 'home' : 'away';
-  } else {
-    activeGame = null;
-  }
-  activeProp = null;
-  openPlayerCard(playerId);
-}
-
-// ── Account Screen ────────────────────────────────────────
-function renderAccountScreen() {
-  const body = document.getElementById('account-body');
-
-  if (!currentUser) {
-    body.innerHTML = `
-      <div style="padding:24px 16px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#333;text-transform:uppercase;margin-bottom:16px;">Account</div>
-        <div style="color:#555;font-size:14px;margin-bottom:24px;line-height:1.6;">Sign in to track your analyses and unlock unlimited access.</div>
-        <button onclick="window.location.href='/'" style="width:100%;background:#860038;color:#fff;font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;border:none;padding:14px;cursor:pointer;margin-bottom:10px;">Sign In / Create Account</button>
+  function teamSection(players, name, abbr) {
+    const rows = players.map(p => {
+      const isHot = p.hot;
+      const sparkline = isHot
+        ? `<svg width="40" height="18" viewBox="0 0 40 18"><polyline points="0,14 8,10 16,8 24,5 32,3 40,1" stroke="#00e676" stroke-width="1.5" fill="none"/></svg>`
+        : `<svg width="40" height="18" viewBox="0 0 40 18"><polyline points="0,9 8,11 16,9 24,10 32,8 40,9" stroke="#2a2a2a" stroke-width="1.5" fill="none"/></svg>`;
+      return `<div class="bs-row">
+        <div class="bs-name">${p.n} <span class="bs-pos">${p.p}</span>${isHot?'<span class="hot-pill">HOT</span>':''}</div>
+        <div class="bs-stat${isHot?' hot':''}">${p.pts}</div>
+        <div class="bs-stat">${p.r}</div>
+        <div class="bs-stat">${p.a}</div>
+        <div>${sparkline}</div>
       </div>`;
-    return;
+    }).join('');
+    return `<div class="bs-team-header">${abbr} — ${name}</div>
+      <div class="bs-col-headers"><div>Player</div><div>PTS</div><div>REB</div><div>AST</div><div>Trend</div></div>
+      ${rows}`;
   }
 
-  const name = currentUser.name || currentUser.email || 'User';
-  const plan = currentUser.tier || currentUser.plan || 'free';
-  const usage = currentUser.todayUsage || 0;
+  el.innerHTML = `<div class="bs-content">
+    ${teamSection(g.awayPlayers, g.title.split(' @ ')[0] || g.away, g.away)}
+    ${teamSection(g.homePlayers, g.title.split(' @ ')[1] || g.home, g.home)}
+  </div>`;
+}
+
+/* ── SNAPSHOT ───────────────────────────────────────────── */
+function openSnapshot() {
+  renderSnapshot();
+  goTo('s-snapshot');
+}
+
+function renderSnapshot() {
+  if (!activeGame) return;
+  const g = activeGame;
+  const secs = activeGameSecs;
+  const m = calcModel(g, secs);
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const edgeClass = m.edge >= 0 ? 'green' : 'red';
+  const badgeClass = g.badge === 'HEATING' ? 'heating' : 'closing';
+  const wins = getWindows(secs);
+  const fullWin = wins[wins.length-1];
+  const proj = projWindow(g, secs, fullWin.s);
+
+  document.getElementById('snapshot-content').innerHTML = `
+    <div class="snapshot-wrap">
+      <div class="share-card">
+        <div class="sc-logo">
+          <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        </div>
+        <div class="sc-title">${g.title}</div>
+        <div class="sc-meta">${g.period} · ${g.clock} · ${g.network}</div>
+        <div class="sc-score">${g.away} ${g.awayScore} – ${g.homeScore} ${g.home}</div>
+        <div class="sc-row">
+          <div><div class="sc-row-label">Market</div><div class="sc-row-val">${g.marketTotal}</div></div>
+          <div><div class="sc-row-label">Model</div><div class="sc-row-val green">${m.model}</div></div>
+          <div><div class="sc-row-label">Conf</div><div class="sc-row-val">${m.conf}%</div></div>
+        </div>
+        <div class="sc-edge ${edgeClass}">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
+        <div class="sc-window">Next ${fullWin.l} → <span>${proj.pts} pts expected</span></div>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar-bg"><div class="conf-bar-fill green" style="width:${m.conf}%"></div></div>
+        </div>
+        <div class="sc-badge-row"><span class="sc-badge ${badgeClass}">${g.badge}</span></div>
+        <div class="sc-watermark">PARLAYKILLERAPP.COM</div>
+      </div>
+      <div class="share-note">Screenshot this card. Post the result after the game.</div>
+      <div class="share-btns">
+        <button class="share-btn-el green" onclick="shareToX()">Share to X</button>
+        <button class="share-btn-el ghost">Copy Image</button>
+      </div>
+    </div>
+  `;
+}
+
+function shareToX() {
+  if (!activeGame) return;
+  const g = activeGame;
+  const m = calcModel(g, activeGameSecs);
+  const sign = m.edge >= 0 ? '+' : '';
+  const txt = encodeURIComponent(`${g.title} | ${g.period} · ${g.clock}\nMarket: ${g.marketTotal} | Model: ${m.model}\nEDGE: ${sign}${m.edge} ${g.side}\n\nvia @ParlayKillerApp`);
+  window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
+}
+
+/* ── ACCOUNT ────────────────────────────────────────────── */
+function renderAccount() {
+  const user = window.__user || {};
+  const plan = user.plan || 'free';
+  const isPro = plan === 'pro';
+  const usage = user.todayUsage || 0;
+  const remaining = Math.max(0, 3 - usage);
+  const name = user.name || user.email || 'User';
+  const email = user.email || '';
   const initial = name[0].toUpperCase();
 
-  body.innerHTML = `
-    <div style="padding:24px 16px;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#333;text-transform:uppercase;margin-bottom:16px;">Account</div>
-      <div style="background:#111;border:1px solid #1e1e1e;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">${esc(name)}</div>
-        <div style="font-size:11px;color:#555;">${esc(currentUser.email || '')}</div>
-        <div style="font-size:11px;color:#860038;margin-top:6px;font-weight:700;">${plan === 'pro' ? '⚡ PRO — Unlimited' : 'Free — ' + (3 - usage) + ' analyses remaining'}</div>
+  document.getElementById('account-content').innerHTML = `
+    <div class="account-wrap">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div style="width:48px;height:48px;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;color:#080808;">${initial}</div>
+        <div>
+          <div class="acc-name">${name}</div>
+          <div class="acc-email">${email}</div>
+        </div>
       </div>
-      ${plan !== 'pro' ? `<button onclick="window.location.href='/account.html'" style="width:100%;background:#860038;color:#fff;font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;border:none;padding:14px;cursor:pointer;margin-bottom:10px;">Upgrade to Pro — $9.99/mo</button>` : ''}
-      <button onclick="signOut()" style="width:100%;background:none;border:1px solid #333;color:#555;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:14px;cursor:pointer;margin-bottom:10px;">Sign Out</button>
-      <a href="/account.html" style="display:block;text-align:center;font-size:11px;color:#444;text-decoration:none;margin-top:8px;">Account Settings →</a>
-    </div>`;
+      <div class="acc-plan-badge ${isPro?'pro':'free'}">${isPro?'PRO — Unlimited':`Free — ${remaining} remaining`}</div>
+      <div class="acc-stats">
+        <div class="acc-stat-row"><span class="acc-stat-label">Plan</span><span class="acc-stat-val">${isPro?'Live Edge Pro':'Free'}</span></div>
+        <div class="acc-stat-row"><span class="acc-stat-label">Analyses today</span><span class="acc-stat-val">${usage}${!isPro?' / 3':''}</span></div>
+        <div class="acc-stat-row"><span class="acc-stat-label">Games tracked</span><span class="acc-stat-val">${favorites.length}</span></div>
+        <div class="acc-stat-row"><span class="acc-stat-label">Active alerts</span><span class="acc-stat-val">${alerts.length}</span></div>
+      </div>
+      ${!isPro?`<button class="acc-btn green" onclick="window.location.href='/api/billing/create-checkout-session'">Upgrade to Live Edge Pro</button>`:''}
+      <button class="acc-btn outline" onclick="signOut()">Sign Out</button>
+    </div>
+  `;
 }
 
-// ── Utilities ─────────────────────────────────────────────
-function esc(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+async function signOut() {
+  try { await fetch('/api/auth/logout', { method:'POST', credentials:'include' }); } catch {}
+  window.location.href = '/';
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+/* ── UPGRADE BANNER ─────────────────────────────────────── */
+function showUpgradeBanner(message) {
+  const existing = document.getElementById('upgrade-banner');
+  if (existing) existing.remove();
+  const b = document.createElement('div');
+  b.id = 'upgrade-banner';
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#00e676;color:#080808;font-size:11px;font-weight:700;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:999;letter-spacing:0.06em;font-family:DM Sans,sans-serif;max-width:480px;margin:0 auto;';
+  b.innerHTML = `<span>${message}</span><button onclick="window.location.href='/api/billing/create-checkout-session'" style="background:#080808;color:#00e676;border:none;font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer;letter-spacing:0.08em;">UPGRADE</button>`;
+  document.body.prepend(b);
+  setTimeout(() => b.remove(), 6000);
 }
 
-// ── Init ──────────────────────────────────────────────────
-checkAuth();
-renderHome();
+/* ── RUN ANALYSIS ───────────────────────────────────────── */
+async function runAnalysis(game, prop) {
+  const payload = {
+    playerName: prop.playerName, sport: 'NBA',
+    statType: prop.statType, currentStat: prop.currentStat,
+    propLine: prop.line, period: game.period,
+    timeRemaining: game.clock, homeScore: game.homeScore,
+    awayScore: game.awayScore,
+  };
+  try {
+    const r = await fetch('/api/liveunder', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+    if (r.status === 401) { showUpgradeBanner('Sign in to run full analysis'); return; }
+    if (data.limitReached) { showUpgradeBanner('Upgrade to Pro for unlimited analyses'); return; }
+    return data;
+  } catch(e) { return null; }
+}
+
+/* ── MODALS ─────────────────────────────────────────────── */
+function openTrackModal(gameId) {
+  const g = GAMES[gameId];
+  if (!g) return;
+  const m = calcModel(g, g.secsRemaining);
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const edgeClass = m.edge >= 0 ? 'green' : 'red';
+  showModal(`
+    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-title">Track this edge</div>
+    <div class="modal-game-info">${g.title} · ${g.period} · ${g.clock}</div>
+    <div class="modal-edge ${edgeClass}">Current edge: ${edgeSign}${m.edge} ${g.side}</div>
+    <div class="modal-section-label">Notify me when:</div>
+    <div class="modal-pills">
+      <button class="modal-pill on" onclick="this.classList.toggle('on')">Edge changes</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Edge > 5.0</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Model flips</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Alt lines pulled</button>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="confirmTrack('${gameId}')">Start Tracking</button>
+    </div>
+  `);
+}
+
+function confirmTrack(gameId) {
+  if (!favorites.includes(gameId)) favorites.push(gameId);
+  closeModal();
+  showConfirmModal('✓', 'Tracking Started', `You'll be notified when the edge changes on ${GAMES[gameId]?.title || 'this game'}.`);
+}
+
+function openAlertModal(gameId) {
+  const g = GAMES[gameId];
+  if (!g) return;
+  showModal(`
+    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-title">Set Alert</div>
+    <div class="modal-game-info">${g.title} · ${g.period} · ${g.clock}</div>
+    <div class="modal-section-label">Alert when:</div>
+    <div class="modal-pills">
+      <button class="modal-pill on" onclick="this.classList.toggle('on')">Edge > 5.0</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Edge > 7.0</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Model flips side</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Alt lines pulling</button>
+    </div>
+    <div class="modal-section-label">Deliver via:</div>
+    <div class="modal-pills">
+      <button class="modal-pill on" onclick="this.classList.toggle('on')">In-app</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Push notification</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Email</button>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="confirmAlert('${gameId}')">Set Alert</button>
+    </div>
+  `);
+}
+
+function confirmAlert(gameId) {
+  const g = GAMES[gameId];
+  if (g) {
+    const m = calcModel(g, g.secsRemaining);
+    const sign = m.edge >= 0 ? '+' : '';
+    alerts.push({ gameId, title: g.title, msg: `Edge: ${sign}${m.edge} ${g.side}`, color: g.edgeColor, time: 'Just now' });
+  }
+  closeModal();
+  showConfirmModal('🔔', 'Alert Set', `We'll notify you when the edge threshold is crossed.`);
+}
+
+function showModal(html) {
+  const layer = document.getElementById('modal-layer');
+  layer.innerHTML = `<div class="modal-overlay open" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
+}
+
+function showConfirmModal(icon, title, msg) {
+  const layer = document.getElementById('modal-layer');
+  layer.innerHTML = `<div class="modal-overlay open confirm-modal" onclick="if(event.target===this)closeModal()"><div class="modal"><span class="confirm-icon">${icon}</span><div class="confirm-title">${title}</div><div class="confirm-msg">${msg}</div><button class="modal-btn primary" style="width:100%;" onclick="closeModal()">Done</button></div></div>`;
+}
+
+function closeModal() {
+  document.getElementById('modal-layer').innerHTML = '';
+}
+
+/* ── AUTH INIT ──────────────────────────────────────────── */
+function updateNavAvatar(user) {
+  // Usage warning injected via upgrade banner when needed
+}
+
+async function initApp() {
+  try {
+    const r = await fetch('/api/auth/me', { credentials:'include' });
+    const data = await r.json();
+    if (!data.user) { window.location.href = '/'; return; }
+    window.__user = data.user;
+    updateNavAvatar(data.user);
+    renderBoard();
+  } catch(e) { window.location.href = '/'; }
+}
+
+function renderBoard() {
+  renderHomeContent();
+}
+
+initApp();
 </script>
 </body>
 </html>
