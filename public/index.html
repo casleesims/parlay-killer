@@ -4,24 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Parlay Killer Live Edge</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #080808; --s1: #0d0d0d; --s2: #111111;
-      --border: #141414; --b2: #1e1e1e;
-      --green: #00e676; --red: #ff453a; --amber: #f5a623;
-      --white: #ffffff; --dim: #555555; --muted: #2a2a2a;
+      --bg: #141e2b; --s1: #1a2535; --s2: #1e2c3e; --s3: #243347;
+      --border: #253042; --b2: #2d3d52;
+      --blue: #4da6ff; --blue-dim: rgba(77,166,255,0.12); --blue-border: rgba(77,166,255,0.25);
+      --red: #ff453a; --amber: #f5a623; --avoid: #ff5a52;
+      --white: #e8f2fb; --dim: #4a6480; --muted: #2d3d52; --navy: #0d1520;
     }
     html { height: 100%; }
     body { height: 100%; overflow: auto; background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-serif; }
 
     /* LOGO */
     .logo { display: flex; align-items: center; line-height: 1; }
-    .logo-pk { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-    .logo-pk .w { color: #ffffff; }
-    .logo-pk .g { color: #00e676; }
-    .logo-le { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #ff453a; letter-spacing: 0.1em; margin-left: 7px; position: relative; top: 1px; }
+    .logo-pk { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; }
+    .logo-pk em { color: var(--blue); font-style: normal; }
+    .logo-le { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--red); letter-spacing: 0.1em; margin-left: 7px; position: relative; top: 1px; }
 
     /* APP SHELL */
     #app { position: fixed; inset: 0; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
@@ -34,72 +34,59 @@
     .scr.inactive { transform: translateX(100%); }
 
     /* TOP BAR */
-    .top-bar { display: flex; justify-content: space-between; align-items: center; height: 50px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; height: 50px; padding: 0 16px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; background: var(--navy); position: sticky; top: 0; z-index: 10; }
     .top-bar-left { display: flex; align-items: center; gap: 8px; }
     .top-bar-right { display: flex; align-items: center; gap: 8px; }
-    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); background: none; border: none; cursor: pointer; padding: 0; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); background: none; border: none; cursor: pointer; padding: 0; }
     .back-btn svg { flex-shrink: 0; }
     .share-btn { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--red); background: none; border: none; cursor: pointer; }
-    .live-count { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--white); }
-    .live-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }
+    .live-count { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: var(--white); }
+    .live-dot { width: 7px; height: 7px; background: var(--blue); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
 
     /* TABS */
-    .tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; position: sticky; top: 50px; z-index: 9; background: var(--bg); }
-    .tab { flex: 1; padding: 11px 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; background: none; border-left: none; border-right: none; border-top: none; }
-    .tab.active { color: var(--white); border-bottom-color: var(--green); }
+    .tabs { display: flex; border-bottom: 0.5px solid var(--border); flex-shrink: 0; position: sticky; top: 50px; z-index: 9; background: var(--bg); }
+    .tab { flex: 1; padding: 11px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; background: none; border-left: none; border-right: none; border-top: none; }
+    .tab.active { color: var(--white); border-bottom-color: var(--blue); }
 
-    /* GAME CARD */
-    .game-card { border-left: 3px solid transparent; border-bottom: 1px solid var(--border); padding: 14px 16px; cursor: pointer; transition: background 0.12s; }
+    /* GAME CARD — new design */
+    .game-card { border-left: 3px solid transparent; border-bottom: 0.5px solid var(--border); padding: 14px 16px; cursor: pointer; transition: background 0.12s; background: var(--bg); }
     .game-card:active { background: var(--s1); }
-    .game-card.edge-over { border-left-color: var(--green); }
-    .game-card.edge-under { border-left-color: var(--red); }
-    .gc-score-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .gc-team { }
-    .gc-team.right { text-align: right; }
-    .gc-abbr { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: var(--white); line-height: 1; }
-    .gc-score { font-family: 'Bebas Neue', sans-serif; font-size: 38px; letter-spacing: -0.01em; color: var(--white); line-height: 1; }
-    .gc-rec { font-size: 10px; color: var(--dim); margin-top: 2px; }
-    .gc-center { text-align: center; }
-    .gc-sep { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--dim); line-height: 1; }
-    .gc-period { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: var(--dim); }
-    .gc-clock { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--white); }
-    .gc-network { font-size: 9px; color: var(--dim); margin-top: 2px; }
-    .gc-edge-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .gc-edge-nums { font-size: 12px; color: var(--dim); }
-    .gc-edge-nums .edge-val { font-weight: 600; }
-    .gc-edge-nums .edge-val.green { color: var(--green); }
-    .gc-edge-nums .edge-val.red { color: var(--red); }
-    .gc-badge { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.1em; padding: 2px 7px; border: 1px solid; }
-    .gc-badge.heating { color: var(--green); border-color: var(--green); }
-    .gc-badge.closing { color: var(--amber); border-color: var(--amber); }
-    .gc-windows { display: flex; gap: 0; margin-bottom: 10px; border: 1px solid var(--border); }
-    .gc-win { flex: 1; text-align: center; padding: 7px 4px; border-right: 1px solid var(--border); }
-    .gc-win:last-child { border-right: none; }
-    .gc-win-label { font-size: 9px; color: var(--dim); margin-bottom: 2px; }
-    .gc-win-pts { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.04em; color: var(--white); }
-    .gc-win.full .gc-win-label { color: var(--green); }
-    .gc-win.full .gc-win-pts { color: var(--green); }
-    .gc-signals { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-    .signal-pill { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; padding: 3px 8px; background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
-    .signal-pill.warn { background: rgba(245,166,35,0.1); color: var(--amber); border-color: rgba(245,166,35,0.2); }
-    .gc-actions { display: flex; gap: 8px; }
-    .gc-btn { flex: 1; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 0; background: none; border: 1px solid var(--b2); color: var(--white); cursor: pointer; transition: background 0.12s; }
-    .gc-btn:active { background: var(--s1); }
-    .gc-btn.primary { background: var(--green); color: #080808; border-color: var(--green); }
-    .gc-btn.primary:active { opacity: 0.85; }
+    .game-card.edge-over { border-left-color: var(--blue); }
+    .game-card.edge-under { border-left-color: var(--avoid); }
+    .game-card.edge-wait { border-left-color: var(--amber); }
+    .gc-meta { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .gc-meta-live { color: var(--blue); }
+    .gc-live-dot { display: inline-block; width: 5px; height: 5px; background: var(--blue); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; vertical-align: middle; margin-right: 3px; flex-shrink: 0; }
+    .gc-teams { font-size: 14px; font-weight: 500; color: var(--white); margin-bottom: 8px; }
+    .gc-score-total { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 0.5px solid var(--border); }
+    .gc-score-lbl, .gc-total-lbl { font-size: 9px; color: var(--dim); letter-spacing: 0.06em; text-transform: uppercase; display: block; }
+    .gc-score-val { font-size: 13px; font-weight: 500; color: #7a9ab8; }
+    .gc-total-num { font-size: 20px; font-weight: 500; color: var(--white); letter-spacing: -0.02em; display: block; }
+    .gc-total-book { font-size: 9px; color: var(--dim); display: block; }
+    .gc-total-block { text-align: right; }
+    .gc-verdict-row { display: flex; align-items: flex-end; justify-content: space-between; }
+    .gc-verdict { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
+    .gc-verdict-over { color: var(--blue); }
+    .gc-verdict-wait { color: var(--amber); }
+    .gc-verdict-avoid { color: var(--avoid); }
+    .gc-verdict-pregame { color: var(--dim); font-size: 13px; }
+    .gc-why { font-size: 10px; color: var(--dim); margin-top: 3px; }
+    .gc-edge-col { text-align: right; }
+    .gc-edge-num { font-size: 13px; font-weight: 500; display: block; }
+    .gc-edge-lbl { font-size: 9px; color: var(--dim); }
 
     /* EMPTY STATE */
     .empty-state { padding: 60px 24px; text-align: center; }
-    .empty-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.3; }
+    .empty-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.2; }
     .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.06em; color: var(--dim); margin-bottom: 6px; }
     .empty-sub { font-size: 13px; font-weight: 300; color: var(--dim); }
 
     /* SECTION LABEL */
-    .section-label { padding: 10px 16px 6px; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+    .section-label { padding: 10px 16px 6px; font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
 
     /* ── GAME VIEW ─────────────────────────────── */
-    .score-header { padding: 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .score-header { padding: 16px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
     .sh-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 12px; }
     .sh-team { }
     .sh-team.right { text-align: right; }
@@ -109,86 +96,86 @@
     .sh-center { text-align: center; }
     .sh-period { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--white); letter-spacing: 0.04em; }
     .sh-clock { font-size: 22px; font-weight: 300; color: var(--white); }
-    .sh-live { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; color: var(--green); display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 4px; }
-    .sh-live-dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; }
-    .qtr-chart { display: flex; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .sh-live { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; color: var(--blue); display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 4px; }
+    .sh-live-dot { width: 5px; height: 5px; background: var(--blue); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; }
+    .qtr-chart { display: flex; gap: 6px; padding: 10px 16px; border-bottom: 0.5px solid var(--border); }
     .qtr-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .qtr-bars { display: flex; gap: 2px; align-items: flex-end; height: 28px; }
-    .qtr-bar-away { background: #444; width: 8px; }
-    .qtr-bar-home { background: rgba(0,230,118,0.6); width: 8px; }
+    .qtr-bar-away { background: #2d3d52; width: 8px; }
+    .qtr-bar-home { background: rgba(77,166,255,0.5); width: 8px; }
     .qtr-label { font-size: 6px; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; }
 
     /* EDGE TAB */
     .edge-tab-content { padding: 16px; }
-    .clock-strip { display: flex; align-items: center; gap: 10px; padding: 10px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
-    .clock-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: var(--dim); text-transform: uppercase; flex-shrink: 0; }
-    .clock-slider { flex: 1; accent-color: var(--green); }
-    .clock-display { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.06em; flex-shrink: 0; min-width: 40px; text-align: right; }
-    .edge-hero { background: var(--s1); border: 1px solid var(--b2); padding: 16px; margin-bottom: 14px; }
-    .eh-row1 { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); gap: 4px; }
-    .eh-col-label { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+    .clock-strip { display: flex; align-items: center; gap: 10px; padding: 10px 0 16px; border-bottom: 0.5px solid var(--border); margin-bottom: 16px; }
+    .clock-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; color: var(--dim); text-transform: uppercase; flex-shrink: 0; }
+    .clock-slider { flex: 1; accent-color: var(--blue); }
+    .clock-display { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--blue); letter-spacing: 0.06em; flex-shrink: 0; min-width: 40px; text-align: right; }
+    .edge-hero { background: var(--s1); border: 0.5px solid var(--b2); padding: 16px; margin-bottom: 14px; }
+    .eh-row1 { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 0.5px solid var(--border); gap: 4px; }
+    .eh-col-label { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
     .eh-score-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--white); }
     .eh-market-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--white); }
     .eh-model-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
-    .eh-model-val.green { color: var(--green); }
-    .eh-model-val.red { color: var(--red); }
+    .eh-model-val.green { color: var(--blue); }
+    .eh-model-val.red { color: var(--avoid); }
     .eh-edge { text-align: center; }
     .eh-edge-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; }
-    .eh-edge-num.green { color: var(--green); }
-    .eh-edge-num.red { color: var(--red); }
+    .eh-edge-num.green { color: var(--blue); }
+    .eh-edge-num.red { color: var(--avoid); }
     .eh-playable { font-size: 11px; color: var(--dim); margin-top: 4px; }
-    .eh-playable span { color: var(--white); font-weight: 600; }
+    .eh-playable span { color: var(--white); font-weight: 500; }
     .conf-bar-wrap { margin-bottom: 14px; }
     .conf-bar-header { display: flex; justify-content: space-between; align-items: center; font-size: 10px; margin-bottom: 6px; }
-    .conf-bar-label { font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; }
-    .conf-bar-pct { font-weight: 700; }
+    .conf-bar-label { font-weight: 500; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; }
+    .conf-bar-pct { font-weight: 500; }
     .conf-bar-bg { height: 4px; background: var(--muted); }
     .conf-bar-fill { height: 4px; transition: width 0.4s ease; }
-    .conf-bar-fill.green { background: var(--green); }
+    .conf-bar-fill.green { background: var(--blue); }
     .conf-bar-fill.amber { background: var(--amber); }
     .market-chart { margin-bottom: 14px; }
-    .market-chart-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+    .market-chart-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
     .windows-section { margin-bottom: 14px; }
-    .ws-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+    .ws-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
     .win-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-    .win-tab { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; padding: 5px 10px; border: 1px solid var(--b2); color: var(--dim); cursor: pointer; background: none; transition: all 0.12s; }
-    .win-tab.active { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.06); }
-    .win-detail { background: var(--s1); border: 1px solid var(--b2); padding: 12px 14px; }
+    .win-tab { font-size: 10px; font-weight: 500; letter-spacing: 0.06em; padding: 5px 10px; border: 1px solid var(--b2); color: var(--dim); cursor: pointer; background: none; transition: all 0.12s; }
+    .win-tab.active { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+    .win-detail { background: var(--s1); border: 0.5px solid var(--b2); padding: 12px 14px; }
     .wd-pts { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.02em; color: var(--white); }
     .wd-range { font-size: 11px; color: var(--dim); margin-top: 2px; }
     .wd-note { font-size: 11px; color: var(--dim); margin-top: 4px; font-style: italic; }
-    .alt-line { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; padding: 5px 10px; border: 1px solid; margin-bottom: 14px; }
-    .alt-line.full { color: var(--green); border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.05); }
+    .alt-line { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; padding: 5px 10px; border: 1px solid; margin-bottom: 14px; }
+    .alt-line.full { color: var(--blue); border-color: var(--blue-border); background: var(--blue-dim); }
     .alt-line.thin { color: var(--amber); border-color: rgba(245,166,35,0.3); background: rgba(245,166,35,0.05); }
-    .alt-line.gone { color: var(--red); border-color: rgba(255,69,58,0.3); background: rgba(255,69,58,0.05); }
+    .alt-line.gone { color: var(--avoid); border-color: rgba(255,90,82,0.3); background: rgba(255,90,82,0.05); }
     .signals-section { margin-bottom: 14px; }
-    .sig-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .sig-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
     .sig-row:last-child { border-bottom: none; }
     .sig-name { color: var(--dim); }
-    .sig-val { font-weight: 600; }
-    .sig-val.green { color: var(--green); }
+    .sig-val { font-weight: 500; }
+    .sig-val.green { color: var(--blue); }
     .sig-val.amber { color: var(--amber); }
-    .sig-val.red { color: var(--red); }
-    .action-block { padding: 14px; background: var(--s1); border: 1px solid var(--b2); margin-bottom: 14px; }
+    .sig-val.red { color: var(--avoid); }
+    .action-block { padding: 14px; background: var(--s1); border: 0.5px solid var(--b2); margin-bottom: 14px; }
     .ab-playable { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.04em; color: var(--white); margin-bottom: 4px; }
     .ab-note { font-size: 11px; color: var(--dim); margin-bottom: 14px; }
     .ab-btns { display: flex; gap: 8px; }
-    .ab-btn { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 0; border: 1px solid var(--b2); color: var(--white); background: none; cursor: pointer; transition: background 0.12s; }
-    .ab-btn.primary { background: var(--green); color: #080808; border-color: var(--green); }
-    .ab-btn.danger { border-color: var(--red); color: var(--red); }
+    .ab-btn { flex: 1; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 0; border: 1px solid var(--b2); color: var(--white); background: none; cursor: pointer; transition: background 0.12s; }
+    .ab-btn.primary { background: var(--blue); color: var(--navy); border-color: var(--blue); }
+    .ab-btn.danger { border-color: var(--avoid); color: var(--avoid); }
     .ab-btn:active { opacity: 0.85; }
 
     /* BOX SCORE */
     .bs-content { padding: 0 0 16px; }
-    .bs-team-header { padding: 10px 16px 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border); background: var(--s1); }
-    .bs-col-headers { display: grid; grid-template-columns: 1fr 40px 40px 40px 44px; padding: 6px 16px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border); }
-    .bs-row { display: grid; grid-template-columns: 1fr 40px 40px 40px 44px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; }
+    .bs-team-header { padding: 10px 16px 6px; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 0.5px solid var(--border); background: var(--s1); }
+    .bs-col-headers { display: grid; grid-template-columns: 1fr 40px 40px 40px 44px; padding: 6px 16px; font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 0.5px solid var(--border); }
+    .bs-row { display: grid; grid-template-columns: 1fr 40px 40px 40px 44px; padding: 10px 16px; border-bottom: 0.5px solid var(--border); align-items: center; }
     .bs-row:last-child { border-bottom: none; }
-    .bs-name { font-size: 13px; font-weight: 700; color: var(--white); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .bs-name { font-size: 13px; font-weight: 500; color: var(--white); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .bs-pos { font-size: 9px; color: var(--dim); font-weight: 400; }
-    .hot-pill { font-family: 'Bebas Neue', sans-serif; font-size: 9px; letter-spacing: 0.08em; color: #080808; background: var(--green); padding: 1px 5px; }
+    .hot-pill { font-family: 'Bebas Neue', sans-serif; font-size: 9px; letter-spacing: 0.08em; color: var(--navy); background: var(--blue); padding: 1px 5px; }
     .bs-stat { font-size: 13px; text-align: center; color: var(--white); }
-    .bs-stat.hot { color: var(--green); font-weight: 700; }
+    .bs-stat.hot { color: var(--blue); font-weight: 500; }
 
     /* SNAPSHOT */
     .snapshot-wrap { padding: 16px; }
@@ -197,24 +184,24 @@
     .sc-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 2px; }
     .sc-meta { font-size: 10px; color: var(--dim); margin-bottom: 14px; }
     .sc-score { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: -0.01em; color: var(--white); text-align: center; margin-bottom: 14px; }
-    .sc-row { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); gap: 4px; }
-    .sc-row-label { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 3px; }
+    .sc-row { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 0.5px solid var(--border); gap: 4px; }
+    .sc-row-label { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 3px; }
     .sc-row-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--white); }
-    .sc-row-val.green { color: var(--green); }
+    .sc-row-val.green { color: var(--blue); }
     .sc-edge { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.04em; text-align: center; margin-bottom: 10px; }
-    .sc-edge.green { color: var(--green); }
-    .sc-edge.red { color: var(--red); }
+    .sc-edge.green { color: var(--blue); }
+    .sc-edge.red { color: var(--avoid); }
     .sc-window { font-size: 11px; text-align: center; color: var(--dim); margin-bottom: 12px; }
-    .sc-window span { color: var(--green); font-weight: 600; }
+    .sc-window span { color: var(--blue); font-weight: 500; }
     .sc-badge-row { text-align: center; margin-bottom: 12px; }
     .sc-badge { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; padding: 4px 12px; border: 1px solid; }
-    .sc-badge.heating { color: var(--green); border-color: var(--green); }
+    .sc-badge.heating { color: var(--blue); border-color: var(--blue); }
     .sc-badge.closing { color: var(--amber); border-color: var(--amber); }
-    .sc-watermark { font-size: 9px; text-align: center; color: rgba(255,255,255,0.08); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 12px; font-weight: 700; }
+    .sc-watermark { font-size: 9px; text-align: center; color: rgba(232,242,251,0.08); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 12px; font-weight: 500; }
     .share-note { font-size: 11px; color: var(--dim); text-align: center; margin-bottom: 16px; }
     .share-btns { display: flex; gap: 10px; }
     .share-btn-el { flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; padding: 12px; border: none; cursor: pointer; }
-    .share-btn-el.green { background: var(--green); color: #080808; }
+    .share-btn-el.green { background: var(--blue); color: var(--navy); }
     .share-btn-el.ghost { background: none; border: 1px solid var(--b2); color: var(--white); }
 
     /* ACCOUNT */
@@ -223,68 +210,74 @@
     .acc-email { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
     .acc-plan-badge { display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.1em; padding: 4px 10px; border: 1px solid; margin-bottom: 24px; }
     .acc-plan-badge.free { color: var(--amber); border-color: var(--amber); }
-    .acc-plan-badge.pro { color: var(--green); border-color: var(--green); }
-    .acc-stats { border: 1px solid var(--b2); margin-bottom: 20px; }
-    .acc-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .acc-plan-badge.pro { color: var(--blue); border-color: var(--blue); }
+    .acc-stats { border: 0.5px solid var(--b2); margin-bottom: 20px; }
+    .acc-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 0.5px solid var(--border); font-size: 13px; }
     .acc-stat-row:last-child { border-bottom: none; }
     .acc-stat-label { color: var(--dim); }
-    .acc-stat-val { font-weight: 600; color: var(--white); }
+    .acc-stat-val { font-weight: 500; color: var(--white); }
     .acc-btn { width: 100%; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.1em; padding: 14px; border: none; cursor: pointer; margin-bottom: 10px; }
-    .acc-btn.green { background: var(--green); color: #080808; }
+    .acc-btn.green { background: var(--blue); color: var(--navy); }
     .acc-btn.outline { background: none; border: 1px solid var(--b2); color: var(--dim); }
-    .acc-btn.outline:hover { color: var(--white); border-color: #555; }
+    .acc-btn.outline:hover { color: var(--white); border-color: var(--blue-border); }
+
+    /* KILL STRIP */
+    #best-bet-strip { background: var(--blue); flex-shrink: 0; }
+    .best-bet-strip-inner { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
+    .bb-label { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+    .bb-game { font-size: 13px; font-weight: 500; color: #fff; margin-top: 1px; }
+    .bb-sub { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+    .bb-right { font-size: 10px; font-weight: 500; color: var(--blue); background: #fff; border-radius: 2px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
 
     /* BOTTOM NAV */
-    #bottom-nav { display: flex; background: #060606; border-top: 1px solid var(--border); flex-shrink: 0; position: relative; z-index: 20; }
+    #bottom-nav { display: flex; background: var(--navy); border-top: 0.5px solid var(--border); flex-shrink: 0; position: relative; z-index: 20; }
     .bn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 8px 0; cursor: pointer; transition: opacity 0.12s; border: none; background: none; -webkit-tap-highlight-color: transparent; }
-    .bn svg { display: block; }
-    .bn span { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2a2a2a; }
-    .bn.active span { color: var(--green); }
-    .bn.active svg { opacity: 1; }
-    .bn svg { opacity: 0.2; color: var(--white); }
-    .bn.active svg { opacity: 1; color: var(--green); }
+    .bn svg { display: block; opacity: 0.25; }
+    .bn span { font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); opacity: 0.25; }
+    .bn.active span { color: var(--blue); opacity: 1; }
+    .bn.active svg { opacity: 1; color: var(--blue); }
     .bn-icon-color { fill: none; stroke: var(--white); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-    .bn.active .bn-icon-color { stroke: var(--green); }
+    .bn.active .bn-icon-color { stroke: var(--blue); }
 
     /* FAV BUTTON */
-    .fav-btn { background:none; border:none; cursor:pointer; color:#333; padding:4px; transition:color 0.15s; line-height:1; }
-    .fav-btn.on { color:#f5a623; }
+    .fav-btn { background:none; border:none; cursor:pointer; color:var(--b2); padding:4px; transition:color 0.15s; line-height:1; }
+    .fav-btn.on { color:var(--amber); }
     .fav-btn:active { opacity:0.7; }
 
     /* NEWS CARDS */
-    .news-card { background:#0d0d0d; border:1px solid #141414; border-left:3px solid #141414; padding:14px 16px; margin:0 0 1px; cursor:pointer; transition:border-color 0.15s; }
-    .news-card.breaking { border-left-color:#ff453a; }
+    .news-card { background: var(--s1); border: 0.5px solid var(--border); border-left: 3px solid var(--border); padding:14px 16px; margin:0 0 1px; cursor:pointer; transition:border-color 0.15s; display:block; text-decoration:none; color:inherit; }
+    .news-card.breaking { border-left-color: var(--red); }
     .news-card:active { opacity:0.8; }
     .news-meta { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-    .news-sport { font-size:9px; font-weight:700; color:#00e676; letter-spacing:0.1em; text-transform:uppercase; }
-    .news-age { font-size:9px; color:#333; }
-    .news-breaking { font-size:8px; font-weight:900; color:#ff453a; letter-spacing:0.08em; text-transform:uppercase; background:#1a0000; border:1px solid #ff453a; padding:1px 6px; }
-    .news-title { font-size:13px; font-weight:700; color:#fff; line-height:1.4; margin-bottom:6px; }
-    .news-desc { font-size:11px; color:#555; line-height:1.6; margin-bottom:6px; font-weight:300; }
-    .news-arrow { font-size:12px; color:#333; text-align:right; }
+    .news-sport { font-size:9px; font-weight:500; color:var(--blue); letter-spacing:0.1em; text-transform:uppercase; }
+    .news-age { font-size:9px; color:var(--dim); }
+    .news-breaking { font-size:8px; font-weight:500; color:var(--red); letter-spacing:0.08em; text-transform:uppercase; background:rgba(255,69,58,0.1); border:1px solid var(--red); padding:1px 6px; }
+    .news-title { font-size:13px; font-weight:500; color:var(--white); line-height:1.4; margin-bottom:6px; }
+    .news-desc { font-size:11px; color:var(--dim); line-height:1.6; margin-bottom:6px; font-weight:300; }
+    .news-arrow { font-size:12px; color:var(--dim); text-align:right; }
 
     /* MODAL */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; align-items: flex-end; justify-content: center; }
     .modal-overlay.open { display: flex; }
-    .modal { background: var(--s1); border: 1px solid var(--b2); border-top: 3px solid var(--green); width: 100%; max-width: 480px; padding: 24px 20px 32px; position: relative; }
+    .modal { background: var(--s1); border: 1px solid var(--b2); border-top: 3px solid var(--blue); width: 100%; max-width: 480px; padding: 24px 20px 32px; position: relative; }
     .modal-logo { margin-bottom: 14px; }
     .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 4px; }
     .modal-game-info { font-size: 12px; color: var(--dim); margin-bottom: 16px; }
     .modal-edge { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.04em; margin-bottom: 16px; }
-    .modal-edge.green { color: var(--green); }
-    .modal-edge.red { color: var(--red); }
-    .modal-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+    .modal-edge.green { color: var(--blue); }
+    .modal-edge.red { color: var(--avoid); }
+    .modal-section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
     .modal-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
     .modal-pill { font-size: 11px; font-weight: 500; padding: 7px 12px; border: 1px solid var(--b2); color: var(--dim); cursor: pointer; background: none; transition: all 0.12s; }
-    .modal-pill.on { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.08); }
+    .modal-pill.on { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
     .modal-btns { display: flex; gap: 8px; margin-top: 6px; }
     .modal-btn { flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.1em; padding: 12px; border: none; cursor: pointer; }
     .modal-btn.cancel { background: none; border: 1px solid var(--b2); color: var(--dim); }
-    .modal-btn.primary { background: var(--green); color: #080808; }
+    .modal-btn.primary { background: var(--blue); color: var(--navy); }
     .confirm-modal .modal { text-align: center; }
     .confirm-icon { font-size: 40px; margin-bottom: 14px; display: block; }
-    .confirm-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.06em; color: var(--green); margin-bottom: 8px; }
-    .confirm-msg { font-size: 13px; font-weight: 300; color: #aaa; margin-bottom: 20px; }
+    .confirm-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.06em; color: var(--blue); margin-bottom: 8px; }
+    .confirm-msg { font-size: 13px; font-weight: 300; color: var(--dim); margin-bottom: 20px; }
   </style>
 </head>
 <body>
@@ -295,10 +288,10 @@
     <div class="scr active" id="s-home">
       <div class="top-bar">
         <div class="logo">
-          <div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div>
+          <div class="logo-pk">Parlay<em>Killer</em></div>
           <div class="logo-le">Live Edge</div>
         </div>
-        <div class="live-count"><span class="live-dot"></span><span id="live-count-label">2 LIVE</span></div>
+        <div class="live-count" id="live-count-wrap"><span class="live-dot"></span><span id="live-count-label">2 LIVE</span></div>
       </div>
       <div class="tabs" id="home-tabs">
         <button class="tab active" id="tab-live" onclick="switchHomeTab('live')">Live</button>
@@ -311,11 +304,11 @@
       <div class="top-bar">
         <div class="top-bar-left">
           <button class="back-btn" onclick="goBack('s-home')">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#4da6ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Board
           </button>
         </div>
-        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
         <button class="share-btn" onclick="openSnapshot()">Share</button>
       </div>
       <div id="game-view-content"></div>
@@ -326,11 +319,11 @@
       <div class="top-bar">
         <div class="top-bar-left">
           <button class="back-btn" onclick="goBack('s-game')">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#4da6ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Game
           </button>
         </div>
-        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
         <div></div>
       </div>
       <div id="snapshot-content"></div>
@@ -339,11 +332,23 @@
     <!-- SCREEN: ACCOUNT -->
     <div class="scr inactive" id="s-account">
       <div class="top-bar">
-        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
       </div>
       <div id="account-content"></div>
     </div>
 
+  </div>
+
+  <!-- KILL STRIP -->
+  <div id="best-bet-strip" style="display:none;">
+    <div class="best-bet-strip-inner">
+      <div class="bb-left">
+        <div class="bb-label">BEST BET</div>
+        <div class="bb-game" id="bb-game">—</div>
+        <div class="bb-sub" id="bb-sub">—</div>
+      </div>
+      <div class="bb-right" onclick="openBestBet()">Act now →</div>
+    </div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -466,7 +471,7 @@ const GAMES = {
     awayScore:90, homeScore:111, awayRec:'44-26', homeRec:'52-18',
     period:'Q4', clock:'6:31', maxSecs:720, secsRemaining:391,
     totalSoFar:201, marketTotal:200.5, baseEdge:6.4, side:'OVER',
-    edgeColor:'#00e676', badge:'HEATING', network:'ESPN', status:'live',
+    edgeColor:'#4da6ff', badge:'HEATING', network:'ESPN', status:'live',
     qtrs:[[28,30],[24,26],[22,30],[16,25]],
     awayPlayers:[
       {n:'J. Brunson',p:'PG',pts:22,r:3,a:5,hot:true,seasonPts:29.0},
@@ -492,7 +497,7 @@ const GAMES = {
     awayScore:88, homeScore:103, awayRec:'40-30', homeRec:'36-34',
     period:'Q3', clock:'2:47', maxSecs:2880, secsRemaining:887,
     totalSoFar:191, marketTotal:215.5, baseEdge:-6.4, side:'UNDER',
-    edgeColor:'#ff4444', badge:'CLOSING', network:'TNT', status:'live',
+    edgeColor:'#ff5a52', badge:'CLOSING', network:'TNT', status:'live',
     qtrs:[[28,30],[26,28],[20,25]],
     awayPlayers:[
       {n:'LeBron James',p:'SF',pts:22,r:6,a:7,hot:false,seasonPts:23.7},
@@ -568,19 +573,20 @@ function navTo(tab) {
 async function renderNews() {
   const el = document.getElementById('home-content');
   document.getElementById('live-count-label').textContent = 'NEWS';
-  el.innerHTML = `<div style="padding:20px 16px;text-align:center;font-size:10px;color:#333;letter-spacing:0.1em;text-transform:uppercase;">Loading headlines…</div>`;
+  document.getElementById('live-count-wrap').style.display = 'flex';
+  el.innerHTML = `<div style="padding:20px 16px;text-align:center;font-size:10px;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;">Loading headlines…</div>`;
   try {
     const r = await fetch('/api/news/feed', { credentials:'include' });
     const d = await r.json();
     if (!d.items || !d.items.length) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;opacity:0.3;">📰</div><div class="empty-title">No headlines right now</div></div>`;
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;">📰</div><div class="empty-title">No headlines right now</div></div>`;
       return;
     }
     el.innerHTML = '<div style="padding:6px 0;">' + d.items.map(item => {
       const age = timeAgo(new Date(item.pubDate));
       const tl = (item.title || '').toLowerCase();
       const isBreaking = tl.includes('injury') || tl.includes('questionable') || tl.includes('out ') || tl.includes('suspended');
-      return `<a class="news-card ${isBreaking?'breaking':''}" href="${item.link}" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;">
+      return `<a class="news-card ${isBreaking?'breaking':''}" href="${item.link}" target="_blank" rel="noopener">
         <div class="news-meta">
           <span class="news-sport">${item.sport}</span>
           <span class="news-age">${age}</span>
@@ -637,7 +643,13 @@ function renderHomeContent() {
   const allGames = getAllGames();
   const live = allGames.filter(g => g.status === 'live');
   const upcoming = allGames.filter(g => g.status !== 'live');
-  document.getElementById('live-count-label').textContent = live.length + ' LIVE';
+  const liveCountWrap = document.getElementById('live-count-wrap');
+  if (live.length > 0) {
+    document.getElementById('live-count-label').textContent = live.length + ' LIVE';
+    liveCountWrap.style.display = 'flex';
+  } else {
+    liveCountWrap.style.display = 'none';
+  }
   let html = '';
   if (live.length) {
     html += '<div class="section-label">Live Now</div>' + live.map(gameCardHTML).join('');
@@ -654,81 +666,135 @@ function renderHomeContent() {
 function renderAlerts() {
   const el = document.getElementById('home-content');
   document.getElementById('live-count-label').textContent = alerts.length + ' ALERTS';
+  document.getElementById('live-count-wrap').style.display = 'flex';
   if (!alerts.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;opacity:0.3;">🔔</div><div class="empty-title">No alerts yet</div><div class="empty-sub">Set an alert on any live game.</div></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;">🔔</div><div class="empty-title">No alerts yet</div><div class="empty-sub">Set an alert on any live game.</div></div>`;
   } else {
-    el.innerHTML = alerts.map(a => `<div class="game-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;"></span><span style="font-size:13px;font-weight:600;">${a.title}</span></div><div style="font-size:11px;color:var(--dim);">${a.msg}</div><div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div><button class="gc-btn" style="margin-top:10px;max-width:80px;" onclick="openGameView('${a.gameId}')">View</button></div>`).join('');
+    el.innerHTML = alerts.map(a => `<div class="game-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;"></span><span style="font-size:13px;font-weight:500;">${a.title}</span></div><div style="font-size:11px;color:var(--dim);">${a.msg}</div><div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div><button style="margin-top:10px;max-width:80px;font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:8px 0;background:none;border:1px solid var(--b2);color:var(--white);cursor:pointer;width:80px;" onclick="openGameView('${a.gameId}')">View</button></div>`).join('');
   }
 }
 
 function gameCardHTML(g) {
   const m = calcModel(g, g.secsRemaining);
-  const wins = getWindows(g.secsRemaining);
   const isPregame = g.baseEdge === 0;
-  const edgeClass = isPregame ? '' : g.side === 'OVER' ? 'edge-over' : 'edge-under';
-  const edgeColor = m.edge >= 0 ? 'green' : 'red';
-  const edgeSign = m.edge >= 0 ? '+' : '';
-  const badgeClass = g.badge === 'HEATING' ? 'heating' : g.badge === 'LIVE' ? 'heating' : 'closing';
-
-  const winCols = wins.map((w, i) => {
-    const p = projWindow(g, g.secsRemaining, w.s);
-    return `<div class="gc-win${w.full?' full':''}">
-      <div class="gc-win-label">${w.l}</div>
-      <div class="gc-win-pts">${p.pts}</div>
-    </div>`;
-  }).join('');
-
   const diff = Math.abs(g.homeScore - g.awayScore);
-  const signals = [];
   const minsPlayed = 48 - g.secsRemaining/60;
   const pace = minsPlayed > 0 ? g.totalSoFar/minsPlayed : 5.1;
-  if (pace > 5.5) signals.push({l:'Pace ↑', warn:false});
-  else if (pace < 4.5) signals.push({l:'Pace ↓', warn:true});
-  if (g.secsRemaining < 240 && diff < 8) signals.push({l:'Foul Risk ↑', warn:true});
-  else signals.push({l:'Efficiency ↑', warn:false});
-  if (diff > 15) signals.push({l:'Blowout Risk', warn:true});
 
+  // Verdict logic
+  let verdictText, verdictClass, edgeClass;
+  if (isPregame) {
+    verdictText = 'Edge calculates when live';
+    verdictClass = 'gc-verdict-pregame';
+    edgeClass = '';
+  } else if (m.edge >= 3) {
+    verdictText = 'BET OVER ' + g.marketTotal;
+    verdictClass = 'gc-verdict-over';
+    edgeClass = 'edge-over';
+  } else if (m.edge > 0 && m.edge < 3) {
+    verdictText = 'WAIT';
+    verdictClass = 'gc-verdict-wait';
+    edgeClass = 'edge-wait';
+  } else if (m.edge < 0 && m.edge > -3) {
+    verdictText = 'WAIT';
+    verdictClass = 'gc-verdict-wait';
+    edgeClass = 'edge-wait';
+  } else {
+    verdictText = 'AVOID OVER ' + g.marketTotal;
+    verdictClass = 'gc-verdict-avoid';
+    edgeClass = 'edge-under';
+  }
+
+  // One-line why
+  let why;
+  if (pace > 5.5) why = 'Pace elevated · scoring window open';
+  else if (pace < 4.5) why = 'Pace stalled · scoring window closing';
+  else if (diff > 15) why = 'Blowout risk · garbage time likely';
+  else if (g.secsRemaining < 240 && diff < 8) why = 'Foul risk elevated · free throws incoming';
+  else why = 'Model vs market divergence';
+
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const edgeNumClass = m.edge >= 3 ? 'gc-verdict-over' : m.edge <= -3 ? 'gc-verdict-avoid' : 'gc-verdict-wait';
+  const isLive = g.status === 'live';
+  const sport = g.sport || (g.isMLB ? 'MLB' : 'NBA');
+  const clockPart = g.clock ? ` ${g.period} ${g.clock}` : ` ${g.period}`;
   const isFav = !!(window.__favs && window.__favs[g.id]);
 
   return `<div class="game-card ${edgeClass}" onclick="openGameView('${g.id}')">
-    <div style="display:flex;justify-content:flex-end;padding:0 0 6px;">
-      <button class="fav-btn${isFav?' on':''}" onclick="event.stopPropagation();toggleFav('${g.id}')" title="Favorite">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="${isFav?'currentColor':'none'}" stroke="currentColor" stroke-width="1.4"><path d="M7 1l1.5 3 3.5.5-2.5 2.5.5 3.5L7 9l-3 1.5.5-3.5L2 4.5 5.5 4z" stroke-linejoin="round"/></svg>
-      </button>
+    <div class="gc-meta">
+      <span>${isLive ? '<span class="gc-live-dot"></span><span class="gc-meta-live">Live</span> · ' : ''}${sport} ·${clockPart}</span>
+      <span class="gc-fav">
+        <button class="fav-btn${isFav?' on':''}" onclick="event.stopPropagation();toggleFav('${g.id}')" title="Favorite">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="${isFav?'currentColor':'none'}" stroke="currentColor" stroke-width="1.4"><path d="M7 1l1.5 3 3.5.5-2.5 2.5.5 3.5L7 9l-3 1.5.5-3.5L2 4.5 5.5 4z" stroke-linejoin="round"/></svg>
+        </button>
+      </span>
     </div>
-    <div class="gc-score-row">
-      <div class="gc-team">
-        <div class="gc-abbr">${g.away}</div>
-        <div class="gc-score">${g.awayScore}</div>
-        <div class="gc-rec">${g.awayRec}</div>
+    <div class="gc-teams">${g.away} vs ${g.home}</div>
+    <div class="gc-score-total">
+      <div class="gc-score-block">
+        <span class="gc-score-lbl">Score</span>
+        <span class="gc-score-val">${g.awayScore} – ${g.homeScore}</span>
       </div>
-      <div class="gc-center">
-        <div class="gc-sep">–</div>
-        <div class="gc-period">${g.period}</div>
-        <div class="gc-clock">${g.clock}</div>
-        <div class="gc-network">${g.network}</div>
-      </div>
-      <div class="gc-team right">
-        <div class="gc-abbr">${g.home}</div>
-        <div class="gc-score">${g.homeScore}</div>
-        <div class="gc-rec">${g.homeRec}</div>
+      <div class="gc-total-block">
+        <span class="gc-total-lbl">O/U</span>
+        <span class="gc-total-num">${g.marketTotal}</span>
+        <span class="gc-total-book">DraftKings</span>
       </div>
     </div>
-    <div class="gc-edge-row">
-      ${isPregame
-        ? `<span class="gc-edge-nums">Total: <strong>${g.marketTotal}</strong> &nbsp; <span style="color:var(--dim);">Edge calculates when live</span></span>`
-        : `<span class="gc-edge-nums">Live: ${g.marketTotal} &nbsp; Fair: <span class="edge-val ${edgeColor}">${m.model}</span> (<span class="edge-val ${edgeColor}">${edgeSign}${m.edge} ${g.side}</span>)</span>`
-      }
-      <span class="gc-badge ${badgeClass}">${g.badge}</span>
-    </div>
-    ${!isPregame ? `<div class="gc-windows">${winCols}</div>` : ''}
-    ${!isPregame ? `<div class="gc-signals">${signals.map(s=>`<span class="signal-pill${s.warn?' warn':''}">${s.l}</span>`).join('')}</div>` : ''}
-    <div class="gc-actions">
-      <button class="gc-btn primary" onclick="event.stopPropagation();openGameView('${g.id}')">View Game</button>
-      <button class="gc-btn" onclick="event.stopPropagation();openTrackModal('${g.id}')">Track</button>
-      <button class="gc-btn" onclick="event.stopPropagation();openAlertModal('${g.id}')">Alert</button>
+    <div class="gc-verdict-row">
+      <div>
+        <div class="gc-verdict ${verdictClass}">${verdictText}</div>
+        <div class="gc-why">${why}</div>
+      </div>
+      ${!isPregame ? `<div class="gc-edge-col">
+        <span class="gc-edge-num ${edgeNumClass}">${edgeSign}${m.edge}</span>
+        <span class="gc-edge-lbl">model edge</span>
+      </div>` : ''}
     </div>
   </div>`;
+}
+
+/* ── KILL STRIP ─────────────────────────────────────────── */
+let bestBetGameId = null;
+
+function updateBestBet(games) {
+  const liveGames = games.filter(g => g.status === 'live' && g.baseEdge !== 0);
+  const strip = document.getElementById('best-bet-strip');
+  if (!liveGames.length) {
+    strip.style.display = 'none';
+    document.querySelectorAll('.scr').forEach(s => s.style.paddingBottom = '56px');
+    return;
+  }
+  const best = liveGames.reduce((a, b) => {
+    const aM = calcModel(a, a.secsRemaining);
+    const bM = calcModel(b, b.secsRemaining);
+    return Math.abs(bM.edge) > Math.abs(aM.edge) ? b : a;
+  });
+  const m = calcModel(best, best.secsRemaining);
+  if (Math.abs(m.edge) < 3) {
+    strip.style.display = 'none';
+    document.querySelectorAll('.scr').forEach(s => s.style.paddingBottom = '56px');
+    return;
+  }
+  bestBetGameId = best.id;
+  const side = m.edge >= 0 ? 'OVER' : 'UNDER';
+  document.getElementById('bb-game').textContent = best.away + ' vs ' + best.home + ' · ' + side + ' ' + best.marketTotal;
+  document.getElementById('bb-sub').textContent = '+' + Math.abs(m.edge) + ' edge · ' + getBestBetReason(best, m);
+  strip.style.display = 'block';
+  document.querySelectorAll('.scr').forEach(s => s.style.paddingBottom = '110px');
+}
+
+function getBestBetReason(g, m) {
+  const diff = Math.abs(g.homeScore - g.awayScore);
+  if (m.pace > 5.5) return 'pace elevated';
+  if (m.pace < 4.5) return 'pace stalled';
+  if (diff > 15) return 'blowout risk';
+  if (g.secsRemaining < 240 && diff < 8) return 'foul risk';
+  return 'model divergence';
+}
+
+function openBestBet() {
+  if (bestBetGameId) openGameView(bestBetGameId);
 }
 
 /* ── GAME VIEW ──────────────────────────────────────────── */
@@ -869,12 +935,12 @@ function renderEdgeTab(el) {
       </div>
       <div class="market-chart">
         <div class="market-chart-label">Market vs Model</div>
-        <svg width="${chartW}" height="${chartH}" viewBox="0 0 ${chartW} ${chartH}" style="display:block;border:1px solid var(--border);background:var(--s1);">
-          <path d="${marketPath}" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.4"/>
-          <path d="${modelPath}" stroke="${m.edge>=0?'#00e676':'#ff453a'}" stroke-width="1.5" fill="none"/>
-          <line x1="${nowX}" y1="0" x2="${nowX}" y2="${chartH}" stroke="#555" stroke-width="1" stroke-dasharray="3,3"/>
-          <text x="4" y="10" font-size="7" fill="#555" font-family="DM Sans">Market</text>
-          <text x="4" y="20" font-size="7" fill="${m.edge>=0?'#00e676':'#ff453a'}" font-family="DM Sans">Model</text>
+        <svg width="${chartW}" height="${chartH}" viewBox="0 0 ${chartW} ${chartH}" style="display:block;border:0.5px solid var(--border);background:var(--s1);">
+          <path d="${marketPath}" stroke="#e8f2fb" stroke-width="1.5" fill="none" opacity="0.25"/>
+          <path d="${modelPath}" stroke="${m.edge>=0?'#4da6ff':'#ff5a52'}" stroke-width="1.5" fill="none"/>
+          <line x1="${nowX}" y1="0" x2="${nowX}" y2="${chartH}" stroke="#4a6480" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="4" y="10" font-size="7" fill="#4a6480" font-family="DM Sans">Market</text>
+          <text x="4" y="20" font-size="7" fill="${m.edge>=0?'#4da6ff':'#ff5a52'}" font-family="DM Sans">Model</text>
         </svg>
       </div>
       <div class="windows-section">
@@ -895,7 +961,7 @@ function renderEdgeTab(el) {
         <div class="sig-row"><span class="sig-name">Garbage time</span><span class="sig-val ${Math.abs(g.homeScore-g.awayScore)>20?'amber':'green'}">${Math.abs(g.homeScore-g.awayScore)>20?'MODERATE RISK':'LOW'}</span></div>
       </div>
       <div class="action-block">
-        <div class="ab-playable">Over playable to: <span style="color:var(--green)" id="ab-playable">${m.playableTo}</span></div>
+        <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
         <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
         <div class="ab-btns">
           <button class="ab-btn primary" onclick="openTrackModal('${g.id}')">Track</button>
@@ -962,7 +1028,7 @@ function renderMLBEdgeTab(el, g) {
         <div class="sig-row"><span class="sig-name">Blowout risk</span><span class="sig-val ${Math.abs((g.homeScore||0)-(g.awayScore||0))>5?'red':'green'}">${Math.abs((g.homeScore||0)-(g.awayScore||0))>5?'HIGH':'LOW'}</span></div>
       </div>
       <div class="action-block">
-        <div class="ab-playable">Over playable to: <span style="color:var(--green)" id="ab-playable">${m.playableTo}</span></div>
+        <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
         <div class="ab-note">Edge decays each inning — act before late-game dampening kicks in.</div>
         <div class="ab-btns">
           <button class="ab-btn primary" onclick="openTrackModal('${g.id}')">Track</button>
@@ -1081,8 +1147,8 @@ function renderBoxTab(el) {
     const rows = players.map(p => {
       const isHot = p.hot;
       const sparkline = isHot
-        ? `<svg width="40" height="18" viewBox="0 0 40 18"><polyline points="0,14 8,10 16,8 24,5 32,3 40,1" stroke="#00e676" stroke-width="1.5" fill="none"/></svg>`
-        : `<svg width="40" height="18" viewBox="0 0 40 18"><polyline points="0,9 8,11 16,9 24,10 32,8 40,9" stroke="#2a2a2a" stroke-width="1.5" fill="none"/></svg>`;
+        ? `<svg width="40" height="18" viewBox="0 0 40 18"><polyline points="0,14 8,10 16,8 24,5 32,3 40,1" stroke="#4da6ff" stroke-width="1.5" fill="none"/></svg>`
+        : `<svg width="40" height="18" viewBox="0 0 40 18"><polyline points="0,9 8,11 16,9 24,10 32,8 40,9" stroke="#2d3d52" stroke-width="1.5" fill="none"/></svg>`;
       return `<div class="bs-row">
         <div class="bs-name">${p.n} <span class="bs-pos">${p.p}</span>${isHot?'<span class="hot-pill">HOT</span>':''}</div>
         <div class="bs-stat${isHot?' hot':''}">${p.pts}</div>
@@ -1124,7 +1190,7 @@ function renderSnapshot() {
     <div class="snapshot-wrap">
       <div class="share-card">
         <div class="sc-logo">
-          <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+          <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
         </div>
         <div class="sc-title">${g.title}</div>
         <div class="sc-meta">${g.period} · ${g.clock} · ${g.network}</div>
@@ -1174,7 +1240,7 @@ function renderAccount() {
   document.getElementById('home-content').innerHTML = `
     <div class="account-wrap">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-        <div style="width:48px;height:48px;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;color:#080808;">${initial}</div>
+        <div style="width:48px;height:48px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--navy);">${initial}</div>
         <div>
           <div class="acc-name">${name}</div>
           <div class="acc-email">${email}</div>
@@ -1204,8 +1270,8 @@ function showUpgradeBanner(message) {
   if (existing) existing.remove();
   const b = document.createElement('div');
   b.id = 'upgrade-banner';
-  b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#00e676;color:#080808;font-size:11px;font-weight:700;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:999;letter-spacing:0.06em;font-family:DM Sans,sans-serif;max-width:480px;margin:0 auto;';
-  b.innerHTML = `<span>${message}</span><button onclick="window.location.href='/api/billing/create-checkout-session'" style="background:#080808;color:#00e676;border:none;font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer;letter-spacing:0.08em;">UPGRADE</button>`;
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#4da6ff;color:#0d1520;font-size:11px;font-weight:500;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:999;letter-spacing:0.06em;font-family:DM Sans,sans-serif;max-width:480px;margin:0 auto;';
+  b.innerHTML = `<span>${message}</span><button onclick="window.location.href='/api/billing/create-checkout-session'" style="background:#0d1520;color:#4da6ff;border:none;font-size:10px;font-weight:500;padding:4px 10px;cursor:pointer;letter-spacing:0.08em;">UPGRADE</button>`;
   document.body.prepend(b);
   setTimeout(() => b.remove(), 6000);
 }
@@ -1239,7 +1305,7 @@ function openTrackModal(gameId) {
   const edgeSign = m.edge >= 0 ? '+' : '';
   const edgeClass = m.edge >= 0 ? 'green' : 'red';
   showModal(`
-    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-logo"><div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div></div>
     <div class="modal-title">Track this edge</div>
     <div class="modal-game-info">${g.title} · ${g.period} · ${g.clock}</div>
     <div class="modal-edge ${edgeClass}">Current edge: ${edgeSign}${m.edge} ${g.side}</div>
@@ -1267,7 +1333,7 @@ function openAlertModal(gameId) {
   const g = GAMES[gameId];
   if (!g) return;
   showModal(`
-    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-logo"><div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div></div>
     <div class="modal-title">Set Alert</div>
     <div class="modal-game-info">${g.title} · ${g.period} · ${g.clock}</div>
     <div class="modal-section-label">Alert when:</div>
@@ -1373,7 +1439,7 @@ function liveGameToCard(g) {
     period: periodLabel, clock: clockLabel,
     totalSoFar: 0, marketTotal: g.marketTotal,
     baseEdge: 0, side: 'TBD',
-    edgeColor: '#555',
+    edgeColor: 'var(--dim)',
     badge: g.status === 'live' ? 'LIVE' : 'PREGAME',
     network: g.sport || '',
     status: g.status,
@@ -1389,6 +1455,8 @@ function liveGameToCard(g) {
 }
 
 function renderBoard() {
+  const games = getAllGames();
+  updateBestBet(games);
   renderHomeContent();
 }
 
