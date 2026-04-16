@@ -514,17 +514,45 @@ function switchHomeTab(t) {
   renderHomeContent();
 }
 
+function getGameById(id) {
+  if (window.__liveGames) {
+    const lg = window.__liveGames.find(g => g.id === id);
+    if (lg) return liveGameToCard(lg);
+  }
+  return GAMES[id] || null;
+}
+
+function getAllGames() {
+  if (window.__liveGames && window.__liveGames.length > 0) {
+    return window.__liveGames.map(liveGameToCard);
+  }
+  return Object.values(GAMES);
+}
+
 function renderHomeContent() {
   const el = document.getElementById('home-content');
   if (homeTab === 'live') {
-    const games = Object.values(GAMES).filter(g => g.status === 'live');
-    document.getElementById('live-count-label').textContent = games.length + ' LIVE';
-    el.innerHTML = '<div class="section-label">Live Now</div>' + games.map(gameCardHTML).join('');
+    const allGames = getAllGames();
+    const live = allGames.filter(g => g.status === 'live');
+    const upcoming = allGames.filter(g => g.status !== 'live');
+    const liveCount = live.length;
+    document.getElementById('live-count-label').textContent = liveCount + ' LIVE';
+    let html = '';
+    if (live.length) {
+      html += '<div class="section-label">Live Now</div>' + live.map(gameCardHTML).join('');
+    }
+    if (upcoming.length) {
+      html += '<div class="section-label">Upcoming</div>' + upcoming.map(gameCardHTML).join('');
+    }
+    if (!allGames.length) {
+      html = `<div class="empty-state"><div class="empty-icon">🏀</div><div class="empty-title">No games right now</div><div class="empty-sub">Check back when games are scheduled.</div></div>`;
+    }
+    el.innerHTML = html;
   } else if (homeTab === 'favs') {
     if (!favorites.length) {
       el.innerHTML = `<div class="empty-state"><div class="empty-icon">★</div><div class="empty-title">No favorites yet</div><div class="empty-sub">Tap Track on any game to save it here.</div></div>`;
     } else {
-      el.innerHTML = favorites.map(id => GAMES[id] ? gameCardHTML(GAMES[id]) : '').join('');
+      el.innerHTML = favorites.map(id => { const g = getGameById(id); return g ? gameCardHTML(g) : ''; }).join('');
     }
   } else {
     if (!alerts.length) {
@@ -538,10 +566,11 @@ function renderHomeContent() {
 function gameCardHTML(g) {
   const m = calcModel(g, g.secsRemaining);
   const wins = getWindows(g.secsRemaining);
-  const edgeClass = g.side === 'OVER' ? 'edge-over' : 'edge-under';
+  const isPregame = g.baseEdge === 0;
+  const edgeClass = isPregame ? '' : g.side === 'OVER' ? 'edge-over' : 'edge-under';
   const edgeColor = m.edge >= 0 ? 'green' : 'red';
   const edgeSign = m.edge >= 0 ? '+' : '';
-  const badgeClass = g.badge === 'HEATING' ? 'heating' : 'closing';
+  const badgeClass = g.badge === 'HEATING' ? 'heating' : g.badge === 'LIVE' ? 'heating' : 'closing';
 
   const winCols = wins.map((w, i) => {
     const p = projWindow(g, g.secsRemaining, w.s);
@@ -581,11 +610,14 @@ function gameCardHTML(g) {
       </div>
     </div>
     <div class="gc-edge-row">
-      <span class="gc-edge-nums">Live: ${g.marketTotal} &nbsp; Fair: <span class="edge-val ${edgeColor}">${m.model}</span> (<span class="edge-val ${edgeColor}">${edgeSign}${m.edge} ${g.side}</span>)</span>
+      ${isPregame
+        ? `<span class="gc-edge-nums">Total: <strong>${g.marketTotal}</strong> &nbsp; <span style="color:var(--dim);">Edge calculates when live</span></span>`
+        : `<span class="gc-edge-nums">Live: ${g.marketTotal} &nbsp; Fair: <span class="edge-val ${edgeColor}">${m.model}</span> (<span class="edge-val ${edgeColor}">${edgeSign}${m.edge} ${g.side}</span>)</span>`
+      }
       <span class="gc-badge ${badgeClass}">${g.badge}</span>
     </div>
-    <div class="gc-windows">${winCols}</div>
-    <div class="gc-signals">${signals.map(s=>`<span class="signal-pill${s.warn?' warn':''}">${s.l}</span>`).join('')}</div>
+    ${!isPregame ? `<div class="gc-windows">${winCols}</div>` : ''}
+    ${!isPregame ? `<div class="gc-signals">${signals.map(s=>`<span class="signal-pill${s.warn?' warn':''}">${s.l}</span>`).join('')}</div>` : ''}
     <div class="gc-actions">
       <button class="gc-btn primary" onclick="event.stopPropagation();openGameView('${g.id}')">View Game</button>
       <button class="gc-btn" onclick="event.stopPropagation();openTrackModal('${g.id}')">Track</button>
@@ -596,7 +628,8 @@ function gameCardHTML(g) {
 
 /* ── GAME VIEW ──────────────────────────────────────────── */
 function openGameView(gameId) {
-  activeGame = GAMES[gameId];
+  activeGame = getGameById(gameId) || GAMES[gameId];
+  if (!activeGame) return;
   activeGameSecs = activeGame.secsRemaining;
   activeTab = 'edge';
   activeWinIdx = 0;
@@ -1072,8 +1105,62 @@ async function initApp() {
     if (!data.user) { window.location.href = '/'; return; }
     window.__user = data.user;
     updateNavAvatar(data.user);
+    await loadLiveGames();
     renderBoard();
   } catch(e) { window.location.href = '/'; }
+}
+
+async function loadLiveGames() {
+  try {
+    const r = await fetch('/api/odds/live-games', { credentials:'include' });
+    const d = await r.json();
+    if (d.games && d.games.length > 0) {
+      window.__liveGames = d.games;
+      window.__dataSource = 'live';
+    } else {
+      window.__liveGames = null;
+      window.__dataSource = 'mock';
+    }
+  } catch(e) {
+    window.__liveGames = null;
+    window.__dataSource = 'mock';
+  }
+}
+
+function liveGameToCard(g) {
+  const now = new Date();
+  const commence = new Date(g.commenceTime);
+  const diffMins = (commence - now) / (1000 * 60);
+  let periodLabel, clockLabel;
+  if (g.status === 'live') {
+    periodLabel = 'LIVE'; clockLabel = '';
+  } else if (diffMins < 60) {
+    periodLabel = 'Starting soon'; clockLabel = Math.round(diffMins) + ' min';
+  } else {
+    periodLabel = commence.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short' });
+    clockLabel = '';
+  }
+  return {
+    id: g.id,
+    title: g.awayTeam + ' @ ' + g.homeTeam,
+    away: g.awayAbbr,
+    home: g.homeAbbr,
+    awayScore: '–', homeScore: '–',
+    awayRec: '', homeRec: '',
+    period: periodLabel, clock: clockLabel,
+    maxSecs: 720, secsRemaining: 720,
+    totalSoFar: 0,
+    marketTotal: g.marketTotal,
+    baseEdge: 0,
+    side: 'TBD',
+    edgeColor: '#555',
+    badge: g.status === 'live' ? 'LIVE' : 'PREGAME',
+    network: g.sport || '',
+    status: g.status,
+    books: g.books,
+    qtrs: [], awayPlayers: [], homePlayers: [],
+    isLive: false,
+  };
 }
 
 function renderBoard() {
