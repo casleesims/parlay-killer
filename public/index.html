@@ -241,10 +241,27 @@
     .bn span { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2a2a2a; }
     .bn.active span { color: var(--green); }
     .bn.active svg { opacity: 1; }
-    .bn svg { opacity: 0.2; }
-    .bn.active svg { opacity: 1; }
+    .bn svg { opacity: 0.2; color: var(--white); }
+    .bn.active svg { opacity: 1; color: var(--green); }
     .bn-icon-color { fill: none; stroke: var(--white); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .bn.active .bn-icon-color { stroke: var(--green); }
+
+    /* FAV BUTTON */
+    .fav-btn { background:none; border:none; cursor:pointer; color:#333; padding:4px; transition:color 0.15s; line-height:1; }
+    .fav-btn.on { color:#f5a623; }
+    .fav-btn:active { opacity:0.7; }
+
+    /* NEWS CARDS */
+    .news-card { background:#0d0d0d; border:1px solid #141414; border-left:3px solid #141414; padding:14px 16px; margin:0 0 1px; cursor:pointer; transition:border-color 0.15s; }
+    .news-card.breaking { border-left-color:#ff453a; }
+    .news-card:active { opacity:0.8; }
+    .news-meta { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .news-sport { font-size:9px; font-weight:700; color:#00e676; letter-spacing:0.1em; text-transform:uppercase; }
+    .news-age { font-size:9px; color:#333; }
+    .news-breaking { font-size:8px; font-weight:900; color:#ff453a; letter-spacing:0.08em; text-transform:uppercase; background:#1a0000; border:1px solid #ff453a; padding:1px 6px; }
+    .news-title { font-size:13px; font-weight:700; color:#fff; line-height:1.4; margin-bottom:6px; }
+    .news-desc { font-size:11px; color:#555; line-height:1.6; margin-bottom:6px; font-weight:300; }
+    .news-arrow { font-size:12px; color:#333; text-align:right; }
 
     /* MODAL */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; align-items: flex-end; justify-content: center; }
@@ -283,10 +300,8 @@
         </div>
         <div class="live-count"><span class="live-dot"></span><span id="live-count-label">2 LIVE</span></div>
       </div>
-      <div class="tabs">
+      <div class="tabs" id="home-tabs">
         <button class="tab active" id="tab-live" onclick="switchHomeTab('live')">Live</button>
-        <button class="tab" id="tab-favs" onclick="switchHomeTab('favs')">Favorites</button>
-        <button class="tab" id="tab-alerts" onclick="switchHomeTab('alerts')">Alerts</button>
       </div>
       <div id="home-content"></div>
     </div>
@@ -334,19 +349,19 @@
   <!-- BOTTOM NAV -->
   <nav id="bottom-nav">
     <button class="bn active" id="bn-board" onclick="navTo('board')">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path class="bn-icon-color" d="M2 8L9 2L16 8V16H12V12H6V16H2V8Z"/></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 7L10 2L18 7V18H13V13H7V18H2V7Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>Board</span>
     </button>
-    <button class="bn" id="bn-favs" onclick="navTo('favs')">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path class="bn-icon-color" d="M9 2l1.8 3.6L15 6.3l-3 2.9.7 4.1L9 11.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z"/></svg>
-      <span>Favs</span>
-    </button>
     <button class="bn" id="bn-alerts" onclick="navTo('alerts')">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path class="bn-icon-color" d="M9 2a5 5 0 00-5 5v3L2.5 13h13L14 10V7a5 5 0 00-5-5z"/><path class="bn-icon-color" d="M7 15a2 2 0 004 0"/></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 2a6 6 0 00-6 6v3L2.5 14h15L16 11V8a6 6 0 00-6-6z"/><path d="M8 17a2 2 0 004 0" stroke-linecap="round"/></svg>
       <span>Alerts</span>
     </button>
+    <button class="bn" id="bn-news" onclick="navTo('news')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="16" height="14" rx="1"/><path d="M5 7h10M5 10h10M5 13h6" stroke-linecap="round"/></svg>
+      <span>News</span>
+    </button>
     <button class="bn" id="bn-account" onclick="navTo('account')">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle class="bn-icon-color" cx="9" cy="6" r="3"/><path class="bn-icon-color" d="M2 16c0-3 3.1-5 7-5s7 2 7 5"/></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10" cy="7" r="3"/><path d="M3 18c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke-linecap="round"/></svg>
       <span>Account</span>
     </button>
   </nav>
@@ -400,6 +415,48 @@ function getAltState(secs) {
   if(m>3.5) return {l:'Full board available',cls:'full'};
   if(m>1.5) return {l:'Lines thinning',cls:'thin'};
   return {l:'Main only · -110 both ways',cls:'gone'};
+}
+
+/* ── MLB MATH ──────────────────────────────────────────── */
+function getMLBWindows(inningsRemaining) {
+  const w = [];
+  if (inningsRemaining > 4) { w.push({l:'1 inn',i:1}); w.push({l:'2 inn',i:2}); w.push({l:'3 inn',i:3}); }
+  else if (inningsRemaining > 2) { w.push({l:'1 inn',i:1}); w.push({l:'2 inn',i:2}); }
+  else if (inningsRemaining > 1) { w.push({l:'1 inn',i:1}); }
+  w.push({l: inningsRemaining.toFixed(1) + ' inn ★', i: inningsRemaining, full: true });
+  return w;
+}
+
+function calcMLBModel(game, inningsRemaining) {
+  const inningsPlayed = Math.max(0.5, 9 - inningsRemaining);
+  const pace = game.totalSoFar > 0 ? game.totalSoFar / inningsPlayed : 1.0;
+  const diff = Math.abs((game.homeScore||0) - (game.awayScore||0));
+  const lateDamp = inningsRemaining <= 2 ? 0.82 : inningsRemaining <= 3 ? 0.90 : 1.0;
+  const blowDamp = diff > 5 ? 0.72 : diff > 3 ? 0.85 : 1.0;
+  const timeRatio = Math.max(0.15, inningsRemaining / 9);
+  const edgeNow = Math.round((game.baseEdge || 0) * timeRatio * 10) / 10;
+  const modelFair = Math.round(((game.marketTotal || 8.5) + edgeNow) * 10) / 10;
+  const playableTo = Math.round((modelFair - 0.5) * 2) / 2;
+  const conf = Math.min(88, Math.max(48, Math.round(50 + Math.abs(edgeNow) * 4.2)));
+  const adjPace = pace * lateDamp * blowDamp;
+  return { model: modelFair, edge: edgeNow, playableTo, conf, pace: Math.round(adjPace * 10) / 10 };
+}
+
+function projMLBWindow(game, inningsRemaining, windowInnings) {
+  const useInnings = Math.min(windowInnings, inningsRemaining);
+  const inningsPlayed = Math.max(0.5, 9 - inningsRemaining);
+  const pace = game.totalSoFar > 0 ? game.totalSoFar / inningsPlayed : 1.0;
+  const diff = Math.abs((game.homeScore||0) - (game.awayScore||0));
+  const late = inningsRemaining <= 2 ? 0.82 : 1.0;
+  const blow = diff > 5 ? 0.72 : diff > 3 ? 0.85 : 1.0;
+  const runs = Math.round(pace * useInnings * late * blow * 10) / 10;
+  return { pts: runs, lo: Math.round(runs * 0.70 * 10) / 10, hi: Math.round(runs * 1.30 * 10) / 10 };
+}
+
+function getMLBAltState(inningsRemaining) {
+  if (inningsRemaining > 2) return { l:'Full board available', cls:'full' };
+  if (inningsRemaining > 1) return { l:'Lines thinning', cls:'thin' };
+  return { l:'Main only · -110 both ways', cls:'gone' };
 }
 
 /* ── MOCK DATA ──────────────────────────────────────────── */
@@ -485,32 +542,78 @@ function goBack(to) {
   screenStack.length = 0;
 }
 
-function navTo(name) {
+function navTo(tab) {
   document.querySelectorAll('.bn').forEach(b => b.classList.remove('active'));
-  if (name === 'board') {
-    document.getElementById('bn-board').classList.add('active');
-    goBack('s-home');
-  } else if (name === 'favs') {
-    document.getElementById('bn-favs').classList.add('active');
-    switchHomeTab('favs');
-    goBack('s-home');
-  } else if (name === 'alerts') {
-    document.getElementById('bn-alerts').classList.add('active');
-    switchHomeTab('alerts');
-    goBack('s-home');
-  } else if (name === 'account') {
-    document.getElementById('bn-account').classList.add('active');
+  const btn = document.getElementById('bn-' + tab);
+  if (btn) btn.classList.add('active');
+
+  document.querySelectorAll('.scr').forEach(s => {
+    s.classList.remove('active', 'behind');
+    s.classList.add('inactive');
+  });
+  document.getElementById('s-home').classList.remove('inactive');
+  document.getElementById('s-home').classList.add('active');
+
+  if (tab === 'board') {
+    renderBoard();
+  } else if (tab === 'alerts') {
+    renderAlerts();
+  } else if (tab === 'news') {
+    renderNews();
+  } else if (tab === 'account') {
     renderAccount();
-    goTo('s-account');
   }
+}
+
+async function renderNews() {
+  const el = document.getElementById('home-content');
+  document.getElementById('live-count-label').textContent = 'NEWS';
+  el.innerHTML = `<div style="padding:20px 16px;text-align:center;font-size:10px;color:#333;letter-spacing:0.1em;text-transform:uppercase;">Loading headlines…</div>`;
+  try {
+    const r = await fetch('/api/news/feed', { credentials:'include' });
+    const d = await r.json();
+    if (!d.items || !d.items.length) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;opacity:0.3;">📰</div><div class="empty-title">No headlines right now</div></div>`;
+      return;
+    }
+    el.innerHTML = '<div style="padding:6px 0;">' + d.items.map(item => {
+      const age = timeAgo(new Date(item.pubDate));
+      const tl = (item.title || '').toLowerCase();
+      const isBreaking = tl.includes('injury') || tl.includes('questionable') || tl.includes('out ') || tl.includes('suspended');
+      return `<div class="news-card ${isBreaking?'breaking':''}" onclick="window.open(${JSON.stringify(item.link)},'_blank')">
+        <div class="news-meta">
+          <span class="news-sport">${item.sport}</span>
+          <span class="news-age">${age}</span>
+          ${isBreaking?'<span class="news-breaking">INJURY/OUT</span>':''}
+        </div>
+        <div class="news-title">${item.title}</div>
+        ${item.description?`<div class="news-desc">${item.description.slice(0,120)}${item.description.length>120?'…':''}</div>`:''}
+        <div class="news-arrow">→</div>
+      </div>`;
+    }).join('') + '</div>';
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-title" style="color:var(--dim);">Couldn't load news</div></div>`;
+  }
+}
+
+function timeAgo(date) {
+  const mins = Math.round((Date.now() - date) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.round(hrs / 24) + 'd ago';
+}
+
+function toggleFav(id) {
+  if (!window.__favs) window.__favs = {};
+  window.__favs[id] = !window.__favs[id];
+  renderBoard();
 }
 
 /* ── HOME / BOARD ───────────────────────────────────────── */
 function switchHomeTab(t) {
   homeTab = t;
-  ['live','favs','alerts'].forEach(id => {
-    document.getElementById('tab-'+id).classList.toggle('active', id === t);
-  });
   renderHomeContent();
 }
 
@@ -531,35 +634,30 @@ function getAllGames() {
 
 function renderHomeContent() {
   const el = document.getElementById('home-content');
-  if (homeTab === 'live') {
-    const allGames = getAllGames();
-    const live = allGames.filter(g => g.status === 'live');
-    const upcoming = allGames.filter(g => g.status !== 'live');
-    const liveCount = live.length;
-    document.getElementById('live-count-label').textContent = liveCount + ' LIVE';
-    let html = '';
-    if (live.length) {
-      html += '<div class="section-label">Live Now</div>' + live.map(gameCardHTML).join('');
-    }
-    if (upcoming.length) {
-      html += '<div class="section-label">Upcoming</div>' + upcoming.map(gameCardHTML).join('');
-    }
-    if (!allGames.length) {
-      html = `<div class="empty-state"><div class="empty-icon">🏀</div><div class="empty-title">No games right now</div><div class="empty-sub">Check back when games are scheduled.</div></div>`;
-    }
-    el.innerHTML = html;
-  } else if (homeTab === 'favs') {
-    if (!favorites.length) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">★</div><div class="empty-title">No favorites yet</div><div class="empty-sub">Tap Track on any game to save it here.</div></div>`;
-    } else {
-      el.innerHTML = favorites.map(id => { const g = getGameById(id); return g ? gameCardHTML(g) : ''; }).join('');
-    }
+  const allGames = getAllGames();
+  const live = allGames.filter(g => g.status === 'live');
+  const upcoming = allGames.filter(g => g.status !== 'live');
+  document.getElementById('live-count-label').textContent = live.length + ' LIVE';
+  let html = '';
+  if (live.length) {
+    html += '<div class="section-label">Live Now</div>' + live.map(gameCardHTML).join('');
+  }
+  if (upcoming.length) {
+    html += '<div class="section-label">Upcoming</div>' + upcoming.map(gameCardHTML).join('');
+  }
+  if (!allGames.length) {
+    html = `<div class="empty-state"><div class="empty-icon">🏀</div><div class="empty-title">No games right now</div><div class="empty-sub">Check back when games are scheduled.</div></div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderAlerts() {
+  const el = document.getElementById('home-content');
+  document.getElementById('live-count-label').textContent = alerts.length + ' ALERTS';
+  if (!alerts.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;opacity:0.3;">🔔</div><div class="empty-title">No alerts yet</div><div class="empty-sub">Set an alert on any live game.</div></div>`;
   } else {
-    if (!alerts.length) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-title">No alerts yet</div><div class="empty-sub">Set an alert on any live game.</div></div>`;
-    } else {
-      el.innerHTML = alerts.map(a => `<div class="game-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;"></span><span style="font-size:13px;font-weight:600;">${a.title}</span></div><div style="font-size:11px;color:var(--dim);">${a.msg}</div><div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div><button class="gc-btn" style="margin-top:10px;max-width:80px;" onclick="openGameView('${a.gameId}')">View</button></div>`).join('');
-    }
+    el.innerHTML = alerts.map(a => `<div class="game-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;"></span><span style="font-size:13px;font-weight:600;">${a.title}</span></div><div style="font-size:11px;color:var(--dim);">${a.msg}</div><div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div><button class="gc-btn" style="margin-top:10px;max-width:80px;" onclick="openGameView('${a.gameId}')">View</button></div>`).join('');
   }
 }
 
@@ -590,7 +688,14 @@ function gameCardHTML(g) {
   else signals.push({l:'Efficiency ↑', warn:false});
   if (diff > 15) signals.push({l:'Blowout Risk', warn:true});
 
+  const isFav = !!(window.__favs && window.__favs[g.id]);
+
   return `<div class="game-card ${edgeClass}" onclick="openGameView('${g.id}')">
+    <div style="display:flex;justify-content:flex-end;padding:0 0 6px;">
+      <button class="fav-btn${isFav?' on':''}" onclick="event.stopPropagation();toggleFav('${g.id}')" title="Favorite">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="${isFav?'currentColor':'none'}" stroke="currentColor" stroke-width="1.4"><path d="M7 1l1.5 3 3.5.5-2.5 2.5.5 3.5L7 9l-3 1.5.5-3.5L2 4.5 5.5 4z" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
     <div class="gc-score-row">
       <div class="gc-team">
         <div class="gc-abbr">${g.away}</div>
@@ -703,6 +808,12 @@ function renderGameTabContent() {
 
 function renderEdgeTab(el) {
   const g = activeGame;
+
+  if (g.isMLB) {
+    renderMLBEdgeTab(el, g);
+    return;
+  }
+
   const secs = activeGameSecs;
   const m = calcModel(g, secs);
   const wins = getWindows(secs);
@@ -719,16 +830,12 @@ function renderEdgeTab(el) {
     `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`
   ).join('');
 
-  // Simple SVG chart
-  const chartW = 280, chartH = 52;
-  const pts = 8;
-  const mStart = g.marketTotal;
+  const chartW = 280, chartH = 52, pts = 8;
   const modelStart = g.marketTotal + g.baseEdge;
   const svgPoints = Array.from({length:pts}, (_,i) => {
     const x = Math.round((i/(pts-1)) * chartW);
     const marketY = Math.round(chartH/2);
-    const ratio = i/(pts-1);
-    const mY = Math.round(chartH/2 - (modelStart - mStart) * ratio * 1.2);
+    const mY = Math.round(chartH/2 - (modelStart - g.marketTotal) * (i/(pts-1)) * 1.2);
     return { x, marketY, modelY: Math.min(chartH-2, Math.max(2, mY)) };
   });
   const marketPath = svgPoints.map((p,i) => `${i?'L':'M'}${p.x},${p.marketY}`).join(' ');
@@ -800,6 +907,73 @@ function renderEdgeTab(el) {
   `;
 }
 
+function renderMLBEdgeTab(el, g) {
+  const innings = g.inningsRemaining || 9;
+  const m = calcMLBModel(g, innings);
+  const wins = getMLBWindows(innings);
+  const alt = getMLBAltState(innings);
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const confColor = m.conf >= 70 ? 'green' : 'amber';
+  if (activeWinIdx >= wins.length) activeWinIdx = wins.length - 1;
+  const selWin = wins[activeWinIdx];
+  const selProj = projMLBWindow(g, innings, selWin.i);
+  const winTabsHtml = wins.map((w, i) =>
+    `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`
+  ).join('');
+  el.innerHTML = `
+    <div class="edge-tab-content">
+      <div class="clock-strip">
+        <span class="clock-label">Innings remaining</span>
+        <input type="range" class="clock-slider" min="0" max="9" step="0.5" value="${innings}" oninput="onInningSlide(this.value)">
+        <span class="clock-display" id="clock-disp">${innings.toFixed(1)}</span>
+      </div>
+      <div class="edge-hero">
+        <div class="eh-row1">
+          <div><div class="eh-col-label">Score</div><div class="eh-score-val">${g.awayScore}–${g.homeScore}</div></div>
+          <div><div class="eh-col-label">Market</div><div class="eh-market-val">${g.marketTotal}</div></div>
+          <div><div class="eh-col-label">Model</div><div class="eh-model-val ${edgeColor}" id="model-val">${m.model}</div></div>
+        </div>
+        <div class="eh-edge">
+          <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
+          <div class="eh-playable">Over playable to: <span id="playable-to">${m.playableTo}</span></div>
+        </div>
+      </div>
+      <div class="conf-bar-wrap">
+        <div class="conf-bar-header">
+          <span class="conf-bar-label">Confidence</span>
+          <span class="conf-bar-pct" id="conf-pct" style="color:var(--${confColor})">${m.conf}%</span>
+        </div>
+        <div class="conf-bar-bg"><div class="conf-bar-fill ${confColor}" id="conf-fill" style="width:${m.conf}%"></div></div>
+      </div>
+      <div class="windows-section">
+        <div class="ws-label">Next inning projections</div>
+        <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
+        <div class="win-detail" id="win-detail">
+          <div class="wd-pts">${selProj.pts} runs</div>
+          <div class="wd-range">Range: ${selProj.lo} – ${selProj.hi}</div>
+          <div class="wd-note">${selWin.full ? 'Full remaining game' : 'Isolated inning window'}</div>
+        </div>
+      </div>
+      <div class="alt-line ${alt.cls}" id="alt-line">${alt.l}</div>
+      <div class="signals-section">
+        <div class="sig-row"><span class="sig-name">Run pace</span><span class="sig-val ${m.pace>1.2?'green':m.pace<0.8?'red':'amber'}">${m.pace>1.2?'HIGH ↑':m.pace<0.8?'LOW ↓':'MODERATE'}</span></div>
+        <div class="sig-row"><span class="sig-name">Bullpen factor</span><span class="sig-val amber">LATE GAME</span></div>
+        <div class="sig-row"><span class="sig-name">Blowout risk</span><span class="sig-val ${Math.abs((g.homeScore||0)-(g.awayScore||0))>5?'red':'green'}">${Math.abs((g.homeScore||0)-(g.awayScore||0))>5?'HIGH':'LOW'}</span></div>
+      </div>
+      <div class="action-block">
+        <div class="ab-playable">Over playable to: <span style="color:var(--green)" id="ab-playable">${m.playableTo}</span></div>
+        <div class="ab-note">Edge decays each inning — act before late-game dampening kicks in.</div>
+        <div class="ab-btns">
+          <button class="ab-btn primary" onclick="openTrackModal('${g.id}')">Track</button>
+          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Set Alert</button>
+          <button class="ab-btn danger" onclick="openSnapshot()">Snapshot</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function onClockSlide(val) {
   activeGameSecs = parseInt(val);
   const g = activeGame;
@@ -841,14 +1015,62 @@ function onClockSlide(val) {
   }
 }
 
+function onInningSlide(val) {
+  const innings = parseFloat(val);
+  if (activeGame) activeGame.inningsRemaining = innings;
+  const g = activeGame;
+  const m = calcMLBModel(g, innings);
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const confColor = m.conf >= 70 ? 'green' : 'amber';
+  const alt = getMLBAltState(innings);
+  const cd = document.getElementById('clock-disp');
+  const mv = document.getElementById('model-val');
+  const en = document.getElementById('edge-num');
+  const pt = document.getElementById('playable-to');
+  const abp = document.getElementById('ab-playable');
+  const cp = document.getElementById('conf-pct');
+  const cf = document.getElementById('conf-fill');
+  const al = document.getElementById('alt-line');
+  if (cd) cd.textContent = innings.toFixed(1);
+  if (mv) { mv.textContent = m.model; mv.className = 'eh-model-val ' + edgeColor; }
+  if (en) { en.textContent = `EDGE: ${edgeSign}${m.edge} ${g.side}`; en.className = 'eh-edge-num ' + edgeColor; }
+  if (pt) pt.textContent = m.playableTo;
+  if (abp) abp.textContent = m.playableTo;
+  if (cp) { cp.textContent = m.conf + '%'; cp.style.color = `var(--${confColor})`; }
+  if (cf) { cf.style.width = m.conf + '%'; cf.className = 'conf-bar-fill ' + confColor; }
+  if (al) { al.textContent = alt.l; al.className = 'alt-line ' + alt.cls; }
+  const wins = getMLBWindows(innings);
+  if (activeWinIdx >= wins.length) activeWinIdx = wins.length - 1;
+  const wt = document.getElementById('win-tabs');
+  const wd = document.getElementById('win-detail');
+  if (wt) wt.innerHTML = wins.map((w,i) => `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`).join('');
+  if (wd) {
+    const sel = wins[activeWinIdx];
+    const p = projMLBWindow(g, innings, sel.i);
+    wd.innerHTML = `<div class="wd-pts">${p.pts} runs</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated inning window'}</div>`;
+  }
+}
+
 function selectWindow(idx) {
   activeWinIdx = idx;
-  const wins = getWindows(activeGameSecs);
   document.querySelectorAll('.win-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
-  const sel = wins[idx];
-  const p = projWindow(activeGame, activeGameSecs, sel.s);
   const wd = document.getElementById('win-detail');
-  if (wd) wd.innerHTML = `<div class="wd-pts">${p.pts} pts</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated window projection'}</div>`;
+  if (!wd) return;
+  if (activeGame?.isMLB) {
+    const innings = activeGame.inningsRemaining || 9;
+    const wins = getMLBWindows(innings);
+    const sel = wins[idx];
+    if (!sel) return;
+    const p = projMLBWindow(activeGame, innings, sel.i);
+    wd.innerHTML = `<div class="wd-pts">${p.pts} runs</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated inning window'}</div>`;
+  } else {
+    const wins = getWindows(activeGameSecs);
+    const sel = wins[idx];
+    if (!sel) return;
+    const p = projWindow(activeGame, activeGameSecs, sel.s);
+    wd.innerHTML = `<div class="wd-pts">${p.pts} pts</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated window projection'}</div>`;
+  }
 }
 
 function renderBoxTab(el) {
@@ -949,7 +1171,7 @@ function renderAccount() {
   const email = user.email || '';
   const initial = name[0].toUpperCase();
 
-  document.getElementById('account-content').innerHTML = `
+  document.getElementById('home-content').innerHTML = `
     <div class="account-wrap">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
         <div style="width:48px;height:48px;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;color:#080808;">${initial}</div>
@@ -1140,19 +1362,17 @@ function liveGameToCard(g) {
     periodLabel = commence.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short' });
     clockLabel = '';
   }
-  return {
+  const isMLB = g.sport === 'MLB';
+  const base = {
     id: g.id,
     title: g.awayTeam + ' @ ' + g.homeTeam,
-    away: g.awayAbbr,
-    home: g.homeAbbr,
+    sport: g.sport || 'NBA',
+    away: g.awayAbbr, home: g.homeAbbr,
     awayScore: '–', homeScore: '–',
     awayRec: '', homeRec: '',
     period: periodLabel, clock: clockLabel,
-    maxSecs: 720, secsRemaining: 720,
-    totalSoFar: 0,
-    marketTotal: g.marketTotal,
-    baseEdge: 0,
-    side: 'TBD',
+    totalSoFar: 0, marketTotal: g.marketTotal,
+    baseEdge: 0, side: 'TBD',
     edgeColor: '#555',
     badge: g.status === 'live' ? 'LIVE' : 'PREGAME',
     network: g.sport || '',
@@ -1161,6 +1381,11 @@ function liveGameToCard(g) {
     qtrs: [], awayPlayers: [], homePlayers: [],
     isLive: false,
   };
+  if (isMLB) {
+    return { ...base, isMLB: true, currentInning: 1, isBottom: false,
+      inningsRemaining: 9, maxSecs: 9, secsRemaining: 9 };
+  }
+  return { ...base, isMLB: false, maxSecs: 720, secsRemaining: 720 };
 }
 
 function renderBoard() {

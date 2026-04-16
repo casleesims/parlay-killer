@@ -54,6 +54,7 @@ const valueFinderRouter  = require('./routes/valuefinder');
 const authRouter         = require('./routes/auth');
 const billingRouter      = require('./routes/billing');
 const playerStatsRouter  = require('./routes/playerstats');
+const newsRouter         = require('./routes/news');
 const passport          = require('./config/passport');
 
 const app = express();
@@ -164,6 +165,7 @@ app.use('/api/liveunder',    liveUnderLimiter,  liveUnderRouter);
 app.use('/api/valuefinder',  oddsLimiter,          valueFinderRouter);
 app.use('/api/playerstats', playerStatsLimiter,   playerStatsRouter);
 app.use('/api/billing',                           billingRouter);
+app.use('/api/news',                              newsRouter);
 
 if (sentryEnabled) app.use(Sentry.Handlers.errorHandler());
 app.use((err, req, res, next) => {
