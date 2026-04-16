@@ -45,8 +45,8 @@
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
 
     /* TABS */
-    .tabs { display: flex; border-bottom: 0.5px solid var(--border); flex-shrink: 0; position: sticky; top: 50px; z-index: 9; background: var(--bg); }
-    .tab { flex: 1; padding: 11px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; background: none; border-left: none; border-right: none; border-top: none; }
+    .tabs { display: flex; border-bottom: 0.5px solid var(--border); flex-shrink: 0; position: sticky; top: 50px; z-index: 9; background: var(--navy); }
+    .tab { flex: 1; padding: 11px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; color: rgba(232,242,251,0.65); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; background: none; border-left: none; border-right: none; border-top: none; }
     .tab.active { color: var(--white); border-bottom-color: var(--blue); }
 
     /* GAME CARD — new design */
@@ -294,7 +294,9 @@
         <div class="live-count" id="live-count-wrap"><span class="live-dot"></span><span id="live-count-label">2 LIVE</span></div>
       </div>
       <div class="tabs" id="home-tabs">
-        <button class="tab active" id="tab-live" onclick="switchHomeTab('live')">Live</button>
+        <button class="tab active" id="tab-all" onclick="switchSportTab('all')">All</button>
+        <button class="tab" id="tab-nba" onclick="switchSportTab('nba')">NBA</button>
+        <button class="tab" id="tab-mlb" onclick="switchSportTab('mlb')">MLB</button>
       </div>
       <div id="home-content"></div>
     </div>
@@ -522,6 +524,7 @@ let activeGameSecs = 0;
 let activeTab = 'edge';
 let activeWinIdx = 0;
 let homeTab = 'live';
+let activeSportTab = 'all';
 let favorites = [];
 let alerts = [];
 
@@ -548,6 +551,7 @@ function goBack(to) {
 }
 
 function navTo(tab) {
+  activeSportTab = 'all';
   document.querySelectorAll('.bn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('bn-' + tab);
   if (btn) btn.classList.add('active');
@@ -623,6 +627,14 @@ function switchHomeTab(t) {
   renderHomeContent();
 }
 
+function switchSportTab(sport) {
+  activeSportTab = sport;
+  document.querySelectorAll('#home-tabs .tab').forEach(t => t.classList.remove('active'));
+  const btn = document.getElementById('tab-' + sport);
+  if (btn) btn.classList.add('active');
+  renderHomeContent();
+}
+
 function getGameById(id) {
   if (window.__liveGames) {
     const lg = window.__liveGames.find(g => g.id === id);
@@ -641,15 +653,26 @@ function getAllGames() {
 function renderHomeContent() {
   const el = document.getElementById('home-content');
   const allGames = getAllGames();
-  const live = allGames.filter(g => g.status === 'live');
-  const upcoming = allGames.filter(g => g.status !== 'live');
+
+  const filterBySport = (games) => {
+    if (activeSportTab === 'all') return games;
+    if (activeSportTab === 'nba') return games.filter(g => !g.isMLB && (g.sport === 'NBA' || !g.sport));
+    if (activeSportTab === 'mlb') return games.filter(g => g.isMLB || g.sport === 'MLB');
+    return games;
+  };
+
+  const live = filterBySport(allGames.filter(g => g.status === 'live'));
+  const upcoming = filterBySport(allGames.filter(g => g.status !== 'live'));
+
+  const liveAll = allGames.filter(g => g.status === 'live');
   const liveCountWrap = document.getElementById('live-count-wrap');
-  if (live.length > 0) {
-    document.getElementById('live-count-label').textContent = live.length + ' LIVE';
+  if (liveAll.length > 0) {
+    document.getElementById('live-count-label').textContent = liveAll.length + ' LIVE';
     liveCountWrap.style.display = 'flex';
   } else {
     liveCountWrap.style.display = 'none';
   }
+
   let html = '';
   if (live.length) {
     html += '<div class="section-label">Live Now</div>' + live.map(gameCardHTML).join('');
@@ -657,10 +680,12 @@ function renderHomeContent() {
   if (upcoming.length) {
     html += '<div class="section-label">Upcoming</div>' + upcoming.map(gameCardHTML).join('');
   }
-  if (!allGames.length) {
-    html = `<div class="empty-state"><div class="empty-icon">🏀</div><div class="empty-title">No games right now</div><div class="empty-sub">Check back when games are scheduled.</div></div>`;
+  if (!live.length && !upcoming.length) {
+    const sportName = activeSportTab === 'all' ? '' : activeSportTab.toUpperCase() + ' ';
+    html = `<div class="empty-state"><div class="empty-title">No ${sportName}games right now</div><div class="empty-sub">Check back when games are scheduled.</div></div>`;
   }
   el.innerHTML = html;
+  updateBestBet(allGames);
 }
 
 function renderAlerts() {
