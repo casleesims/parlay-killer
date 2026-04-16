@@ -580,7 +580,7 @@ async function renderNews() {
       const age = timeAgo(new Date(item.pubDate));
       const tl = (item.title || '').toLowerCase();
       const isBreaking = tl.includes('injury') || tl.includes('questionable') || tl.includes('out ') || tl.includes('suspended');
-      return `<div class="news-card ${isBreaking?'breaking':''}" onclick="window.open(${JSON.stringify(item.link)},'_blank')">
+      return `<a class="news-card ${isBreaking?'breaking':''}" href="${item.link}" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;">
         <div class="news-meta">
           <span class="news-sport">${item.sport}</span>
           <span class="news-age">${age}</span>
@@ -589,7 +589,7 @@ async function renderNews() {
         <div class="news-title">${item.title}</div>
         ${item.description?`<div class="news-desc">${item.description.slice(0,120)}${item.description.length>120?'…':''}</div>`:''}
         <div class="news-arrow">→</div>
-      </div>`;
+      </a>`;
     }).join('') + '</div>';
   } catch(e) {
     el.innerHTML = `<div class="empty-state"><div class="empty-title" style="color:var(--dim);">Couldn't load news</div></div>`;
