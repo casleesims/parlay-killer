@@ -1166,6 +1166,10 @@ function selectWindow(idx) {
 
 function renderBoxTab(el) {
   const g = activeGame;
+  if (g.isMLB) {
+    renderMLBBoxTab(el, g);
+    return;
+  }
   const minsPlayed = 48 - g.secsRemaining/60;
 
   function teamSection(players, name, abbr) {
@@ -1190,6 +1194,67 @@ function renderBoxTab(el) {
   el.innerHTML = `<div class="bs-content">
     ${teamSection(g.awayPlayers, g.title.split(' @ ')[0] || g.away, g.away)}
     ${teamSection(g.homePlayers, g.title.split(' @ ')[1] || g.home, g.home)}
+  </div>`;
+}
+
+function renderMLBBoxTab(el, g) {
+  const awayAbbr = g.away || 'AWAY';
+  const homeAbbr = g.home || 'HOME';
+  const awayName = g.title ? (g.title.split(' @ ')[0] || awayAbbr) : awayAbbr;
+  const homeName = g.title ? (g.title.split(' @ ')[1] || homeAbbr) : homeAbbr;
+
+  const awayPitcher = g.awayPitcher || { name: 'Starter', ip: '—', h: '—', er: '—', k: '—', bb: '—' };
+  const homePitcher = g.homePitcher || { name: 'Starter', ip: '—', h: '—', er: '—', k: '—', bb: '—' };
+  const awayBatters = g.awayBatters || [];
+  const homeBatters = g.homeBatters || [];
+
+  function pitcherRow(p) {
+    return `<div class="bs-row" style="grid-template-columns: 1fr 36px 36px 36px 36px 36px;">
+      <div class="bs-name">${p.name} <span class="bs-pos">P</span>${p.hot ? '<span class="hot-pill">HOT</span>' : ''}</div>
+      <div class="bs-stat">${p.ip}</div>
+      <div class="bs-stat">${p.h}</div>
+      <div class="bs-stat">${p.er}</div>
+      <div class="bs-stat">${p.k}</div>
+      <div class="bs-stat">${p.bb}</div>
+    </div>`;
+  }
+
+  function batterRow(b) {
+    return `<div class="bs-row" style="grid-template-columns: 1fr 36px 36px 36px 36px 36px;">
+      <div class="bs-name">${b.name} <span class="bs-pos">${b.pos || ''}</span>${b.hot ? '<span class="hot-pill">HOT</span>' : ''}</div>
+      <div class="bs-stat${b.hot ? ' hot' : ''}">${b.ab || '—'}</div>
+      <div class="bs-stat${b.hot ? ' hot' : ''}">${b.h || '—'}</div>
+      <div class="bs-stat">${b.r || '—'}</div>
+      <div class="bs-stat">${b.rbi || '—'}</div>
+      <div class="bs-stat">${b.hr || '—'}</div>
+    </div>`;
+  }
+
+  function noDataRow() {
+    return `<div style="padding: 16px; font-size: 12px; color: var(--dim); font-style: italic;">Live roster data available with Sportradar production key</div>`;
+  }
+
+  const colHeadersPitching = `<div class="bs-col-headers" style="grid-template-columns: 1fr 36px 36px 36px 36px 36px;">
+    <div>Pitcher</div><div>IP</div><div>H</div><div>ER</div><div>K</div><div>BB</div>
+  </div>`;
+
+  const colHeadersBatting = `<div class="bs-col-headers" style="grid-template-columns: 1fr 36px 36px 36px 36px 36px;">
+    <div>Batter</div><div>AB</div><div>H</div><div>R</div><div>RBI</div><div>HR</div>
+  </div>`;
+
+  el.innerHTML = `<div class="bs-content">
+    <div class="bs-team-header">${awayAbbr} — ${awayName} · Pitching</div>
+    ${colHeadersPitching}
+    ${pitcherRow(awayPitcher)}
+    <div class="bs-team-header">${awayAbbr} — ${awayName} · Batting</div>
+    ${colHeadersBatting}
+    ${awayBatters.length ? awayBatters.map(batterRow).join('') : noDataRow()}
+    <div class="bs-team-header">${homeAbbr} — ${homeName} · Pitching</div>
+    ${colHeadersPitching}
+    ${pitcherRow(homePitcher)}
+    <div class="bs-team-header">${homeAbbr} — ${homeName} · Batting</div>
+    ${colHeadersBatting}
+    ${homeBatters.length ? homeBatters.map(batterRow).join('') : noDataRow()}
   </div>`;
 }
 
@@ -1474,7 +1539,11 @@ function liveGameToCard(g) {
   };
   if (isMLB) {
     return { ...base, isMLB: true, currentInning: 1, isBottom: false,
-      inningsRemaining: 9, maxSecs: 9, secsRemaining: 9 };
+      inningsRemaining: 9, maxSecs: 9, secsRemaining: 9,
+      awayPitcher: { name: 'Starting Pitcher', ip: '—', h: '—', er: '—', k: '—', bb: '—', hot: false },
+      homePitcher: { name: 'Starting Pitcher', ip: '—', h: '—', er: '—', k: '—', bb: '—', hot: false },
+      awayBatters: [], homeBatters: [],
+    };
   }
   return { ...base, isMLB: false, maxSecs: 720, secsRemaining: 720 };
 }
