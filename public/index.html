@@ -563,6 +563,76 @@ function initTheme() {
 }
 function initCookieBanner() {}
 
+/* ── FREE TIER ──────────────────────────────────────────── */
+const FREE_GAME_LIMIT = 3;
+
+function getFreeUsage() {
+  if (window.__user && (window.__user.plan === 'pro' || window.__user.isOwner)) return { count: 0, limit: FREE_GAME_LIMIT, isPro: true };
+  try {
+    const data = JSON.parse(localStorage.getItem('pk_free_usage') || '{"count":0}');
+    return { count: data.count || 0, limit: FREE_GAME_LIMIT, isPro: false };
+  } catch(e) { return { count: 0, limit: FREE_GAME_LIMIT, isPro: false }; }
+}
+
+function incrementFreeUsage() {
+  const usage = getFreeUsage();
+  if (usage.isPro) return true;
+  const newCount = usage.count + 1;
+  localStorage.setItem('pk_free_usage', JSON.stringify({ count: newCount }));
+  return newCount <= FREE_GAME_LIMIT;
+}
+
+function hasHitFreeLimit() {
+  const usage = getFreeUsage();
+  if (usage.isPro) return false;
+  return usage.count >= usage.limit;
+}
+
+function showUpgradeWall(context) {
+  showModal(`
+    <div class="modal-logo">
+      <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
+    </div>
+    <div class="modal-title">You've used your ${FREE_GAME_LIMIT} free analyses</div>
+    <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:20px;">
+      Upgrade to Live Edge Pro for unlimited game analyses, Best Bet alerts, window projections, and book comparison.
+    </div>
+    <div style="background:var(--s2);border:0.5px solid var(--b2);border-radius:4px;padding:14px;margin-bottom:20px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div>
+          <div style="font-size:9px;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Free</div>
+          <div style="font-size:12px;color:var(--dim);line-height:1.8;">
+            ✓ Live board<br>
+            ✓ ${FREE_GAME_LIMIT} game analyses<br>
+            ✓ Basic verdict<br>
+            ✗ Window projections<br>
+            ✗ Book comparison<br>
+            ✗ Unlimited alerts<br>
+            ✗ Best Bet strip
+          </div>
+        </div>
+        <div style="border-left:0.5px solid var(--border);padding-left:12px;">
+          <div style="font-size:9px;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Pro · $9.99/mo</div>
+          <div style="font-size:12px;color:var(--white);line-height:1.8;">
+            ✓ Live board<br>
+            ✓ Unlimited analyses<br>
+            ✓ Full verdict + edge<br>
+            ✓ Window projections<br>
+            ✓ Book comparison<br>
+            ✓ Unlimited alerts<br>
+            ✓ Best Bet strip
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">Maybe later</button>
+      <button class="modal-btn primary" onclick="closeModal();startCheckout('monthly')">Upgrade to Pro →</button>
+    </div>
+    <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--dim);">$39.99/year · cancel anytime</div>
+  `);
+}
+
 /* ── MATH ──────────────────────────────────────────────── */
 function fmt(s) { return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 
@@ -958,6 +1028,18 @@ function renderHomeContent() {
   }
   el.innerHTML = html;
   updateBestBet(allGames);
+
+  const freeUsage = getFreeUsage();
+  if (!freeUsage.isPro) {
+    const remaining = Math.max(0, freeUsage.limit - freeUsage.count);
+    const strip = document.createElement('div');
+    strip.style.cssText = 'padding:8px 16px;font-size:11px;color:var(--dim);display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);';
+    strip.innerHTML = remaining > 0
+      ? `<span>${remaining} free ${remaining === 1 ? 'analysis' : 'analyses'} remaining</span><button onclick="startCheckout('monthly')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;">Upgrade →</button>`
+      : `<span>Free limit reached</span><button onclick="showUpgradeWall('board')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;">Upgrade to Pro →</button>`;
+    const homeContent = document.getElementById('home-content');
+    if (homeContent) homeContent.insertBefore(strip, homeContent.firstChild);
+  }
 }
 
 function renderAlerts() {
@@ -1148,6 +1230,10 @@ function updateBestBet(games) {
   strip.style.display = 'block';
   document.querySelectorAll('.scr').forEach(s => s.style.paddingBottom = '110px');
   updateDesktopBestBet();
+  if (hasHitFreeLimit()) {
+    const bbRight = document.querySelector('.bb-right');
+    if (bbRight) { bbRight.textContent = 'Upgrade to act →'; bbRight.onclick = () => showUpgradeWall('best-bet'); }
+  }
 }
 
 function getBestBetReason(g, m) {
@@ -1165,6 +1251,24 @@ function openBestBet() {
 
 /* ── GAME VIEW ──────────────────────────────────────────── */
 function openGameView(gameId) {
+  const usage = getFreeUsage();
+
+  if (!usage.isPro && usage.count >= usage.limit) {
+    showUpgradeWall('game-view');
+    return;
+  }
+
+  if (!usage.isPro) {
+    incrementFreeUsage();
+    const newUsage = getFreeUsage();
+    const remaining = usage.limit - newUsage.count;
+    if (remaining === 1) {
+      setTimeout(() => showUpgradeBanner('1 free analysis remaining — upgrade for unlimited'), 2000);
+    } else if (remaining === 0) {
+      setTimeout(() => showUpgradeBanner('That was your last free analysis — upgrade to continue'), 2000);
+    }
+  }
+
   activeGame = getGameById(gameId) || GAMES[gameId];
   if (!activeGame) return;
   activeGameSecs = activeGame.secsRemaining;
@@ -1253,6 +1357,7 @@ function renderGameTabContent() {
 
 function renderEdgeTab(el) {
   const g = activeGame;
+  const usage = getFreeUsage();
 
   if (g.isMLB) {
     renderMLBEdgeTab(el, g);
@@ -1322,6 +1427,7 @@ function renderEdgeTab(el) {
           <text x="4" y="20" font-size="7" fill="${m.edge>=0?'#4da6ff':'#ff5a52'}" font-family="DM Sans">Model</text>
         </svg>
       </div>
+      ${usage.isPro ? `
       <div class="windows-section">
         <div class="ws-label">Next window projections</div>
         <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
@@ -1331,6 +1437,12 @@ function renderEdgeTab(el) {
           <div class="wd-note">${selWin.full ? 'Full remaining game' : 'Isolated window projection'}</div>
         </div>
       </div>
+      ` : `
+      <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:14px;margin-bottom:14px;text-align:center;">
+        <div style="font-size:12px;color:var(--dim);margin-bottom:8px;">Window projections · Pro feature</div>
+        <button onclick="showUpgradeWall('windows')" style="font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:8px 16px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;">Upgrade to unlock →</button>
+      </div>
+      `}
       <div class="alt-line ${alt.cls}" id="alt-line">${alt.l}</div>
       <div class="signals-section">
         <div class="sig-row"><span class="sig-name">Pace</span><span class="sig-val ${m.pace>5.5?'green':m.pace<4.5?'red':'amber'}">${m.pace>5.5?'HIGH ↑':m.pace<4.5?'LOW ↓':'MODERATE'}</span></div>
@@ -1881,7 +1993,8 @@ function renderAccount() {
   document.getElementById('live-count-wrap').style.display = 'flex';
   const user = window.__user || {};
   const plan = user.plan || 'free';
-  const isPro = plan === 'pro';
+  const isPro = plan === 'pro' || user.isOwner;
+  if (isPro) localStorage.removeItem('pk_free_usage');
   const usage = user.todayUsage || 0;
   const remaining = Math.max(0, 3 - usage);
   const name = user.name || user.email || 'User';
@@ -2081,6 +2194,13 @@ function openAlertModal(gameId) {
 }
 
 function confirmAlert(gameId) {
+  const usage = getFreeUsage();
+  const existingAlerts = alerts.filter(a => a.type === 'watching');
+  if (!usage.isPro && existingAlerts.length >= 1) {
+    closeModal();
+    showUpgradeWall('alerts');
+    return;
+  }
   const g = getGameById(gameId) || GAMES[gameId];
   if (!g) return;
   const isMLB = g.isMLB || g.sport === 'MLB';
