@@ -88,14 +88,35 @@ function mergeGameData(scoresData, oddsData, sport) {
       : 0;
     const totalSoFar = homeScore + awayScore;
 
-    const awayWords = game.away_team.split(' ');
-    const homeWords = game.home_team.split(' ');
-    const awayAbbr = TEAM_ABBR_MAP[game.away_team] || (awayWords.length > 1
-      ? (awayWords[0][0] + awayWords[awayWords.length-1].substring(0,2)).toUpperCase()
-      : game.away_team.substring(0,3).toUpperCase());
-    const homeAbbr = TEAM_ABBR_MAP[game.home_team] || (homeWords.length > 1
-      ? (homeWords[0][0] + homeWords[homeWords.length-1].substring(0,2)).toUpperCase()
-      : game.home_team.substring(0,3).toUpperCase());
+    const NBA_ABBR = {
+      'Atlanta Hawks': 'ATL', 'Boston Celtics': 'BOS', 'Brooklyn Nets': 'BKN',
+      'Charlotte Hornets': 'CHA', 'Chicago Bulls': 'CHI', 'Cleveland Cavaliers': 'CLE',
+      'Dallas Mavericks': 'DAL', 'Denver Nuggets': 'DEN', 'Detroit Pistons': 'DET',
+      'Golden State Warriors': 'GSW', 'Houston Rockets': 'HOU', 'Indiana Pacers': 'IND',
+      'LA Clippers': 'LAC', 'Los Angeles Clippers': 'LAC', 'Los Angeles Lakers': 'LAL',
+      'LA Lakers': 'LAL', 'Memphis Grizzlies': 'MEM', 'Miami Heat': 'MIA',
+      'Milwaukee Bucks': 'MIL', 'Minnesota Timberwolves': 'MIN', 'New Orleans Pelicans': 'NOP',
+      'New York Knicks': 'NYK', 'Oklahoma City Thunder': 'OKC', 'Orlando Magic': 'ORL',
+      'Philadelphia 76ers': 'PHI', 'Phoenix Suns': 'PHX', 'Portland Trail Blazers': 'POR',
+      'Sacramento Kings': 'SAC', 'San Antonio Spurs': 'SAS', 'Toronto Raptors': 'TOR',
+      'Utah Jazz': 'UTA', 'Washington Wizards': 'WAS',
+    };
+    const MLB_ABBR = {
+      'Arizona Diamondbacks': 'ARI', 'Atlanta Braves': 'ATL', 'Baltimore Orioles': 'BAL',
+      'Boston Red Sox': 'BOS', 'Chicago Cubs': 'CHC', 'Chicago White Sox': 'CWS',
+      'Cincinnati Reds': 'CIN', 'Cleveland Guardians': 'CLE', 'Colorado Rockies': 'COL',
+      'Detroit Tigers': 'DET', 'Houston Astros': 'HOU', 'Kansas City Royals': 'KC',
+      'Los Angeles Angels': 'LAA', 'Los Angeles Dodgers': 'LAD', 'Miami Marlins': 'MIA',
+      'Milwaukee Brewers': 'MIL', 'Minnesota Twins': 'MIN', 'New York Mets': 'NYM',
+      'New York Yankees': 'NYY', 'Oakland Athletics': 'OAK', 'Philadelphia Phillies': 'PHI',
+      'Pittsburgh Pirates': 'PIT', 'San Diego Padres': 'SD', 'San Francisco Giants': 'SF',
+      'Seattle Mariners': 'SEA', 'St. Louis Cardinals': 'STL', 'Tampa Bay Rays': 'TB',
+      'Texas Rangers': 'TEX', 'Toronto Blue Jays': 'TOR', 'Washington Nationals': 'WSH',
+      'Athletics': 'OAK', 'Sacramento Athletics': 'OAK',
+    };
+    const ABBR_MAP = isMLB ? MLB_ABBR : NBA_ABBR;
+    const awayAbbr = ABBR_MAP[game.away_team] || game.away_team.split(' ').pop().substring(0, 3).toUpperCase();
+    const homeAbbr = ABBR_MAP[game.home_team] || game.home_team.split(' ').pop().substring(0, 3).toUpperCase();
 
     let clock = '';
     let period = isLive ? 'LIVE' : 'Upcoming';

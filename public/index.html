@@ -1050,7 +1050,7 @@ function gameCardHTML(g) {
         </button>
       </span>
     </div>
-    <div class="gc-teams">${g.away} vs ${g.home}</div>
+    <div class="gc-teams">${g.awayTeam || g.away} vs ${g.homeTeam || g.home}</div>
     <div class="gc-score-total">
       <div class="gc-score-block">
         <span class="gc-score-lbl">Score</span>
