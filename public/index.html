@@ -1196,13 +1196,13 @@ function gameCardHTML(g) {
         } else {
           return `
             <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-              <div class="gc-proj-item" style="opacity:0.3;filter:blur(3px);pointer-events:none;flex:1;">
+              <div class="gc-proj-item" style="flex:1;">
                 <span class="gc-proj-label">Next ${wins[0]?.l || '5:00'}</span>
-                <span class="gc-proj-val">??.?</span>
+                <span class="gc-proj-val" style="filter:blur(5px);user-select:none;">14.2</span>
               </div>
-              <div class="gc-proj-item" style="opacity:0.3;filter:blur(3px);pointer-events:none;flex:1;">
+              <div class="gc-proj-item" style="flex:1;">
                 <span class="gc-proj-label">Playable to</span>
-                <span class="gc-proj-val gc-proj-playable">???.?</span>
+                <span class="gc-proj-val gc-proj-playable" style="filter:blur(5px);user-select:none;">999.9</span>
               </div>
               <div style="flex-shrink:0;">
                 <button onclick="event.stopPropagation();showUpgradeWall('projections')" style="font-size:10px;font-weight:500;letter-spacing:0.04em;padding:5px 10px;background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue-border);border-radius:2px;cursor:pointer;">Pro →</button>
@@ -1430,7 +1430,7 @@ function renderEdgeTab(el) {
           <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
           <div class="eh-playable">Playable to: ${usage.isPro
             ? `<span id="playable-to" style="color:var(--white);font-weight:500;">${m.playableTo}</span>`
-            : `<span style="filter:blur(4px);opacity:0.3;pointer-events:none;">${m.playableTo}</span><button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;margin-left:6px;">Pro →</button>`
+            : `<span style="filter:blur(5px);user-select:none;color:var(--white);font-weight:500;">999.9</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;">Pro →</button>`
           }</div>
         </div>
       </div>
@@ -1464,21 +1464,20 @@ function renderEdgeTab(el) {
       ` : `
       <div class="windows-section">
         <div class="ws-label">Next window projections</div>
-        <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:20px;text-align:center;">
-          <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;opacity:0.25;filter:blur(4px);pointer-events:none;">
-            <div style="text-align:center;">
-              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next 3:00</div>
-              <div style="font-size:28px;font-weight:500;color:var(--white);">12.4</div>
+        <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:14px;">
+          <div style="display:flex;gap:0;margin-bottom:12px;">
+            <div style="flex:1;padding-right:12px;border-right:0.5px solid var(--border);">
+              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next ${wins[0]?.l || '3:00'}</div>
+              <div style="font-size:24px;font-weight:500;color:var(--white);filter:blur(6px);user-select:none;">14.2</div>
               <div style="font-size:10px;color:var(--dim);">pts expected</div>
             </div>
-            <div style="text-align:center;">
-              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next 5:00</div>
-              <div style="font-size:28px;font-weight:500;color:var(--white);">21.7</div>
+            <div style="flex:1;padding-left:12px;">
+              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next ${wins[1]?.l || '5:00'}</div>
+              <div style="font-size:24px;font-weight:500;color:var(--white);filter:blur(6px);user-select:none;">23.8</div>
               <div style="font-size:10px;color:var(--dim);">pts expected</div>
             </div>
           </div>
-          <div style="font-size:12px;color:var(--dim);margin-bottom:12px;">Window projections are a Pro feature</div>
-          <button onclick="showUpgradeWall('windows')" style="font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:10px 20px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;">Unlock with Pro →</button>
+          <button onclick="showUpgradeWall('windows')" style="width:100%;font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:9px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;">Unlock with Pro →</button>
         </div>
       </div>
       `}
@@ -1618,7 +1617,7 @@ function renderMLBEdgeTab(el, g) {
           <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
           <div class="eh-playable">Playable to: ${usage.isPro
             ? `<span id="playable-to" style="color:var(--white);font-weight:500;">${m.playableTo}</span>`
-            : `<span style="filter:blur(4px);opacity:0.3;pointer-events:none;">${m.playableTo}</span><button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;margin-left:6px;">Pro →</button>`
+            : `<span style="filter:blur(5px);user-select:none;color:var(--white);font-weight:500;">999.9</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;">Pro →</button>`
           }</div>
         </div>
       </div>
@@ -1642,21 +1641,20 @@ function renderMLBEdgeTab(el, g) {
       ` : `
       <div class="windows-section">
         <div class="ws-label">Next inning projections</div>
-        <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:20px;text-align:center;">
-          <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;opacity:0.25;filter:blur(4px);pointer-events:none;">
-            <div style="text-align:center;">
-              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next 1 inn</div>
-              <div style="font-size:28px;font-weight:500;color:var(--white);">1.2</div>
+        <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:14px;">
+          <div style="display:flex;gap:0;margin-bottom:12px;">
+            <div style="flex:1;padding-right:12px;border-right:0.5px solid var(--border);">
+              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next ${wins[0]?.l || '1 inn'}</div>
+              <div style="font-size:24px;font-weight:500;color:var(--white);filter:blur(6px);user-select:none;">1.2</div>
               <div style="font-size:10px;color:var(--dim);">runs expected</div>
             </div>
-            <div style="text-align:center;">
-              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next 2 inn</div>
-              <div style="font-size:28px;font-weight:500;color:var(--white);">2.4</div>
+            <div style="flex:1;padding-left:12px;">
+              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next ${wins[1]?.l || '2 inn'}</div>
+              <div style="font-size:24px;font-weight:500;color:var(--white);filter:blur(6px);user-select:none;">2.4</div>
               <div style="font-size:10px;color:var(--dim);">runs expected</div>
             </div>
           </div>
-          <div style="font-size:12px;color:var(--dim);margin-bottom:12px;">Window projections are a Pro feature</div>
-          <button onclick="showUpgradeWall('windows')" style="font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:10px 20px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;">Unlock with Pro →</button>
+          <button onclick="showUpgradeWall('windows')" style="width:100%;font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:9px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;">Unlock with Pro →</button>
         </div>
       </div>
       `}
