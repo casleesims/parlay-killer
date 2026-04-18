@@ -125,6 +125,41 @@ router.post('/logout', (req, res) => {
   });
 });
 
+// ── DELETE /api/auth/delete-account ───────────────────────
+router.delete('/delete-account', requireAuth, async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+  try {
+    const userResult = await pool.query(
+      'SELECT stripe_customer_id, stripe_subscription_id FROM users WHERE id = $1',
+      [userId]
+    );
+    const user = userResult.rows[0];
+
+    if (user?.stripe_subscription_id) {
+      try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        await stripe.subscriptions.cancel(user.stripe_subscription_id);
+      } catch(stripeErr) {
+        console.error('Stripe cancel error on account delete:', stripeErr.message);
+      }
+    }
+
+    await pool.query('DELETE FROM usage WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+
+    req.session.destroy(err => {
+      if (err) console.error('Session destroy error on account delete:', err);
+      res.clearCookie('connect.sid');
+      res.json({ ok: true });
+    });
+  } catch(err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ error: 'Failed to delete account. Please contact support.' });
+  }
+});
+
 // ── GET /api/auth/me ───────────────────────────────────────
 router.get('/me', async (req, res) => {
   if (!req.session.userId) {

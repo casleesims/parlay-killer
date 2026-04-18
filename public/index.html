@@ -270,6 +270,18 @@
     .fav-btn.on { color:var(--amber); }
     .fav-btn:active { opacity:0.7; }
     .alert-badge { pointer-events: none; }
+    .onboarding-overlay { position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;max-width:480px;margin:0 auto; }
+    .onboarding-slide { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;text-align:center; }
+    .onboarding-icon { width:64px;height:64px;background:var(--blue-dim);border:0.5px solid var(--blue-border);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:28px; }
+    .onboarding-step { font-size:10px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-bottom:12px; }
+    .onboarding-title { font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:0.04em;color:var(--white);margin-bottom:14px;line-height:1.1; }
+    .onboarding-body { font-size:15px;font-weight:300;color:var(--dim);line-height:1.75;margin-bottom:32px; }
+    .onboarding-example { background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:14px 16px;width:100%;text-align:left;margin-bottom:32px; }
+    .onboarding-dots { display:flex;gap:8px;margin-bottom:24px; }
+    .onboarding-dot { width:6px;height:6px;border-radius:50%;background:var(--b2);transition:background 0.2s; }
+    .onboarding-dot.active { background:var(--blue); }
+    .onboarding-btn { width:100%;padding:14px;background:var(--blue);color:var(--navy);font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;border:none;border-radius:2px;cursor:pointer; }
+    .onboarding-skip { background:none;border:none;color:var(--dim);font-size:12px;cursor:pointer;padding:12px;margin-top:8px; }
 
     /* NEWS CARDS */
     .news-card { background: var(--s1); border: 0.5px solid var(--border); border-left: 3px solid var(--border); padding:14px 16px; margin:0 0 1px; cursor:pointer; transition:border-color 0.15s; display:block; text-decoration:none; color:inherit; }
@@ -324,10 +336,6 @@
         <button class="tab active" id="tab-all" onclick="switchSportTab('all')">All</button>
         <button class="tab" id="tab-nba" onclick="switchSportTab('nba')">NBA</button>
         <button class="tab" id="tab-mlb" onclick="switchSportTab('mlb')">MLB</button>
-      </div>
-      <div class="ptr-indicator" id="ptr-indicator">
-        <div class="ptr-spinner"></div>
-        <span id="ptr-label">Refreshing…</span>
       </div>
       <div id="home-content"></div>
     </div>
@@ -575,6 +583,7 @@ let activeTab = 'edge';
 let activeWinIdx = 0;
 let homeTab = 'live';
 let activeSportTab = 'all';
+let activeNavTab = 'board';
 let favorites = [];
 let alerts = [];
 
@@ -625,6 +634,7 @@ function goBack(to) {
 }
 
 function navTo(tab) {
+  activeNavTab = tab;
   document.querySelectorAll('.bn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('bn-' + tab);
   if (btn) btn.classList.add('active');
@@ -666,6 +676,7 @@ function hideBoardTabs() {
 }
 
 async function renderNewsTab() {
+  hideBoardTabs();
   const el = document.getElementById('home-content');
   document.getElementById('live-count-label').textContent = 'NEWS';
   document.getElementById('live-count-wrap').style.display = 'flex';
@@ -811,29 +822,52 @@ function renderHomeContent() {
 }
 
 function renderAlerts() {
-  const el = document.getElementById('home-content');
-  document.getElementById('live-count-label').textContent = 'ALERTS';
-  document.getElementById('live-count-wrap').style.display = 'flex';
+  hideBoardTabs();
   const strip = document.getElementById('best-bet-strip');
   if (strip) strip.style.display = 'none';
+  const el = document.getElementById('home-content');
+  document.getElementById('live-count-label').textContent = alerts.length + ' ALERTS';
+  document.getElementById('live-count-wrap').style.display = 'flex';
+
   if (!alerts.length) {
     el.innerHTML = `<div class="empty-state">
       <div class="empty-title">No alerts yet</div>
-      <div class="empty-sub">Set an alert on any live game from the Board.</div>
+      <div class="empty-sub">Tap Alert on any game from the Board to start watching it.</div>
     </div>`;
-  } else {
-    el.innerHTML = alerts.map(a => `
-      <div class="game-card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+    return;
+  }
+
+  el.innerHTML = alerts.map((a, i) => {
+    const isTriggered = a.type === 'triggered';
+    const isWatching = a.type === 'watching';
+    return `<div class="game-card" style="border-left:3px solid ${a.color};">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
           <span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;flex-shrink:0;"></span>
           <span style="font-size:13px;font-weight:500;color:var(--white);">${a.title}</span>
         </div>
-        <div style="font-size:11px;color:var(--dim);">${a.msg}</div>
-        <div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div>
-        <button class="gc-btn" style="margin-top:10px;max-width:80px;" onclick="openGameView('${a.gameId}')">View</button>
+        <span style="font-size:9px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;
+          color:${isTriggered ? '#ff453a' : isWatching ? '#4da6ff' : 'var(--dim)'};
+          background:${isTriggered ? 'rgba(255,69,58,0.1)' : isWatching ? 'rgba(77,166,255,0.1)' : 'transparent'};
+          border:0.5px solid ${isTriggered ? 'rgba(255,69,58,0.3)' : isWatching ? 'rgba(77,166,255,0.3)' : 'transparent'};
+          padding:2px 7px;border-radius:2px;">
+          ${isTriggered ? 'TRIGGERED' : isWatching ? 'WATCHING' : 'ALERT'}
+        </span>
       </div>
-    `).join('');
-  }
+      <div style="font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:8px;">${a.msg}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:10px;color:var(--dim);">${a.time}</div>
+        <div style="display:flex;gap:8px;">
+          <button style="font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
+            padding:6px 12px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;"
+            onclick="openGameView('${a.gameId}')">View Game</button>
+          <button style="font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
+            padding:6px 12px;background:none;border:0.5px solid var(--b2);color:var(--dim);border-radius:2px;cursor:pointer;"
+            onclick="alerts.splice(${i},1);renderAlerts();">Dismiss</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function gameCardHTML(g) {
@@ -1147,6 +1181,20 @@ function renderEdgeTab(el) {
         <div class="sig-row"><span class="sig-name">Blowout risk</span><span class="sig-val ${Math.abs(g.homeScore-g.awayScore)>15?'red':'green'}">${Math.abs(g.homeScore-g.awayScore)>15?'HIGH':'LOW'}</span></div>
         <div class="sig-row"><span class="sig-name">Garbage time</span><span class="sig-val ${Math.abs(g.homeScore-g.awayScore)>20?'amber':'green'}">${Math.abs(g.homeScore-g.awayScore)>20?'MODERATE RISK':'LOW'}</span></div>
       </div>
+      <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Bet Sizing · Kelly Criterion</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="background:var(--s2);border-radius:3px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:500;color:var(--blue);">${Math.max(0, Math.min(25, Math.round(Math.abs(m.edge) / 2 * 10) / 10))}%</div>
+            <div style="font-size:9px;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;">Full Kelly</div>
+          </div>
+          <div style="background:var(--s2);border-radius:3px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:500;color:var(--white);">${Math.round(Math.max(0, Math.min(25, Math.round(Math.abs(m.edge) / 2 * 10) / 10)) / 2 * 10) / 10}%</div>
+            <div style="font-size:9px;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;">Half Kelly (safer)</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;">% of bankroll suggested based on this edge. Half Kelly reduces variance.</div>
+      </div>
       <div class="action-block">
         <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
         <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
@@ -1154,6 +1202,7 @@ function renderEdgeTab(el) {
           <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${(SPORTSBOOK_LINKS[getSportsbookPref()] || SPORTSBOOK_LINKS.draftkings).name}</button>
           <button class="ab-btn" onclick="openTrackModal('${g.id}')">Track</button>
           <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
+          <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Log Bet</button>
           <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
         </div>
       </div>
@@ -1215,6 +1264,20 @@ function renderMLBEdgeTab(el, g) {
         <div class="sig-row"><span class="sig-name">Bullpen factor</span><span class="sig-val amber">LATE GAME</span></div>
         <div class="sig-row"><span class="sig-name">Blowout risk</span><span class="sig-val ${Math.abs((g.homeScore||0)-(g.awayScore||0))>5?'red':'green'}">${Math.abs((g.homeScore||0)-(g.awayScore||0))>5?'HIGH':'LOW'}</span></div>
       </div>
+      <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Bet Sizing · Kelly Criterion</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="background:var(--s2);border-radius:3px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:500;color:var(--blue);">${Math.max(0, Math.min(25, Math.round(Math.abs(m.edge) / 2 * 10) / 10))}%</div>
+            <div style="font-size:9px;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;">Full Kelly</div>
+          </div>
+          <div style="background:var(--s2);border-radius:3px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:500;color:var(--white);">${Math.round(Math.max(0, Math.min(25, Math.round(Math.abs(m.edge) / 2 * 10) / 10)) / 2 * 10) / 10}%</div>
+            <div style="font-size:9px;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;">Half Kelly (safer)</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;">% of bankroll suggested based on this edge. Half Kelly reduces variance.</div>
+      </div>
       <div class="action-block">
         <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
         <div class="ab-note">Edge decays each inning — act before late-game dampening kicks in.</div>
@@ -1222,6 +1285,7 @@ function renderMLBEdgeTab(el, g) {
           <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${(SPORTSBOOK_LINKS[getSportsbookPref()] || SPORTSBOOK_LINKS.draftkings).name}</button>
           <button class="ab-btn" onclick="openTrackModal('${g.id}')">Track</button>
           <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
+          <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Log Bet</button>
           <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
         </div>
       </div>
@@ -1539,6 +1603,8 @@ function renderAccount() {
   const name = user.name || user.email || 'User';
   const email = user.email || '';
   const initial = name[0].toUpperCase();
+  const stats = getStreakStats();
+  const pendingBets = stats.history.filter(b => b.result === null);
 
   document.getElementById('home-content').innerHTML = `
     <div class="account-wrap">
@@ -1584,8 +1650,45 @@ function renderAccount() {
         </div>
         <div style="font-size:10px;color:var(--dim);margin-top:8px;">Bet Now buttons will open your preferred sportsbook</div>
       </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">My Record</div>
+        <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;padding:16px 0;border-bottom:0.5px solid var(--border);">
+            <div>
+              <div style="font-size:22px;font-weight:500;color:var(--blue);">${stats.wins}</div>
+              <div style="font-size:10px;color:var(--dim);margin-top:2px;letter-spacing:0.06em;text-transform:uppercase;">Wins</div>
+            </div>
+            <div style="border-left:0.5px solid var(--border);border-right:0.5px solid var(--border);">
+              <div style="font-size:22px;font-weight:500;color:var(--avoid);">${stats.losses}</div>
+              <div style="font-size:10px;color:var(--dim);margin-top:2px;letter-spacing:0.06em;text-transform:uppercase;">Losses</div>
+            </div>
+            <div>
+              <div style="font-size:22px;font-weight:500;color:var(--white);">${stats.winPct}%</div>
+              <div style="font-size:10px;color:var(--dim);margin-top:2px;letter-spacing:0.06em;text-transform:uppercase;">Win Rate</div>
+            </div>
+          </div>
+          ${pendingBets.length ? `
+            <div style="padding:12px 16px;">
+              <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;">Pending Results</div>
+              ${pendingBets.slice(0,3).map(b => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);">
+                  <div>
+                    <div style="font-size:12px;font-weight:500;color:var(--white);">${b.title}</div>
+                    <div style="font-size:10px;color:var(--dim);">${b.side} ${b.total} · Edge ${b.edge >= 0 ? '+' : ''}${b.edge}</div>
+                  </div>
+                  <div style="display:flex;gap:6px;">
+                    <button onclick="markResult(${b.id},'win')" style="font-size:10px;font-weight:500;padding:5px 10px;background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue-border);border-radius:2px;cursor:pointer;">W</button>
+                    <button onclick="markResult(${b.id},'loss')" style="font-size:10px;font-weight:500;padding:5px 10px;background:rgba(255,90,82,0.1);color:var(--avoid);border:0.5px solid rgba(255,90,82,0.25);border-radius:2px;cursor:pointer;">L</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `<div style="padding:14px 16px;font-size:12px;color:var(--dim);font-style:italic;">No pending results. Log a bet from any game view.</div>`}
+        </div>
+      </div>
       ${!isPro?`<button class="acc-btn green" onclick="window.location.href='/api/billing/create-checkout-session'">Upgrade to Live Edge Pro</button>`:''}
       <button class="acc-btn outline" onclick="signOut()">Sign Out</button>
+      <button class="acc-btn" onclick="confirmDeleteAccount()" style="background:none;border:0.5px solid var(--avoid);color:var(--avoid);margin-top:4px;">Delete Account</button>
     </div>
   `;
 }
@@ -1745,45 +1848,61 @@ function openAlertModal(gameId) {
 }
 
 function confirmAlert(gameId) {
-  if (!window.__alertThresholds) window.__alertThresholds = {};
   const g = getGameById(gameId) || GAMES[gameId];
-  if (!g) { closeModal(); return; }
+  if (!g) return;
+  const isMLB = g.isMLB || g.sport === 'MLB';
+  const m = isMLB ? calcMLBModel(g, g.inningsRemaining || 9) : calcModel(g, g.secsRemaining);
+  const sign = m.edge >= 0 ? '+' : '';
 
-  // Read selected threshold pills from the modal
-  const pills = document.querySelectorAll('.modal-pill.on');
-  const thresholds = Array.from(pills).map(p => p.textContent.trim());
-  const edgeThreshold = thresholds.find(t => t.startsWith('Edge >'));
-  const threshold = edgeThreshold ? parseFloat(edgeThreshold.replace('Edge > ', '')) : 5;
+  if (!window.__alertThresholds) window.__alertThresholds = {};
 
-  window.__alertThresholds[gameId] = { gameId, title: g.title, threshold };
+  const activePills = document.querySelectorAll('.modal-pill.on');
+  const thresholds = [];
+  activePills.forEach(p => thresholds.push(p.textContent.trim()));
+  window.__alertThresholds[gameId] = thresholds;
 
-  // Start polling for threshold crossings
-  if (!window.__alertPollInterval) {
-    window.__alertPollInterval = setInterval(() => {
+  const thresholdText = thresholds.length ? thresholds.join(', ') : 'any edge change';
+
+  addAlert({
+    gameId,
+    title: g.title,
+    msg: `Watching for: ${thresholdText} · Current edge: ${sign}${m.edge} ${g.side}`,
+    color: '#4da6ff',
+    time: 'Just now',
+    type: 'watching',
+  });
+
+  if (!window.__alertInterval) {
+    window.__alertInterval = setInterval(() => {
       if (!window.__alertThresholds) return;
-      Object.values(window.__alertThresholds).forEach(t => {
-        const game = getGameById(t.gameId) || GAMES[t.gameId];
+      Object.entries(window.__alertThresholds).forEach(([gid, thresholds]) => {
+        const game = getGameById(gid) || GAMES[gid];
         if (!game) return;
-        const isMLB = game.isMLB || game.sport === 'MLB';
-        const m = isMLB ? calcMLBModel(game, game.inningsRemaining || 9) : calcModel(game, game.secsRemaining);
-        if (Math.abs(m.edge) >= t.threshold) {
-          const sign = m.edge >= 0 ? '+' : '';
-          addAlert({
-            gameId: t.gameId,
-            title: t.title,
-            msg: `Edge threshold hit: ${sign}${m.edge} ${m.side || game.side}`,
-            color: 'green',
-            time: 'Just now',
-          });
-          // Remove after firing so it doesn't spam
-          delete window.__alertThresholds[t.gameId];
+        const isMLBGame = game.isMLB || game.sport === 'MLB';
+        const model = isMLBGame ? calcMLBModel(game, game.inningsRemaining || 9) : calcModel(game, game.secsRemaining);
+        thresholds.forEach(t => {
+          if (t.includes('5.0') && Math.abs(model.edge) >= 5) {
+            addAlert({ gameId: gid, title: game.title, msg: `🚨 Edge crossed +5.0 — Now ${model.edge >= 0 ? '+' : ''}${model.edge} ${game.side}`, color: '#4da6ff', time: 'Just now', type: 'triggered' });
+            delete window.__alertThresholds[gid];
+          }
+          if (t.includes('7.0') && Math.abs(model.edge) >= 7) {
+            addAlert({ gameId: gid, title: game.title, msg: `🚨 Edge crossed +7.0 — Now ${model.edge >= 0 ? '+' : ''}${model.edge} ${game.side}`, color: '#4da6ff', time: 'Just now', type: 'triggered' });
+            delete window.__alertThresholds[gid];
+          }
+          if (t.includes('Model flips') && window.__alertThresholds[gid]?.lastEdge !== undefined && model.edge * window.__alertThresholds[gid].lastEdge < 0) {
+            addAlert({ gameId: gid, title: game.title, msg: `🚨 Model flipped — Now ${model.edge >= 0 ? '+' : ''}${model.edge} ${game.side}`, color: '#f5a623', time: 'Just now', type: 'triggered' });
+            delete window.__alertThresholds[gid];
+          }
+        });
+        if (window.__alertThresholds[gid]) {
+          window.__alertThresholds[gid].lastEdge = model.edge;
         }
       });
     }, 30000);
   }
 
   closeModal();
-  showConfirmModal('🔔', 'Alert Set', `You'll be alerted when edge crosses ${threshold} on ${g.title}.`);
+  showConfirmModal('🔔', 'Alert Set', `Watching ${g.title}. You'll see updates in your Alerts tab.`);
 }
 
 function showModal(html) {
@@ -1805,6 +1924,258 @@ function updateNavAvatar(user) {
   // Usage warning injected via upgrade banner when needed
 }
 
+/* ── BET HISTORY / STREAK ───────────────────────────────── */
+function getBetHistory() {
+  try { return JSON.parse(localStorage.getItem('pk_bet_history') || '[]'); } catch(e) { return []; }
+}
+
+function saveBetHistory(history) {
+  localStorage.setItem('pk_bet_history', JSON.stringify(history));
+}
+
+function logBet(game, edge, side, total) {
+  const history = getBetHistory();
+  const bet = { id: Date.now(), gameId: game.id, title: game.title, period: game.period, clock: game.clock, edge, side, total, placedAt: new Date().toISOString(), result: null };
+  history.unshift(bet);
+  saveBetHistory(history);
+  showResultModal(bet.id);
+}
+
+function markResult(betId, result) {
+  const history = getBetHistory();
+  const bet = history.find(b => b.id === betId);
+  if (bet) { bet.result = result; saveBetHistory(history); }
+  closeModal();
+  const wins = history.filter(b => b.result === 'win').length;
+  const losses = history.filter(b => b.result === 'loss').length;
+  showConfirmModal('✓', `Logged as ${result === 'win' ? 'Win 🔥' : 'Loss'}`, `Your record: ${wins}W – ${losses}L`);
+}
+
+function showResultModal(betId) {
+  showModal(`
+    <div class="modal-logo"><div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-title">Bet Logged</div>
+    <div class="modal-game-info">Mark the result after the game ends</div>
+    <div class="modal-btns" style="flex-direction:column;gap:8px;margin-top:16px;">
+      <button class="modal-btn primary" style="background:#4da6ff;color:var(--navy);" onclick="markResult(${betId},'win')">✓ Win</button>
+      <button class="modal-btn" style="border-color:var(--avoid);color:var(--avoid);" onclick="markResult(${betId},'loss')">✗ Loss</button>
+      <button class="modal-btn cancel" onclick="closeModal()">Mark later</button>
+    </div>
+  `);
+}
+
+function getStreakStats() {
+  const history = getBetHistory();
+  const wins = history.filter(b => b.result === 'win').length;
+  const losses = history.filter(b => b.result === 'loss').length;
+  const pending = history.filter(b => b.result === null).length;
+  const total = wins + losses;
+  const winPct = total > 0 ? Math.round((wins / total) * 100) : 0;
+  return { wins, losses, pending, total, winPct, history };
+}
+
+/* ── ONBOARDING ─────────────────────────────────────────── */
+let onboardingStep = 0;
+
+const ONBOARDING_SLIDES = [
+  {
+    icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><polyline points="3,18 8,11 13,14 18,6"/></svg>`,
+    step: 'Step 1 of 3',
+    title: 'The Edge',
+    body: 'Every live game has a market total set by the sportsbook. Our model calculates what the total should actually be. The gap between those two numbers is your edge.',
+    example: `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div><div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Market O/U</div><div style="font-size:18px;font-weight:500;color:var(--white);">224.5</div></div>
+      <div style="text-align:right;"><div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Model says</div><div style="font-size:18px;font-weight:500;color:var(--blue);">230.8</div></div>
+    </div><div style="font-size:15px;font-weight:500;color:var(--blue);">BET OVER 224.5 · +6.3 edge</div>`,
+  },
+  {
+    icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>`,
+    step: 'Step 2 of 3',
+    title: 'Best Bet',
+    body: 'The Best Bet strip at the bottom of your board always shows the single strongest live edge right now. When it\'s there, it\'s the model\'s top call. When it\'s gone, nothing qualifies.',
+    example: `<div style="background:var(--blue);border-radius:3px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
+      <div><div style="font-size:9px;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;">Best Bet</div><div style="font-size:13px;font-weight:500;color:#fff;margin-top:2px;">Lakers OVER 224.5</div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:1px;">+6.3 edge · pace spike</div></div>
+      <div style="font-size:10px;font-weight:500;color:var(--blue);background:#fff;border-radius:2px;padding:5px 10px;">Bet Now</div>
+    </div>`,
+  },
+  {
+    icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+    step: 'Step 3 of 3',
+    title: 'Alerts',
+    body: 'Tap Alert on any game to watch it. Set a threshold and we\'ll notify you in the Alerts tab when the edge crosses it. You don\'t have to watch the board constantly.',
+    example: `<div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);">
+        <span style="width:8px;height:8px;background:var(--blue);border-radius:50%;flex-shrink:0;"></span>
+        <div><div style="font-size:12px;font-weight:500;color:var(--white);">Lakers vs Suns</div><div style="font-size:11px;color:var(--dim);">Watching for: Edge > 5.0</div></div>
+        <span style="margin-left:auto;font-size:9px;color:var(--blue);border:0.5px solid var(--blue-border);padding:2px 7px;border-radius:2px;font-weight:500;letter-spacing:0.06em;">WATCHING</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+        <span style="width:8px;height:8px;background:var(--red);border-radius:50%;flex-shrink:0;"></span>
+        <div><div style="font-size:12px;font-weight:500;color:var(--white);">Celtics vs Knicks</div><div style="font-size:11px;color:var(--dim);">🚨 Edge crossed +5.0</div></div>
+        <span style="margin-left:auto;font-size:9px;color:var(--red);border:0.5px solid rgba(255,69,58,0.3);padding:2px 7px;border-radius:2px;font-weight:500;letter-spacing:0.06em;">TRIGGERED</span>
+      </div>
+    </div>`,
+  },
+];
+
+function showOnboarding() {
+  if (localStorage.getItem('pk_onboarded')) return;
+  onboardingStep = 0;
+  renderOnboardingSlide();
+}
+
+function renderOnboardingSlide() {
+  const existing = document.getElementById('onboarding-overlay');
+  if (existing) existing.remove();
+  const slide = ONBOARDING_SLIDES[onboardingStep];
+  const isLast = onboardingStep === ONBOARDING_SLIDES.length - 1;
+  const el = document.createElement('div');
+  el.id = 'onboarding-overlay';
+  el.className = 'onboarding-overlay';
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:0.5px solid var(--border);">
+      <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
+      <button class="onboarding-skip" onclick="completeOnboarding()">Skip</button>
+    </div>
+    <div class="onboarding-slide">
+      <div class="onboarding-icon">${slide.icon}</div>
+      <div class="onboarding-step">${slide.step}</div>
+      <div class="onboarding-title">${slide.title}</div>
+      <div class="onboarding-body">${slide.body}</div>
+      <div class="onboarding-example">${slide.example}</div>
+      <div class="onboarding-dots">
+        ${ONBOARDING_SLIDES.map((_, i) => `<div class="onboarding-dot${i === onboardingStep ? ' active' : ''}"></div>`).join('')}
+      </div>
+      <button class="onboarding-btn" onclick="${isLast ? 'completeOnboarding()' : 'nextOnboardingSlide()'}">
+        ${isLast ? 'Start Using Parlay Killer' : 'Next →'}
+      </button>
+    </div>
+  `;
+  document.body.appendChild(el);
+}
+
+function nextOnboardingSlide() {
+  onboardingStep++;
+  if (onboardingStep >= ONBOARDING_SLIDES.length) { completeOnboarding(); return; }
+  renderOnboardingSlide();
+}
+
+function completeOnboarding() {
+  localStorage.setItem('pk_onboarded', '1');
+  const el = document.getElementById('onboarding-overlay');
+  if (el) el.remove();
+}
+
+/* ── DELETE ACCOUNT ─────────────────────────────────────── */
+function confirmDeleteAccount() {
+  showModal(`
+    <div class="modal-logo"><div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-title">Delete Account</div>
+    <div class="modal-game-info" style="color:var(--avoid);margin-bottom:16px;">This cannot be undone.</div>
+    <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:20px;">
+      Deleting your account will permanently remove:
+      <ul style="margin-top:8px;padding-left:16px;display:flex;flex-direction:column;gap:4px;">
+        <li>Your profile and login credentials</li>
+        <li>Your subscription and billing history</li>
+        <li>All alerts and tracked games</li>
+        <li>Your bet history and record</li>
+      </ul>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label class="modal-label">Type DELETE to confirm</label>
+      <input class="modal-input" type="text" id="delete-confirm-input" placeholder="DELETE" autocomplete="off">
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn" style="background:var(--avoid);color:#fff;border-color:var(--avoid);" onclick="submitDeleteAccount()">Delete My Account</button>
+    </div>
+  `);
+}
+
+async function submitDeleteAccount() {
+  const input = document.getElementById('delete-confirm-input');
+  if (!input || input.value.trim() !== 'DELETE') {
+    if (input) { input.style.borderColor = 'var(--avoid)'; input.placeholder = 'Type DELETE exactly'; }
+    return;
+  }
+  try {
+    const r = await fetch('/api/auth/delete-account', { method: 'DELETE', credentials: 'include' });
+    if (r.ok) {
+      closeModal();
+      localStorage.clear();
+      window.location.href = '/';
+    } else {
+      const data = await r.json();
+      alert(data.error || 'Something went wrong. Try again.');
+    }
+  } catch(e) {
+    alert('Something went wrong. Try again.');
+  }
+}
+
+/* ── PWA INSTALL PROMPT ─────────────────────────────────── */
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  setTimeout(showInstallPrompt, 30000);
+});
+
+function showInstallPrompt() {
+  if (!deferredInstallPrompt) return;
+  if (localStorage.getItem('pk_install_dismissed')) return;
+  const banner = document.createElement('div');
+  banner.id = 'install-banner';
+  banner.style.cssText = 'position:fixed;bottom:64px;left:0;right:0;max-width:480px;margin:0 auto;background:var(--s1);border-top:2px solid var(--blue);border-bottom:0.5px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:500;';
+  banner.innerHTML = `
+    <div>
+      <div style="font-size:12px;font-weight:500;color:var(--white);margin-bottom:2px;">Add to Home Screen</div>
+      <div style="font-size:11px;color:var(--dim);">Install Parlay Killer for quick access during games</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button onclick="dismissInstallPrompt()" style="font-size:11px;color:var(--dim);background:none;border:none;cursor:pointer;padding:4px;">Not now</button>
+      <button onclick="triggerInstallPrompt()" style="font-size:11px;font-weight:500;color:var(--navy);background:var(--blue);border:none;border-radius:2px;padding:8px 14px;cursor:pointer;">Install</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+}
+
+async function triggerInstallPrompt() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const result = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  dismissInstallPrompt();
+}
+
+function dismissInstallPrompt() {
+  localStorage.setItem('pk_install_dismissed', '1');
+  const banner = document.getElementById('install-banner');
+  if (banner) banner.remove();
+}
+
+/* ── AUTO REFRESH ───────────────────────────────────────── */
+function initAutoRefresh() {
+  setInterval(async () => {
+    if (activeNavTab !== 'board') return;
+    if (document.hidden) return;
+    try {
+      await loadLiveGames();
+      renderHomeContent();
+    } catch(e) {}
+  }, 30000);
+
+  document.addEventListener('visibilitychange', async () => {
+    if (!document.hidden && activeNavTab === 'board') {
+      try {
+        await loadLiveGames();
+        renderHomeContent();
+      } catch(e) {}
+    }
+  });
+}
+
 async function initApp() {
   initTheme();
   try {
@@ -1816,6 +2187,8 @@ async function initApp() {
     await loadLiveGames();
     renderBoard();
     showBoardTabs();
+    initAutoRefresh();
+    showOnboarding();
   } catch(e) { window.location.href = '/'; }
 }
 
@@ -1893,8 +2266,19 @@ function renderBoard() {
   const threshold = 72;
 
   const scr = document.getElementById('s-home');
-  const indicator = document.getElementById('ptr-indicator');
-  const label = document.getElementById('ptr-label');
+  if (!scr) return;
+
+  function getOrCreateIndicator() {
+    let indicator = document.getElementById('ptr-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.id = 'ptr-indicator';
+      indicator.className = 'ptr-indicator';
+      indicator.innerHTML = '<div class="ptr-spinner"></div><span id="ptr-label">Pull to refresh</span>';
+      scr.insertBefore(indicator, scr.firstChild);
+    }
+    return indicator;
+  }
 
   scr.addEventListener('touchstart', (e) => {
     if (scr.scrollTop === 0) {
@@ -1907,7 +2291,9 @@ function renderBoard() {
     if (!isPulling || isRefreshing) return;
     const dy = e.touches[0].clientY - startY;
     if (dy > 10) {
+      const indicator = getOrCreateIndicator();
       indicator.classList.add('visible');
+      const label = document.getElementById('ptr-label');
       if (label) label.textContent = dy > threshold ? 'Release to refresh' : 'Pull to refresh';
     }
   }, { passive: true });
@@ -1916,19 +2302,35 @@ function renderBoard() {
     if (!isPulling || isRefreshing) return;
     isPulling = false;
     const dy = e.changedTouches[0].clientY - startY;
+
     if (dy > threshold) {
       isRefreshing = true;
+      const indicator = getOrCreateIndicator();
+      const label = document.getElementById('ptr-label');
       if (label) label.textContent = 'Refreshing…';
+
       try {
-        await loadLiveGames();
-        renderBoard();
-      } catch(err) {}
+        if (activeNavTab === 'board') {
+          await loadLiveGames();
+          renderBoard();
+        } else if (activeNavTab === 'news') {
+          await renderNewsTab();
+        } else if (activeNavTab === 'alerts') {
+          renderAlerts();
+        } else if (activeNavTab === 'account') {
+          renderAccount();
+        }
+      } catch(err) {
+        console.error('Refresh error:', err);
+      }
+
       setTimeout(() => {
         indicator.classList.remove('visible');
         isRefreshing = false;
       }, 800);
     } else {
-      indicator.classList.remove('visible');
+      const indicator = document.getElementById('ptr-indicator');
+      if (indicator) indicator.classList.remove('visible');
     }
   }, { passive: true });
 })();
