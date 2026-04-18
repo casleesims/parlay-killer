@@ -2305,46 +2305,38 @@ async function loadLiveGames() {
 }
 
 function liveGameToCard(g) {
-  const now = new Date();
-  const commence = new Date(g.commenceTime);
-  const diffMins = (commence - now) / (1000 * 60);
-  let periodLabel, clockLabel;
-  if (g.status === 'live') {
-    periodLabel = 'LIVE'; clockLabel = '';
-  } else if (diffMins < 60) {
-    periodLabel = 'Starting soon'; clockLabel = Math.round(diffMins) + ' min';
-  } else {
-    periodLabel = commence.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short' });
-    clockLabel = '';
-  }
-  const isMLB = g.sport === 'MLB';
-  const base = {
+  return {
     id: g.id,
-    title: g.awayTeam + ' @ ' + g.homeTeam,
-    sport: g.sport || 'NBA',
-    away: g.awayAbbr, home: g.homeAbbr,
-    awayScore: '–', homeScore: '–',
-    awayRec: '', homeRec: '',
-    period: periodLabel, clock: clockLabel,
-    totalSoFar: 0, marketTotal: g.marketTotal,
-    baseEdge: 0, side: 'TBD',
-    edgeColor: 'var(--dim)',
-    badge: g.status === 'live' ? 'LIVE' : 'PREGAME',
-    network: g.sport || '',
+    title: g.title,
+    sport: g.sport,
+    away: g.away,
+    home: g.home,
+    awayTeam: g.awayTeam,
+    homeTeam: g.homeTeam,
+    awayScore: g.awayScore,
+    homeScore: g.homeScore,
+    awayRec: g.awayRec || '',
+    homeRec: g.homeRec || '',
+    period: g.period,
+    clock: g.clock,
+    totalSoFar: g.totalSoFar,
+    marketTotal: g.marketTotal,
+    baseEdge: g.baseEdge,
+    side: g.side,
+    edgeColor: g.edgeColor,
+    badge: g.badge,
+    network: g.network,
     status: g.status,
-    books: g.books,
-    qtrs: [], awayPlayers: [], homePlayers: [],
-    isLive: false,
+    books: g.books || [],
+    commenceTime: g.commenceTime,
+    isMLB: g.isMLB,
+    maxSecs: g.maxSecs,
+    secsRemaining: g.secsRemaining,
+    inningsRemaining: g.inningsRemaining,
+    qtrs: g.qtrs || [],
+    awayPlayers: g.awayPlayers || [],
+    homePlayers: g.homePlayers || [],
   };
-  if (isMLB) {
-    return { ...base, isMLB: true, currentInning: 1, isBottom: false,
-      inningsRemaining: 9, maxSecs: 9, secsRemaining: 9,
-      awayPitcher: { name: 'Starting Pitcher', ip: '—', h: '—', er: '—', k: '—', bb: '—', hot: false },
-      homePitcher: { name: 'Starting Pitcher', ip: '—', h: '—', er: '—', k: '—', bb: '—', hot: false },
-      awayBatters: [], homeBatters: [],
-    };
-  }
-  return { ...base, isMLB: false, maxSecs: 720, secsRemaining: 720 };
 }
 
 function renderBoard() {
