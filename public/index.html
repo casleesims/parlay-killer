@@ -14,8 +14,8 @@
       --red: #ff453a; --amber: #f5a623; --avoid: #ff5a52;
       --white: #e8f2fb; --dim: #4a6480; --muted: #2d3d52; --navy: #0d1520;
     }
-    html { height: 100%; }
-    body { height: 100%; overflow: auto; background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-serif; }
+    html { height: 100%; overflow: hidden; }
+    body { height: 100%; overflow: hidden; background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-serif; }
 
     /* LOGO */
     .logo { display: flex; align-items: center; line-height: 1; }
@@ -24,11 +24,11 @@
     .logo-le { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--red); letter-spacing: 0.1em; margin-left: 7px; position: relative; top: 1px; }
 
     /* APP SHELL */
-    #app { position: fixed; inset: 0; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
-    #screens { position: relative; flex: 1; overflow: hidden; }
+    #app { position: fixed; inset: 0; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; overflow: hidden; }
+    #screens { position: relative; flex: 1; overflow: hidden; min-height: 0; }
 
     /* SCREENS */
-    .scr { position: absolute; inset: 0; background: var(--bg); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1); overflow-y: auto; overflow-x: hidden; padding-bottom: 56px; }
+    .scr { position: absolute; inset: 0; background: var(--bg); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1); overflow-y: auto; overflow-x: hidden; padding-bottom: 80px; -webkit-overflow-scrolling: touch; }
     .scr.active { transform: translateX(0); }
     .scr.behind { transform: translateX(-25%); pointer-events: none; }
     .scr.inactive { transform: translateX(100%); }
