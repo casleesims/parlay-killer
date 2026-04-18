@@ -1176,20 +1176,41 @@ function gameCardHTML(g) {
     </div>
     ${!isPregame ? `
     <div class="gc-projections">
-      ${wins.slice(0, 2).map(w => {
-        const p = g.isMLB
-          ? projMLBWindow(g, innings, w.i || w.s/600)
-          : projWindow(g, g.secsRemaining, w.s);
-        const unit = g.isMLB ? 'runs' : 'pts';
-        return `<div class="gc-proj-item">
-          <span class="gc-proj-label">Next ${w.l}</span>
-          <span class="gc-proj-val">${p.pts} ${unit}</span>
-        </div>`;
-      }).join('')}
-      <div class="gc-proj-item">
-        <span class="gc-proj-label">Playable to</span>
-        <span class="gc-proj-val gc-proj-playable">${m.playableTo}</span>
-      </div>
+      ${(() => {
+        const cardUsage = getFreeUsage();
+        if (cardUsage.isPro) {
+          return wins.slice(0, 2).map(w => {
+            const p = g.isMLB
+              ? projMLBWindow(g, innings, w.i || w.s/600)
+              : projWindow(g, g.secsRemaining, w.s);
+            const unit = g.isMLB ? 'runs' : 'pts';
+            return `<div class="gc-proj-item">
+              <span class="gc-proj-label">Next ${w.l}</span>
+              <span class="gc-proj-val">${p.pts} ${unit}</span>
+            </div>`;
+          }).join('') + `
+          <div class="gc-proj-item">
+            <span class="gc-proj-label">Playable to</span>
+            <span class="gc-proj-val gc-proj-playable">${m.playableTo}</span>
+          </div>`;
+        } else {
+          return `
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+              <div class="gc-proj-item" style="opacity:0.3;filter:blur(3px);pointer-events:none;flex:1;">
+                <span class="gc-proj-label">Next ${wins[0]?.l || '5:00'}</span>
+                <span class="gc-proj-val">??.?</span>
+              </div>
+              <div class="gc-proj-item" style="opacity:0.3;filter:blur(3px);pointer-events:none;flex:1;">
+                <span class="gc-proj-label">Playable to</span>
+                <span class="gc-proj-val gc-proj-playable">???.?</span>
+              </div>
+              <div style="flex-shrink:0;">
+                <button onclick="event.stopPropagation();showUpgradeWall('projections')" style="font-size:10px;font-weight:500;letter-spacing:0.04em;padding:5px 10px;background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue-border);border-radius:2px;cursor:pointer;">Pro →</button>
+              </div>
+            </div>
+          `;
+        }
+      })()}
     </div>
     ` : ''}
     ${!isPregame && Math.abs(m.edge) >= 3 ? `
@@ -1407,7 +1428,10 @@ function renderEdgeTab(el) {
         </div>
         <div class="eh-edge">
           <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
-          <div class="eh-playable">Over playable to: <span id="playable-to">${m.playableTo}</span></div>
+          <div class="eh-playable">Playable to: ${usage.isPro
+            ? `<span id="playable-to" style="color:var(--white);font-weight:500;">${m.playableTo}</span>`
+            : `<span style="filter:blur(4px);opacity:0.3;pointer-events:none;">${m.playableTo}</span><button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;margin-left:6px;">Pro →</button>`
+          }</div>
         </div>
       </div>
       <div class="conf-bar-wrap">
@@ -1438,9 +1462,24 @@ function renderEdgeTab(el) {
         </div>
       </div>
       ` : `
-      <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:14px;margin-bottom:14px;text-align:center;">
-        <div style="font-size:12px;color:var(--dim);margin-bottom:8px;">Window projections · Pro feature</div>
-        <button onclick="showUpgradeWall('windows')" style="font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:8px 16px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;">Upgrade to unlock →</button>
+      <div class="windows-section">
+        <div class="ws-label">Next window projections</div>
+        <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:20px;text-align:center;">
+          <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;opacity:0.25;filter:blur(4px);pointer-events:none;">
+            <div style="text-align:center;">
+              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next 3:00</div>
+              <div style="font-size:28px;font-weight:500;color:var(--white);">12.4</div>
+              <div style="font-size:10px;color:var(--dim);">pts expected</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next 5:00</div>
+              <div style="font-size:28px;font-weight:500;color:var(--white);">21.7</div>
+              <div style="font-size:10px;color:var(--dim);">pts expected</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--dim);margin-bottom:12px;">Window projections are a Pro feature</div>
+          <button onclick="showUpgradeWall('windows')" style="font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:10px 20px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;">Unlock with Pro →</button>
+        </div>
       </div>
       `}
       <div class="alt-line ${alt.cls}" id="alt-line">${alt.l}</div>
@@ -1466,7 +1505,10 @@ function renderEdgeTab(el) {
         <div style="font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;">% of bankroll suggested based on this edge. Half Kelly reduces variance.</div>
       </div>
       <div class="action-block">
-        <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
+        <div class="ab-playable">${usage.isPro
+          ? `Playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span>`
+          : `Playable to: <span style="filter:blur(4px);opacity:0.3;">${m.playableTo}</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;">Unlock Pro →</button>`
+        }</div>
         <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
         <div class="ab-btns">
           <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${SPORTSBOOK_LINKS[getSportsbookPref()]?.name || 'DraftKings'}</button>
@@ -1546,6 +1588,7 @@ function renderEdgeTab(el) {
 
 function renderMLBEdgeTab(el, g) {
   const innings = g.inningsRemaining || 9;
+  const usage = getFreeUsage();
   const m = calcMLBModel(g, innings);
   const wins = getMLBWindows(innings);
   const alt = getMLBAltState(innings);
@@ -1573,7 +1616,10 @@ function renderMLBEdgeTab(el, g) {
         </div>
         <div class="eh-edge">
           <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
-          <div class="eh-playable">Over playable to: <span id="playable-to">${m.playableTo}</span></div>
+          <div class="eh-playable">Playable to: ${usage.isPro
+            ? `<span id="playable-to" style="color:var(--white);font-weight:500;">${m.playableTo}</span>`
+            : `<span style="filter:blur(4px);opacity:0.3;pointer-events:none;">${m.playableTo}</span><button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;margin-left:6px;">Pro →</button>`
+          }</div>
         </div>
       </div>
       <div class="conf-bar-wrap">
@@ -1583,6 +1629,7 @@ function renderMLBEdgeTab(el, g) {
         </div>
         <div class="conf-bar-bg"><div class="conf-bar-fill ${confColor}" id="conf-fill" style="width:${m.conf}%"></div></div>
       </div>
+      ${usage.isPro ? `
       <div class="windows-section">
         <div class="ws-label">Next inning projections</div>
         <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
@@ -1592,6 +1639,27 @@ function renderMLBEdgeTab(el, g) {
           <div class="wd-note">${selWin.full ? 'Full remaining game' : 'Isolated inning window'}</div>
         </div>
       </div>
+      ` : `
+      <div class="windows-section">
+        <div class="ws-label">Next inning projections</div>
+        <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:4px;padding:20px;text-align:center;">
+          <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;opacity:0.25;filter:blur(4px);pointer-events:none;">
+            <div style="text-align:center;">
+              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next 1 inn</div>
+              <div style="font-size:28px;font-weight:500;color:var(--white);">1.2</div>
+              <div style="font-size:10px;color:var(--dim);">runs expected</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:9px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Next 2 inn</div>
+              <div style="font-size:28px;font-weight:500;color:var(--white);">2.4</div>
+              <div style="font-size:10px;color:var(--dim);">runs expected</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--dim);margin-bottom:12px;">Window projections are a Pro feature</div>
+          <button onclick="showUpgradeWall('windows')" style="font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:10px 20px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;">Unlock with Pro →</button>
+        </div>
+      </div>
+      `}
       <div class="alt-line ${alt.cls}" id="alt-line">${alt.l}</div>
       <div class="signals-section">
         <div class="sig-row"><span class="sig-name">Run pace</span><span class="sig-val ${m.pace>1.2?'green':m.pace<0.8?'red':'amber'}">${m.pace>1.2?'HIGH ↑':m.pace<0.8?'LOW ↓':'MODERATE'}</span></div>
@@ -1613,7 +1681,10 @@ function renderMLBEdgeTab(el, g) {
         <div style="font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;">% of bankroll suggested based on this edge. Half Kelly reduces variance.</div>
       </div>
       <div class="action-block">
-        <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
+        <div class="ab-playable">${usage.isPro
+          ? `Playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span>`
+          : `Playable to: <span style="filter:blur(4px);opacity:0.3;">${m.playableTo}</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;">Unlock Pro →</button>`
+        }</div>
         <div class="ab-note">Edge decays each inning — act before late-game dampening kicks in.</div>
         <div class="ab-btns">
           <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${SPORTSBOOK_LINKS[getSportsbookPref()]?.name || 'DraftKings'}</button>
@@ -1692,6 +1763,8 @@ function renderMLBEdgeTab(el, g) {
 }
 
 function onClockSlide(val) {
+  const usage = getFreeUsage();
+  if (!usage.isPro) return;
   activeGameSecs = parseInt(val);
   const g = activeGame;
   const secs = activeGameSecs;
@@ -1733,6 +1806,8 @@ function onClockSlide(val) {
 }
 
 function onInningSlide(val) {
+  const usage = getFreeUsage();
+  if (!usage.isPro) return;
   const innings = parseFloat(val);
   if (activeGame) activeGame.inningsRemaining = innings;
   const g = activeGame;
