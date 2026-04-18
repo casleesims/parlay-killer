@@ -269,6 +269,7 @@
     .fav-btn { background:none; border:none; cursor:pointer; color:var(--b2); padding:4px; transition:color 0.15s; line-height:1; }
     .fav-btn.on { color:var(--amber); }
     .fav-btn:active { opacity:0.7; }
+    .alert-badge { pointer-events: none; }
 
     /* NEWS CARDS */
     .news-card { background: var(--s1); border: 0.5px solid var(--border); border-left: 3px solid var(--border); padding:14px 16px; margin:0 0 1px; cursor:pointer; transition:border-color 0.15s; display:block; text-decoration:none; color:inherit; }
@@ -1431,52 +1432,96 @@ function renderSnapshot() {
   if (!activeGame) return;
   const g = activeGame;
   const secs = activeGameSecs;
-  const m = calcModel(g, secs);
+  const isMLB = g.isMLB || g.sport === 'MLB';
+  const m = isMLB ? calcMLBModel(g, g.inningsRemaining || 9) : calcModel(g, secs);
   const edgeSign = m.edge >= 0 ? '+' : '';
   const edgeClass = m.edge >= 0 ? 'green' : 'red';
-  const badgeClass = g.badge === 'HEATING' ? 'heating' : 'closing';
-  const wins = getWindows(secs);
-  const fullWin = wins[wins.length-1];
-  const proj = projWindow(g, secs, fullWin.s);
+  const wins = isMLB ? getMLBWindows(g.inningsRemaining || 9) : getWindows(secs);
+  const fullWin = wins[wins.length - 1];
+  const proj = isMLB ? projMLBWindow(g, g.inningsRemaining || 9, fullWin.s) : projWindow(g, secs, fullWin.s);
+  const tweetText = copyTweetText(true);
 
   document.getElementById('snapshot-content').innerHTML = `
     <div class="snapshot-wrap">
-      <div class="share-card">
-        <div class="sc-logo">
-          <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
+      <div class="share-card" style="background:#1a2535;border:1px solid #2d3d52;border-top:3px solid ${m.edge>=0?'#4da6ff':'#ff453a'};border-radius:8px;padding:20px;margin-bottom:16px;color:#e8f2fb;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;color:#4da6ff;">PARLAY<span style="color:#e8f2fb;">KILLER</span></div>
+          <div style="font-size:9px;letter-spacing:0.15em;color:#4a6480;text-transform:uppercase;">Live Edge</div>
         </div>
-        <div class="sc-title">${g.title}</div>
-        <div class="sc-meta">${g.period} · ${g.clock} · ${g.network}</div>
-        <div class="sc-score">${g.away} ${g.awayScore} – ${g.homeScore} ${g.home}</div>
-        <div class="sc-row">
-          <div><div class="sc-row-label">Market</div><div class="sc-row-val">${g.marketTotal}</div></div>
-          <div><div class="sc-row-label">Model</div><div class="sc-row-val green">${m.model}</div></div>
-          <div><div class="sc-row-label">Conf</div><div class="sc-row-val">${m.conf}%</div></div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;color:#e8f2fb;">${g.title}</div>
+        <div style="font-size:11px;color:#4a6480;margin-bottom:12px;">${g.period} · ${g.clock}${g.network?' · '+g.network:''}</div>
+        <div style="font-size:20px;font-weight:900;text-align:center;margin-bottom:12px;letter-spacing:0.04em;">${g.away} ${g.awayScore} – ${g.homeScore} ${g.home}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div style="background:#0d1520;border-radius:4px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#4a6480;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Market</div>
+            <div style="font-size:15px;font-weight:700;color:#e8f2fb;">${g.marketTotal}</div>
+          </div>
+          <div style="background:#0d1520;border-radius:4px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#4a6480;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Model</div>
+            <div style="font-size:15px;font-weight:700;color:#4da6ff;">${m.model}</div>
+          </div>
+          <div style="background:#0d1520;border-radius:4px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#4a6480;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Conf</div>
+            <div style="font-size:15px;font-weight:700;color:#e8f2fb;">${m.conf}%</div>
+          </div>
         </div>
-        <div class="sc-edge ${edgeClass}">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
-        <div class="sc-window">Next ${fullWin.l} → <span>${proj.pts} pts expected</span></div>
-        <div class="conf-bar-wrap">
-          <div class="conf-bar-bg"><div class="conf-bar-fill green" style="width:${m.conf}%"></div></div>
+        <div style="text-align:center;font-size:18px;font-weight:900;letter-spacing:0.08em;color:${m.edge>=0?'#4da6ff':'#ff453a'};margin-bottom:8px;">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
+        <div style="font-size:11px;color:#4a6480;text-align:center;margin-bottom:12px;">Next ${fullWin.l} → ${proj.pts} ${isMLB?'runs':'pts'} projected</div>
+        <div style="background:#0d1520;border-radius:2px;height:4px;overflow:hidden;margin-bottom:8px;">
+          <div style="height:100%;width:${m.conf}%;background:${m.edge>=0?'#4da6ff':'#ff453a'};"></div>
         </div>
-        <div class="sc-badge-row"><span class="sc-badge ${badgeClass}">${g.badge}</span></div>
-        <div class="sc-watermark">PARLAYKILLERAPP.COM</div>
+        <div style="font-size:9px;letter-spacing:0.2em;text-align:center;color:#253042;text-transform:uppercase;">PARLAYKILLERAPP.COM</div>
       </div>
-      <div class="share-note">Screenshot this card. Post the result after the game.</div>
-      <div class="share-btns">
-        <button class="share-btn-el green" onclick="shareToX()">Share to X</button>
-        <button class="share-btn-el ghost">Copy Image</button>
+      <div style="font-size:12px;color:var(--dim);text-align:center;margin-bottom:14px;">Screenshot this card and post the result.</div>
+      <button class="share-btn-el green" style="width:100%;margin-bottom:10px;" onclick="shareToX()">Post to X</button>
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;">Tweet text</div>
+        <div id="tweet-preview" style="font-size:12px;color:var(--text-primary);line-height:1.6;white-space:pre-wrap;">${tweetText}</div>
       </div>
+      <button class="share-btn-el ghost" style="width:100%;" onclick="copyTweetTextToClipboard()">Copy Tweet Text</button>
     </div>
   `;
 }
 
-function shareToX() {
-  if (!activeGame) return;
+function copyTweetText(returnOnly) {
+  if (!activeGame) return '';
   const g = activeGame;
-  const m = calcModel(g, activeGameSecs);
+  const secs = activeGameSecs;
+  const isMLB = g.isMLB || g.sport === 'MLB';
+  const m = isMLB ? calcMLBModel(g, g.inningsRemaining || 9) : calcModel(g, secs);
   const sign = m.edge >= 0 ? '+' : '';
-  const txt = encodeURIComponent(`${g.title} | ${g.period} · ${g.clock}\nMarket: ${g.marketTotal} | Model: ${m.model}\nEDGE: ${sign}${m.edge} ${g.side}\n\nvia @ParlayKillerApp`);
-  window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
+  const wins = isMLB ? getMLBWindows(g.inningsRemaining || 9) : getWindows(secs);
+  const next = wins[0];
+  const proj = isMLB ? projMLBWindow(g, g.inningsRemaining || 9, next.s) : projWindow(g, secs, next.s);
+  const unit = isMLB ? 'runs' : 'pts';
+  const txt = `${g.title} | ${g.period} · ${g.clock}\nMarket: ${g.marketTotal} | Model: ${m.model} | Conf: ${m.conf}%\nEDGE: ${sign}${m.edge} ${g.side}\nNext ${next.l} → ${proj.pts} ${unit} projected\n\nvia @ParlayKillerApp`;
+  if (returnOnly) return txt;
+  return txt;
+}
+
+function copyTweetTextToClipboard() {
+  const txt = copyTweetText();
+  if (!txt) return;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  }).catch(() => {
+    // fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+function shareToX() {
+  const txt = copyTweetText();
+  if (!txt) return;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`, '_blank');
 }
 
 /* ── ACCOUNT ────────────────────────────────────────────── */
@@ -1610,9 +1655,66 @@ function openTrackModal(gameId) {
 }
 
 function confirmTrack(gameId) {
+  if (!window.__tracked) window.__tracked = {};
+  const g = getGameById(gameId) || GAMES[gameId];
+  if (!g) { closeModal(); return; }
   if (!favorites.includes(gameId)) favorites.push(gameId);
+  const isMLB = g.isMLB || g.sport === 'MLB';
+  const m = isMLB ? calcMLBModel(g, g.inningsRemaining || 9) : calcModel(g, g.secsRemaining);
+  window.__tracked[gameId] = {
+    gameId,
+    title: g.title,
+    marketTotal: g.marketTotal,
+    lastEdge: m.edge,
+    lastSide: m.side || g.side,
+  };
   closeModal();
-  showConfirmModal('✓', 'Tracking Started', `You'll be notified when the edge changes on ${GAMES[gameId]?.title || 'this game'}.`);
+  showConfirmModal('✓', 'Now Tracking', `Edge changes on ${g.title} will appear in your Alerts tab.`);
+  startTrackingUpdates();
+}
+
+function startTrackingUpdates() {
+  if (window.__trackInterval) return; // already running
+  window.__trackInterval = setInterval(() => {
+    if (!window.__tracked || !Object.keys(window.__tracked).length) return;
+    Object.values(window.__tracked).forEach(t => {
+      const g = getGameById(t.gameId) || GAMES[t.gameId];
+      if (!g) return;
+      const isMLB = g.isMLB || g.sport === 'MLB';
+      const m = isMLB ? calcMLBModel(g, g.inningsRemaining || 9) : calcModel(g, g.secsRemaining);
+      if (m.edge !== t.lastEdge || (m.side || g.side) !== t.lastSide) {
+        const sign = m.edge >= 0 ? '+' : '';
+        addAlert({
+          gameId: t.gameId,
+          title: t.title,
+          msg: `Edge moved: ${sign}${m.edge} ${m.side || g.side}`,
+          color: m.edge >= 3 ? 'green' : m.edge <= -3 ? 'red' : 'amber',
+          time: 'Just now',
+        });
+        t.lastEdge = m.edge;
+        t.lastSide = m.side || g.side;
+      }
+    });
+  }, 30000);
+}
+
+function addAlert(alert) {
+  alerts.unshift(alert);
+  // Show badge on alerts nav button
+  const btn = document.getElementById('bn-alerts');
+  if (btn) {
+    let badge = btn.querySelector('.alert-badge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'alert-badge';
+      badge.style.cssText = 'position:absolute;top:2px;right:10px;background:#ff453a;color:#fff;font-size:9px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px;pointer-events:none;';
+      btn.style.position = 'relative';
+      btn.appendChild(badge);
+    }
+    const unread = alerts.length;
+    badge.textContent = unread > 9 ? '9+' : String(unread);
+    badge.style.display = 'flex';
+  }
 }
 
 function openAlertModal(gameId) {
@@ -1643,14 +1745,45 @@ function openAlertModal(gameId) {
 }
 
 function confirmAlert(gameId) {
-  const g = GAMES[gameId];
-  if (g) {
-    const m = calcModel(g, g.secsRemaining);
-    const sign = m.edge >= 0 ? '+' : '';
-    alerts.push({ gameId, title: g.title, msg: `Edge: ${sign}${m.edge} ${g.side}`, color: g.edgeColor, time: 'Just now' });
+  if (!window.__alertThresholds) window.__alertThresholds = {};
+  const g = getGameById(gameId) || GAMES[gameId];
+  if (!g) { closeModal(); return; }
+
+  // Read selected threshold pills from the modal
+  const pills = document.querySelectorAll('.modal-pill.on');
+  const thresholds = Array.from(pills).map(p => p.textContent.trim());
+  const edgeThreshold = thresholds.find(t => t.startsWith('Edge >'));
+  const threshold = edgeThreshold ? parseFloat(edgeThreshold.replace('Edge > ', '')) : 5;
+
+  window.__alertThresholds[gameId] = { gameId, title: g.title, threshold };
+
+  // Start polling for threshold crossings
+  if (!window.__alertPollInterval) {
+    window.__alertPollInterval = setInterval(() => {
+      if (!window.__alertThresholds) return;
+      Object.values(window.__alertThresholds).forEach(t => {
+        const game = getGameById(t.gameId) || GAMES[t.gameId];
+        if (!game) return;
+        const isMLB = game.isMLB || game.sport === 'MLB';
+        const m = isMLB ? calcMLBModel(game, game.inningsRemaining || 9) : calcModel(game, game.secsRemaining);
+        if (Math.abs(m.edge) >= t.threshold) {
+          const sign = m.edge >= 0 ? '+' : '';
+          addAlert({
+            gameId: t.gameId,
+            title: t.title,
+            msg: `Edge threshold hit: ${sign}${m.edge} ${m.side || game.side}`,
+            color: 'green',
+            time: 'Just now',
+          });
+          // Remove after firing so it doesn't spam
+          delete window.__alertThresholds[t.gameId];
+        }
+      });
+    }, 30000);
   }
+
   closeModal();
-  showConfirmModal('🔔', 'Alert Set', `We'll notify you when the edge threshold is crossed.`);
+  showConfirmModal('🔔', 'Alert Set', `You'll be alerted when edge crosses ${threshold} on ${g.title}.`);
 }
 
 function showModal(html) {
