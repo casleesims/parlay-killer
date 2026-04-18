@@ -1506,7 +1506,8 @@ function renderEdgeTab(el) {
           <span class="collapse-arrow" id="arrow-context">▼</span>
         </div>
         <div id="collapse-context" class="collapse-body" style="display:none;">
-          <div class="context-row"><span class="context-label">Pre-game total</span><span class="context-val">${g.marketTotal}</span></div>
+          <div class="context-row"><span class="context-label">Pre-game total</span><span class="context-val">${g.pregameTotal ? g.pregameTotal : g.status === 'live' ? '<span style="color:var(--dim);font-size:11px;font-style:italic;">Fetching...</span>' : g.marketTotal}</span></div>
+          ${g.pregameTotal && g.marketTotal && g.pregameTotal !== g.marketTotal ? `<div class="context-row"><span class="context-label">Line movement</span><span class="context-val" style="color:${g.marketTotal > g.pregameTotal ? 'var(--blue)' : 'var(--avoid)'}">${g.pregameTotal} → ${g.marketTotal} (${g.marketTotal > g.pregameTotal ? '+' : ''}${Math.round((g.marketTotal - g.pregameTotal) * 10) / 10})</span></div>` : ''}
           <div class="context-row"><span class="context-label">Current pace projects</span><span class="context-val" style="color:var(--blue)">${m.model}</span></div>
           <div class="context-row"><span class="context-label">Points scored so far</span><span class="context-val">${g.totalSoFar || (parseInt(g.awayScore)||0) + (parseInt(g.homeScore)||0)}</span></div>
           <div class="context-row"><span class="context-label">Confidence</span><span class="context-val" style="color:${m.conf >= 70 ? 'var(--blue)' : 'var(--amber)'}">${m.conf}%</span></div>
@@ -1652,7 +1653,8 @@ function renderMLBEdgeTab(el, g) {
           <span class="collapse-arrow" id="arrow-context">▼</span>
         </div>
         <div id="collapse-context" class="collapse-body" style="display:none;">
-          <div class="context-row"><span class="context-label">Pre-game total</span><span class="context-val">${g.marketTotal}</span></div>
+          <div class="context-row"><span class="context-label">Pre-game total</span><span class="context-val">${g.pregameTotal ? g.pregameTotal : g.status === 'live' ? '<span style="color:var(--dim);font-size:11px;font-style:italic;">Fetching...</span>' : g.marketTotal}</span></div>
+          ${g.pregameTotal && g.marketTotal && g.pregameTotal !== g.marketTotal ? `<div class="context-row"><span class="context-label">Line movement</span><span class="context-val" style="color:${g.marketTotal > g.pregameTotal ? 'var(--blue)' : 'var(--avoid)'}">${g.pregameTotal} → ${g.marketTotal} (${g.marketTotal > g.pregameTotal ? '+' : ''}${Math.round((g.marketTotal - g.pregameTotal) * 10) / 10})</span></div>` : ''}
           <div class="context-row"><span class="context-label">Current pace projects</span><span class="context-val" style="color:var(--blue)">${m.model}</span></div>
           <div class="context-row"><span class="context-label">Runs scored so far</span><span class="context-val">${g.totalSoFar || (parseInt(g.awayScore)||0) + (parseInt(g.homeScore)||0)}</span></div>
           <div class="context-row"><span class="context-label">Confidence</span><span class="context-val" style="color:${m.conf >= 70 ? 'var(--blue)' : 'var(--amber)'}">${m.conf}%</span></div>

@@ -11,6 +11,67 @@ const SCORES_CACHE_MS = 45 * 1000;
 let liveOddsCache = { nba: null, mlb: null, lastFetch: 0 };
 const LIVE_ODDS_CACHE_MS = 90 * 1000;
 
+const pregameTotalCache = {};
+
+async function fetchPregameTotal(gameId, sport, commenceTime) {
+  if (pregameTotalCache[gameId]) return pregameTotalCache[gameId];
+
+  try {
+    const apiKey = process.env.ODDS_API_KEY;
+    const commence = new Date(commenceTime);
+    const fiveMinBefore = new Date(commence.getTime() - 5 * 60 * 1000);
+    const dateStr = fiveMinBefore.toISOString();
+    const sportKey = sport === 'MLB' ? 'baseball_mlb' : 'basketball_nba';
+
+    const url = `https://api.the-odds-api.com/v4/historical/sports/${sportKey}/odds?apiKey=${apiKey}&regions=us&markets=totals&oddsFormat=american&date=${dateStr}`;
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      console.error(`[Pregame] HTTP ${res.status} for game ${gameId}`);
+      return null;
+    }
+
+    const data = await res.json();
+    const games = data.data || [];
+    const game = games.find(g => g.id === gameId);
+
+    if (!game) {
+      console.log(`[Pregame] Game ${gameId} not found in historical snapshot`);
+      return null;
+    }
+
+    let pregameTotal = null;
+    const bookPriority = ['draftkings', 'fanduel', 'betmgm', 'caesars', 'bovada'];
+
+    for (const bookKey of bookPriority) {
+      const bk = game.bookmakers?.find(b => b.key === bookKey);
+      if (bk) {
+        const totalsMarket = bk.markets?.find(m => m.key === 'totals');
+        const over = totalsMarket?.outcomes?.find(o => o.name === 'Over');
+        if (over?.point) {
+          pregameTotal = over.point;
+          console.log(`[Pregame] Game ${gameId} · Pre-game total: ${pregameTotal} (${bk.title})`);
+          break;
+        }
+      }
+    }
+
+    if (!pregameTotal) {
+      for (const bk of (game.bookmakers || [])) {
+        const totalsMarket = bk.markets?.find(m => m.key === 'totals');
+        const over = totalsMarket?.outcomes?.find(o => o.name === 'Over');
+        if (over?.point) { pregameTotal = over.point; break; }
+      }
+    }
+
+    if (pregameTotal) pregameTotalCache[gameId] = pregameTotal;
+    return pregameTotal;
+  } catch(err) {
+    console.error(`[Pregame] Error fetching game ${gameId}:`, err.message);
+    return null;
+  }
+}
+
 async function fetchLiveScores() {
   const now = Date.now();
   if (now - scoresCache.lastFetch < SCORES_CACHE_MS) return scoresCache;
@@ -62,6 +123,11 @@ function mergeGameData(scoresData, oddsData, sport) {
     const isLive = !game.completed && commence <= now;
     const isUpcoming = commence > now;
     if (game.completed) return;
+
+    if (isLive && !pregameTotalCache[game.id]) {
+      fetchPregameTotal(game.id, sport.toUpperCase(), game.commence_time)
+        .catch(err => console.error('[Pregame background fetch]', err.message));
+    }
 
     const oddsGame = oddsMap[game.id];
     let marketTotal = null;
@@ -180,6 +246,7 @@ function mergeGameData(scoresData, oddsData, sport) {
       clock,
       totalSoFar,
       marketTotal: marketTotal || defaultTotal,
+      pregameTotal: pregameTotalCache[game.id] || null,
       baseEdge,
       side: baseEdge >= 0 ? 'OVER' : 'UNDER',
       edgeColor: baseEdge >= 3 ? '#4da6ff' : baseEdge <= -3 ? '#ff5a52' : '#f5a623',
