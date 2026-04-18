@@ -126,9 +126,11 @@ function mergeGameData(scoresData, oddsData, sport) {
 
     if (isUpcoming) {
       const diffMins = (commence - now) / 60000;
+      const dayLabel = commence.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/New_York' });
+      const timeLabel = commence.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' });
       clock = diffMins < 60
         ? Math.round(diffMins) + ' min'
-        : commence.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' });
+        : `${dayLabel} ${timeLabel}`;
     }
 
     let baseEdge = 0;
