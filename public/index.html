@@ -1699,7 +1699,7 @@ function renderAccount() {
           ` : `<div style="padding:14px 16px;font-size:12px;color:var(--dim);font-style:italic;">No pending results. Log a bet from any game view.</div>`}
         </div>
       </div>
-      ${!isPro?`<button class="acc-btn green" onclick="window.location.href='/api/billing/create-checkout-session'">Upgrade to Live Edge Pro</button>`:''}
+      ${!isPro?`<button class="acc-btn green" onclick="startCheckout('monthly')">Upgrade to Live Edge Pro</button>`:''}
       <button class="acc-btn outline" onclick="signOut()">Sign Out</button>
       <button class="acc-btn" onclick="confirmDeleteAccount()" style="background:none;border:0.5px solid var(--avoid);color:var(--avoid);margin-top:4px;">Delete Account</button>
     </div>
@@ -1713,6 +1713,25 @@ async function signOut() {
   window.location.href = '/';
 }
 
+async function startCheckout(priceType) {
+  try {
+    const plan = priceType || 'monthly';
+    const r = await fetch('/api/billing/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ plan }),
+    });
+    const data = await r.json();
+    if (r.status === 401) { window.location.href = '/'; return; }
+    if (!r.ok) { alert(data.error || 'Could not start checkout. Please try again.'); return; }
+    if (data.url) { window.location.href = data.url; }
+    else { alert('Could not start checkout. Please try again.'); }
+  } catch(e) {
+    alert('Something went wrong. Please try again.');
+  }
+}
+
 /* ── UPGRADE BANNER ─────────────────────────────────────── */
 function showUpgradeBanner(message) {
   const existing = document.getElementById('upgrade-banner');
@@ -1720,7 +1739,7 @@ function showUpgradeBanner(message) {
   const b = document.createElement('div');
   b.id = 'upgrade-banner';
   b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:var(--blue);color:var(--navy);font-size:11px;font-weight:500;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:999;letter-spacing:0.06em;font-family:DM Sans,sans-serif;max-width:480px;margin:0 auto;';
-  b.innerHTML = `<span>${message}</span><button onclick="window.location.href='/api/billing/create-checkout-session'" style="background:var(--navy);color:var(--blue);border:none;font-size:10px;font-weight:500;padding:4px 10px;cursor:pointer;letter-spacing:0.08em;">UPGRADE</button>`;
+  b.innerHTML = `<span>${message}</span><button onclick="startCheckout('monthly')" style="background:var(--navy);color:var(--blue);border:none;font-size:10px;font-weight:500;padding:4px 10px;cursor:pointer;letter-spacing:0.08em;">UPGRADE</button>`;
   document.body.prepend(b);
   setTimeout(() => b.remove(), 6000);
 }
