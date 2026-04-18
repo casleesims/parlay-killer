@@ -1196,7 +1196,6 @@ function renderGameView() {
     <div class="qtr-chart">${qtrBars}</div>
     <div class="tabs">
       <button class="tab active" id="gtab-edge" onclick="switchGameTab('edge')">Edge</button>
-      <button class="tab" id="gtab-box" onclick="switchGameTab('box')">Box Score</button>
     </div>
     <div id="game-tab-content"></div>
   `;
@@ -1205,17 +1204,16 @@ function renderGameView() {
 }
 
 function switchGameTab(t) {
-  activeTab = t;
-  document.getElementById('gtab-edge').classList.toggle('active', t === 'edge');
-  document.getElementById('gtab-box').classList.toggle('active', t === 'box');
+  activeTab = 'edge';
+  const edgeTab = document.getElementById('gtab-edge');
+  if (edgeTab) edgeTab.classList.add('active');
   renderGameTabContent();
 }
 
 function renderGameTabContent() {
   const el = document.getElementById('game-tab-content');
   if (!el) return;
-  if (activeTab === 'edge') renderEdgeTab(el);
-  else renderBoxTab(el);
+  renderEdgeTab(el);
 }
 
 function renderEdgeTab(el) {
@@ -1681,7 +1679,7 @@ function copyTweetText(returnOnly) {
   const next = wins[0];
   const proj = isMLB ? projMLBWindow(g, g.inningsRemaining || 9, next.s) : projWindow(g, secs, next.s);
   const unit = isMLB ? 'runs' : 'pts';
-  const txt = `${g.title} | ${g.period} · ${g.clock}\nPre game: ${g.marketTotal} | Current pace: ${m.model} | Conf: ${m.conf}%\nEDGE: ${sign}${m.edge} ${g.side}\nNext ${next.l} → ${proj.pts} ${unit} projected\n\nvia @ParlayKillerApp`;
+  const txt = `${g.title} | ${g.period} · ${g.clock}\nCurrent line: ${g.marketTotal} | Current pace: ${m.model} | Conf: ${m.conf}%\nEDGE: ${sign}${m.edge} ${g.side}\nNext ${next.l} → ${proj.pts} ${unit} projected\n\nvia @ParlayKillerApp`;
   if (returnOnly) return txt;
   return txt;
 }
