@@ -584,7 +584,6 @@ let activeWinIdx = 0;
 let homeTab = 'live';
 let activeSportTab = 'all';
 let activeNavTab = 'board';
-let favorites = [];
 let alerts = [];
 
 const SPORTSBOOK_LINKS = {
@@ -1204,8 +1203,7 @@ function renderEdgeTab(el) {
         <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
         <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
         <div class="ab-btns">
-          <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${(SPORTSBOOK_LINKS[getSportsbookPref()] || SPORTSBOOK_LINKS.draftkings).name}</button>
-          <button class="ab-btn" onclick="openTrackModal('${g.id}')">Track</button>
+          <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${SPORTSBOOK_LINKS[getSportsbookPref()]?.name || 'DraftKings'}</button>
           <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
           <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Log Bet</button>
           <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
@@ -1287,8 +1285,7 @@ function renderMLBEdgeTab(el, g) {
         <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
         <div class="ab-note">Edge decays each inning — act before late-game dampening kicks in.</div>
         <div class="ab-btns">
-          <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${(SPORTSBOOK_LINKS[getSportsbookPref()] || SPORTSBOOK_LINKS.draftkings).name}</button>
-          <button class="ab-btn" onclick="openTrackModal('${g.id}')">Track</button>
+          <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${SPORTSBOOK_LINKS[getSportsbookPref()]?.name || 'DraftKings'}</button>
           <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
           <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Log Bet</button>
           <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
@@ -1624,7 +1621,6 @@ function renderAccount() {
       <div class="acc-stats">
         <div class="acc-stat-row"><span class="acc-stat-label">Plan</span><span class="acc-stat-val">${isPro?'Live Edge Pro':'Free'}</span></div>
         <div class="acc-stat-row"><span class="acc-stat-label">Analyses today</span><span class="acc-stat-val">${usage}${!isPro?' / 3':''}</span></div>
-        <div class="acc-stat-row"><span class="acc-stat-label">Games tracked</span><span class="acc-stat-val">${favorites.length}</span></div>
         <div class="acc-stat-row"><span class="acc-stat-label">Active alerts</span><span class="acc-stat-val">${alerts.length}</span></div>
       </div>
       <div style="margin-bottom:20px;">
@@ -1737,75 +1733,6 @@ async function runAnalysis(game, prop) {
 }
 
 /* ── MODALS ─────────────────────────────────────────────── */
-function openTrackModal(gameId) {
-  const g = GAMES[gameId];
-  if (!g) return;
-  const m = calcModel(g, g.secsRemaining);
-  const edgeSign = m.edge >= 0 ? '+' : '';
-  const edgeClass = m.edge >= 0 ? 'green' : 'red';
-  showModal(`
-    <div class="modal-logo"><div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div></div>
-    <div class="modal-title">Track this edge</div>
-    <div class="modal-game-info">${g.title} · ${g.period} · ${g.clock}</div>
-    <div class="modal-edge ${edgeClass}">Current edge: ${edgeSign}${m.edge} ${g.side}</div>
-    <div class="modal-section-label">Notify me when:</div>
-    <div class="modal-pills">
-      <button class="modal-pill on" onclick="this.classList.toggle('on')">Edge changes</button>
-      <button class="modal-pill" onclick="this.classList.toggle('on')">Edge > 5.0</button>
-      <button class="modal-pill" onclick="this.classList.toggle('on')">Model flips</button>
-      <button class="modal-pill" onclick="this.classList.toggle('on')">Alt lines pulled</button>
-    </div>
-    <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
-      <button class="modal-btn primary" onclick="confirmTrack('${gameId}')">Start Tracking</button>
-    </div>
-  `);
-}
-
-function confirmTrack(gameId) {
-  if (!window.__tracked) window.__tracked = {};
-  const g = getGameById(gameId) || GAMES[gameId];
-  if (!g) { closeModal(); return; }
-  if (!favorites.includes(gameId)) favorites.push(gameId);
-  const isMLB = g.isMLB || g.sport === 'MLB';
-  const m = isMLB ? calcMLBModel(g, g.inningsRemaining || 9) : calcModel(g, g.secsRemaining);
-  window.__tracked[gameId] = {
-    gameId,
-    title: g.title,
-    marketTotal: g.marketTotal,
-    lastEdge: m.edge,
-    lastSide: m.side || g.side,
-  };
-  closeModal();
-  showConfirmModal('✓', 'Now Tracking', `Edge changes on ${g.title} will appear in your Alerts tab.`);
-  startTrackingUpdates();
-}
-
-function startTrackingUpdates() {
-  if (window.__trackInterval) return; // already running
-  window.__trackInterval = setInterval(() => {
-    if (!window.__tracked || !Object.keys(window.__tracked).length) return;
-    Object.values(window.__tracked).forEach(t => {
-      const g = getGameById(t.gameId) || GAMES[t.gameId];
-      if (!g) return;
-      const isMLB = g.isMLB || g.sport === 'MLB';
-      const m = isMLB ? calcMLBModel(g, g.inningsRemaining || 9) : calcModel(g, g.secsRemaining);
-      if (m.edge !== t.lastEdge || (m.side || g.side) !== t.lastSide) {
-        const sign = m.edge >= 0 ? '+' : '';
-        addAlert({
-          gameId: t.gameId,
-          title: t.title,
-          msg: `Edge moved: ${sign}${m.edge} ${m.side || g.side}`,
-          color: m.edge >= 3 ? 'green' : m.edge <= -3 ? 'red' : 'amber',
-          time: 'Just now',
-        });
-        t.lastEdge = m.edge;
-        t.lastSide = m.side || g.side;
-      }
-    });
-  }, 30000);
-}
-
 function addAlert(alert) {
   alerts.unshift(alert);
   // Show badge on alerts nav button
