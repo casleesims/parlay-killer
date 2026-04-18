@@ -122,7 +122,19 @@ function mergeGameData(scoresData, oddsData, sport) {
     let period = isLive ? 'LIVE' : 'Upcoming';
     const maxSecs = isMLB ? 9 : 2880;
     let secsRemaining = maxSecs;
-    const inningsRemaining = 9;
+    let inningsRemaining = 9;
+
+    if (isLive && totalSoFar > 0) {
+      if (isMLB) {
+        const avgRunsPerInning = 0.95;
+        const estimatedInningsPlayed = Math.min(8.5, totalSoFar / avgRunsPerInning);
+        inningsRemaining = Math.max(0.5, Math.round((9 - estimatedInningsPlayed) * 2) / 2);
+      } else {
+        const avgNBAPace = 200;
+        const estimatedPctDone = Math.min(0.92, totalSoFar / avgNBAPace);
+        secsRemaining = Math.max(60, Math.round((1 - estimatedPctDone) * 2880));
+      }
+    }
 
     if (isUpcoming) {
       const diffMins = (commence - now) / 60000;
@@ -137,14 +149,16 @@ function mergeGameData(scoresData, oddsData, sport) {
     if (isLive && marketTotal && totalSoFar > 0) {
       if (isMLB) {
         const inningsPlayed = Math.max(0.5, 9 - inningsRemaining);
-        const pace = totalSoFar / inningsPlayed;
-        const projectedTotal = totalSoFar + (pace * inningsRemaining);
-        baseEdge = Math.round((projectedTotal - marketTotal) * 10) / 10;
+        const runsPerInning = totalSoFar / inningsPlayed;
+        const projectedFinal = totalSoFar + (runsPerInning * inningsRemaining);
+        const rawEdge = projectedFinal - marketTotal;
+        baseEdge = Math.round(Math.max(-5, Math.min(5, rawEdge)) * 10) / 10;
       } else {
-        const minsPlayed = Math.max(1, (maxSecs - secsRemaining) / 60);
+        const minsPlayed = Math.max(1, (2880 - secsRemaining) / 60);
         const pace = totalSoFar / minsPlayed;
-        const projectedTotal = totalSoFar + (pace * (secsRemaining / 60));
-        baseEdge = Math.round((projectedTotal - marketTotal) * 10) / 10;
+        const projectedFinal = totalSoFar + (pace * (secsRemaining / 60));
+        const rawEdge = projectedFinal - marketTotal;
+        baseEdge = Math.round(Math.max(-15, Math.min(15, rawEdge)) * 10) / 10;
       }
     }
 
@@ -175,8 +189,8 @@ function mergeGameData(scoresData, oddsData, sport) {
       books,
       commenceTime: game.commence_time,
       isMLB,
-      maxSecs,
-      secsRemaining,
+      maxSecs: isMLB ? 9 : 2880,
+      secsRemaining: isMLB ? inningsRemaining : secsRemaining,
       inningsRemaining: isMLB ? inningsRemaining : undefined,
       qtrs: [],
       awayPlayers: [],
