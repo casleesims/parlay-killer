@@ -5,6 +5,165 @@ let cache         = { data: null, timestamp: 0 };
 let tomorrowCache = { data: null, timestamp: 0 };
 const CACHE_TTL   = 10 * 60 * 1000; // 10 minutes
 
+let scoresCache = { nba: null, mlb: null, lastFetch: 0 };
+const SCORES_CACHE_MS = 45 * 1000;
+
+let liveOddsCache = { nba: null, mlb: null, lastFetch: 0 };
+const LIVE_ODDS_CACHE_MS = 90 * 1000;
+
+async function fetchLiveScores() {
+  const now = Date.now();
+  if (now - scoresCache.lastFetch < SCORES_CACHE_MS) return scoresCache;
+  try {
+    const apiKey = process.env.ODDS_API_KEY;
+    const [nbaRes, mlbRes] = await Promise.all([
+      fetch(`https://api.the-odds-api.com/v4/sports/basketball_nba/scores?apiKey=${apiKey}&daysFrom=1`),
+      fetch(`https://api.the-odds-api.com/v4/sports/baseball_mlb/scores?apiKey=${apiKey}&daysFrom=1`),
+    ]);
+    const nbaData = nbaRes.ok ? await nbaRes.json() : [];
+    const mlbData = mlbRes.ok ? await mlbRes.json() : [];
+    scoresCache = { nba: nbaData, mlb: mlbData, lastFetch: now };
+    console.log(`[Scores] NBA: ${nbaData.length}, MLB: ${mlbData.length}`);
+  } catch(err) {
+    console.error('[Scores] Error:', err.message);
+  }
+  return scoresCache;
+}
+
+async function fetchLiveOdds() {
+  const now = Date.now();
+  if (now - liveOddsCache.lastFetch < LIVE_ODDS_CACHE_MS) return liveOddsCache;
+  try {
+    const apiKey = process.env.ODDS_API_KEY;
+    const [nbaRes, mlbRes] = await Promise.all([
+      fetch(`https://api.the-odds-api.com/v4/sports/basketball_nba/odds?apiKey=${apiKey}&regions=us&markets=totals&oddsFormat=american`),
+      fetch(`https://api.the-odds-api.com/v4/sports/baseball_mlb/odds?apiKey=${apiKey}&regions=us&markets=totals&oddsFormat=american`),
+    ]);
+    const nbaData = nbaRes.ok ? await nbaRes.json() : [];
+    const mlbData = mlbRes.ok ? await mlbRes.json() : [];
+    liveOddsCache = { nba: nbaData, mlb: mlbData, lastFetch: now };
+    console.log(`[Odds] NBA: ${nbaData.length}, MLB: ${mlbData.length}`);
+  } catch(err) {
+    console.error('[Odds] Error:', err.message);
+  }
+  return liveOddsCache;
+}
+
+function mergeGameData(scoresData, oddsData, sport) {
+  const now = new Date();
+  const games = [];
+  const isMLB = sport === 'mlb';
+
+  const oddsMap = {};
+  (oddsData || []).forEach(g => { oddsMap[g.id] = g; });
+
+  (scoresData || []).forEach(game => {
+    const commence = new Date(game.commence_time);
+    const isLive = !game.completed && commence <= now;
+    const isUpcoming = commence > now;
+    if (game.completed) return;
+
+    const oddsGame = oddsMap[game.id];
+    let marketTotal = null;
+    let books = [];
+
+    if (oddsGame) {
+      oddsGame.bookmakers.forEach(bk => {
+        const totalsMarket = bk.markets?.find(m => m.key === 'totals');
+        if (totalsMarket) {
+          const over = totalsMarket.outcomes?.find(o => o.name === 'Over');
+          if (over) {
+            books.push({ book: bk.title, total: over.point });
+            if (!marketTotal) marketTotal = over.point;
+          }
+        }
+      });
+    }
+
+    const homeScore = game.scores
+      ? parseInt(game.scores.find(s => s.name === game.home_team)?.score || '0')
+      : 0;
+    const awayScore = game.scores
+      ? parseInt(game.scores.find(s => s.name === game.away_team)?.score || '0')
+      : 0;
+    const totalSoFar = homeScore + awayScore;
+
+    const awayWords = game.away_team.split(' ');
+    const homeWords = game.home_team.split(' ');
+    const awayAbbr = TEAM_ABBR_MAP[game.away_team] || (awayWords.length > 1
+      ? (awayWords[0][0] + awayWords[awayWords.length-1].substring(0,2)).toUpperCase()
+      : game.away_team.substring(0,3).toUpperCase());
+    const homeAbbr = TEAM_ABBR_MAP[game.home_team] || (homeWords.length > 1
+      ? (homeWords[0][0] + homeWords[homeWords.length-1].substring(0,2)).toUpperCase()
+      : game.home_team.substring(0,3).toUpperCase());
+
+    let clock = '';
+    let period = isLive ? 'LIVE' : 'Upcoming';
+    const maxSecs = isMLB ? 9 : 2880;
+    let secsRemaining = maxSecs;
+    const inningsRemaining = 9;
+
+    if (isUpcoming) {
+      const diffMins = (commence - now) / 60000;
+      clock = diffMins < 60
+        ? Math.round(diffMins) + ' min'
+        : commence.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    let baseEdge = 0;
+    if (isLive && marketTotal && totalSoFar > 0) {
+      if (isMLB) {
+        const inningsPlayed = Math.max(0.5, 9 - inningsRemaining);
+        const pace = totalSoFar / inningsPlayed;
+        const projectedTotal = totalSoFar + (pace * inningsRemaining);
+        baseEdge = Math.round((projectedTotal - marketTotal) * 10) / 10;
+      } else {
+        const minsPlayed = Math.max(1, (maxSecs - secsRemaining) / 60);
+        const pace = totalSoFar / minsPlayed;
+        const projectedTotal = totalSoFar + (pace * (secsRemaining / 60));
+        baseEdge = Math.round((projectedTotal - marketTotal) * 10) / 10;
+      }
+    }
+
+    const defaultTotal = isMLB ? 8.5 : 220;
+
+    games.push({
+      id: game.id,
+      title: game.away_team + ' @ ' + game.home_team,
+      sport: sport.toUpperCase(),
+      away: awayAbbr,
+      home: homeAbbr,
+      awayTeam: game.away_team,
+      homeTeam: game.home_team,
+      awayScore: isLive ? awayScore : '–',
+      homeScore: isLive ? homeScore : '–',
+      awayRec: '',
+      homeRec: '',
+      period,
+      clock,
+      totalSoFar,
+      marketTotal: marketTotal || defaultTotal,
+      baseEdge,
+      side: baseEdge >= 0 ? 'OVER' : 'UNDER',
+      edgeColor: baseEdge >= 3 ? '#4da6ff' : baseEdge <= -3 ? '#ff5a52' : '#f5a623',
+      badge: isLive ? 'LIVE' : 'PREGAME',
+      network: sport.toUpperCase(),
+      status: isLive ? 'live' : 'upcoming',
+      books,
+      commenceTime: game.commence_time,
+      isMLB,
+      maxSecs,
+      secsRemaining,
+      inningsRemaining: isMLB ? inningsRemaining : undefined,
+      qtrs: [],
+      awayPlayers: [],
+      homePlayers: [],
+    });
+  });
+
+  return games;
+}
+
 const SPORT_NAMES = {
   americanfootball_nfl:        'NFL',
   americanfootball_ncaaf:      'NCAAF',
@@ -230,36 +389,48 @@ function formatLiveGames(games, sport) {
   }).filter(Boolean);
 }
 
-// GET /api/odds/live-games — NBA + MLB next 24h with totals
+// GET /api/odds/live-games — NBA + MLB with real scores + live odds merged
 router.get('/live-games', async (req, res) => {
-  if (!process.env.ODDS_API_KEY) {
-    return res.json({ games: [], source: 'no-key' });
-  }
-  const base = `https://api.the-odds-api.com/v4`;
   try {
-    const [nbaRaw, mlbRaw] = await Promise.all([
-      fetchWithCache(
-        `${base}/sports/basketball_nba/odds/?apiKey=${process.env.ODDS_API_KEY}&regions=us&markets=totals&oddsFormat=american`,
-        'nba-live-odds'
-      ).catch(() => []),
-      fetchWithCache(
-        `${base}/sports/baseball_mlb/odds/?apiKey=${process.env.ODDS_API_KEY}&regions=us&markets=totals&oddsFormat=american`,
-        'mlb-live-odds'
-      ).catch(() => []),
+    const [scores, odds] = await Promise.all([
+      fetchLiveScores(),
+      fetchLiveOdds(),
     ]);
 
-    const cutoff = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const games = [
-      ...formatLiveGames(nbaRaw, 'NBA'),
-      ...formatLiveGames(mlbRaw, 'MLB'),
-    ]
-      .filter(g => new Date(g.commenceTime) <= cutoff)
-      .sort((a, b) => new Date(a.commenceTime) - new Date(b.commenceTime));
+    const nbaGames = mergeGameData(scores.nba || [], odds.nba || [], 'nba');
+    const mlbGames = mergeGameData(scores.mlb || [], odds.mlb || [], 'mlb');
+    const allGames = [...nbaGames, ...mlbGames];
 
-    res.json({ games, source: 'odds-api', timestamp: new Date().toISOString() });
-  } catch (err) {
-    console.error('[Odds] live-games error:', err.message);
-    res.status(500).json({ error: err.message });
+    allGames.sort((a, b) => {
+      if (a.status === 'live' && b.status !== 'live') return -1;
+      if (b.status === 'live' && a.status !== 'live') return 1;
+      return Math.abs(b.baseEdge) - Math.abs(a.baseEdge);
+    });
+
+    res.json({
+      games: allGames,
+      source: 'live',
+      nbaCount: nbaGames.length,
+      mlbCount: mlbGames.length,
+      liveCount: allGames.filter(g => g.status === 'live').length,
+      scoresLastFetch: scores.lastFetch,
+      oddsLastFetch: odds.lastFetch,
+    });
+  } catch(err) {
+    console.error('[live-games] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch live games', games: [] });
+  }
+});
+
+// GET /api/odds/scores-only — lightweight live score polling
+router.get('/scores-only', async (req, res) => {
+  try {
+    const scores = await fetchLiveScores();
+    const liveNBA = (scores.nba || []).filter(g => !g.completed);
+    const liveMLB = (scores.mlb || []).filter(g => !g.completed);
+    res.json({ nba: liveNBA, mlb: liveMLB, lastFetch: scores.lastFetch });
+  } catch(err) {
+    res.status(500).json({ error: 'Failed to fetch scores' });
   }
 });
 

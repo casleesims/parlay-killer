@@ -2243,8 +2243,9 @@ function initAutoRefresh() {
     try {
       await loadLiveGames();
       renderHomeContent();
+      updateDesktopSidebar();
     } catch(e) {}
-  }, 30000);
+  }, 45000);
 
   document.addEventListener('visibilitychange', async () => {
     if (!document.hidden && activeNavTab === 'board') {
