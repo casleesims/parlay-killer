@@ -75,6 +75,12 @@
     .gc-edge-col { text-align: right; }
     .gc-edge-num { font-size: 13px; font-weight: 500; display: block; }
     .gc-edge-lbl { font-size: 9px; color: var(--dim); }
+    .gc-projections { display: flex; gap: 0; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+    .gc-proj-item { flex: 1; display: flex; flex-direction: column; gap: 2px; padding-right: 12px; border-right: 0.5px solid var(--border); margin-right: 12px; }
+    .gc-proj-item:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+    .gc-proj-label { font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+    .gc-proj-val { font-size: 14px; font-weight: 500; color: var(--white); margin-top: 2px; }
+    .gc-proj-playable { color: var(--blue); }
 
     /* EMPTY STATE */
     .empty-state { padding: 60px 24px; text-align: center; }
@@ -702,6 +708,8 @@ function renderAlerts() {
 function gameCardHTML(g) {
   const m = calcModel(g, g.secsRemaining);
   const isPregame = g.baseEdge === 0;
+  const innings = g.inningsRemaining || 9;
+  const wins = g.isMLB ? getMLBWindows(innings) : getWindows(g.secsRemaining);
   const diff = Math.abs(g.homeScore - g.awayScore);
   const minsPlayed = 48 - g.secsRemaining/60;
   const pace = minsPlayed > 0 ? g.totalSoFar/minsPlayed : 5.1;
@@ -776,6 +784,24 @@ function gameCardHTML(g) {
         <span class="gc-edge-lbl">model edge</span>
       </div>` : ''}
     </div>
+    ${!isPregame ? `
+    <div class="gc-projections">
+      ${wins.slice(0, 2).map(w => {
+        const p = g.isMLB
+          ? projMLBWindow(g, innings, w.i || w.s/600)
+          : projWindow(g, g.secsRemaining, w.s);
+        const unit = g.isMLB ? 'runs' : 'pts';
+        return `<div class="gc-proj-item">
+          <span class="gc-proj-label">Next ${w.l}</span>
+          <span class="gc-proj-val">${p.pts} ${unit}</span>
+        </div>`;
+      }).join('')}
+      <div class="gc-proj-item">
+        <span class="gc-proj-label">Playable to</span>
+        <span class="gc-proj-val gc-proj-playable">${m.playableTo}</span>
+      </div>
+    </div>
+    ` : ''}
   </div>`;
 }
 
