@@ -1640,11 +1640,11 @@ function renderSnapshot() {
         <div style="font-size:20px;font-weight:900;text-align:center;margin-bottom:12px;letter-spacing:0.04em;">${g.away} ${g.awayScore} – ${g.homeScore} ${g.home}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
           <div style="background:#0d1520;border-radius:4px;padding:8px;text-align:center;">
-            <div style="font-size:9px;color:#4a6480;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Market</div>
+            <div style="font-size:9px;color:#4a6480;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Pre Game</div>
             <div style="font-size:15px;font-weight:700;color:#e8f2fb;">${g.marketTotal}</div>
           </div>
           <div style="background:#0d1520;border-radius:4px;padding:8px;text-align:center;">
-            <div style="font-size:9px;color:#4a6480;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Model</div>
+            <div style="font-size:9px;color:#4a6480;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Cur Pace</div>
             <div style="font-size:15px;font-weight:700;color:#4da6ff;">${m.model}</div>
           </div>
           <div style="background:#0d1520;border-radius:4px;padding:8px;text-align:center;">
@@ -1681,7 +1681,7 @@ function copyTweetText(returnOnly) {
   const next = wins[0];
   const proj = isMLB ? projMLBWindow(g, g.inningsRemaining || 9, next.s) : projWindow(g, secs, next.s);
   const unit = isMLB ? 'runs' : 'pts';
-  const txt = `${g.title} | ${g.period} · ${g.clock}\nMarket: ${g.marketTotal} | Model: ${m.model} | Conf: ${m.conf}%\nEDGE: ${sign}${m.edge} ${g.side}\nNext ${next.l} → ${proj.pts} ${unit} projected\n\nvia @ParlayKillerApp`;
+  const txt = `${g.title} | ${g.period} · ${g.clock}\nPre game: ${g.marketTotal} | Current pace: ${m.model} | Conf: ${m.conf}%\nEDGE: ${sign}${m.edge} ${g.side}\nNext ${next.l} → ${proj.pts} ${unit} projected\n\nvia @ParlayKillerApp`;
   if (returnOnly) return txt;
   return txt;
 }
