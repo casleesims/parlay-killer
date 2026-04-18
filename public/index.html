@@ -1058,6 +1058,9 @@ function renderAlerts() {
     return;
   }
 
+  const betHistoryMap = {};
+  getBetHistory().forEach(b => { betHistoryMap[b.id] = b; });
+
   el.innerHTML = alerts.map((a, i) => {
     const isTriggered = a.type === 'triggered';
     const isWatching = a.type === 'watching';
@@ -1066,6 +1069,17 @@ function renderAlerts() {
     const badgeColor = isTriggered ? '#ff453a' : isWatching ? '#4da6ff' : isBet ? '#f5a623' : 'var(--dim)';
     const badgeBg = isTriggered ? 'rgba(255,69,58,0.1)' : isWatching ? 'rgba(77,166,255,0.1)' : isBet ? 'rgba(245,166,35,0.1)' : 'transparent';
     const badgeBorder = isTriggered ? 'rgba(255,69,58,0.3)' : isWatching ? 'rgba(77,166,255,0.3)' : isBet ? 'rgba(245,166,35,0.3)' : 'transparent';
+
+    const resolvedBet = isBet && a.betId ? betHistoryMap[a.betId] : null;
+    const isResolved = resolvedBet && resolvedBet.result !== null;
+    const isWin = resolvedBet && resolvedBet.result === 'win';
+    const shareBtn = isResolved ? `
+      <button style="font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
+        padding:6px 12px;background:var(--blue-dim);color:var(--blue);
+        border:0.5px solid var(--blue-border);border-radius:2px;cursor:pointer;"
+        onclick="renderResultShareCard(${JSON.stringify(resolvedBet).replace(/"/g, '&quot;')})">Share Result →</button>
+    ` : '';
+
     return `<div class="game-card" style="border-left:3px solid ${a.color};">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <div style="display:flex;align-items:center;gap:8px;">
@@ -1074,19 +1088,20 @@ function renderAlerts() {
         </div>
         <span style="font-size:9px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;
           color:${badgeColor};background:${badgeBg};border:0.5px solid ${badgeBorder};padding:2px 7px;border-radius:2px;">
-          ${badgeText}
+          ${isResolved ? (isWin ? 'WIN ✓' : 'LOSS') : badgeText}
         </span>
       </div>
       <div style="font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:8px;">${a.msg}</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="font-size:10px;color:var(--dim);">${a.time}</div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
           <button style="font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
             padding:6px 12px;background:var(--blue);color:var(--navy);border:none;border-radius:2px;cursor:pointer;"
             onclick="openGameView('${a.gameId}')">View Game</button>
-          ${isBet && a.betId ? `<button style="font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
+          ${isBet && a.betId && !isResolved ? `<button style="font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
             padding:6px 12px;background:none;border:0.5px solid var(--amber);color:var(--amber);border-radius:2px;cursor:pointer;"
             onclick="showResultModal(${a.betId})">Mark Result</button>` : ''}
+          ${shareBtn}
           <button style="font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
             padding:6px 12px;background:none;border:0.5px solid var(--b2);color:var(--dim);border-radius:2px;cursor:pointer;"
             onclick="alerts.splice(${i},1);saveAlerts();renderAlerts();">Dismiss</button>
@@ -2409,6 +2424,147 @@ function getStreakStats() {
   const total = wins + losses;
   const winPct = total > 0 ? Math.round((wins / total) * 100) : 0;
   return { wins, losses, pending, total, winPct, history };
+}
+
+/* ── RESULT SHARE CARD ──────────────────────────────────── */
+function renderResultShareCard(betHistory) {
+  // Normalise field names — bet history stores `total` but spec uses `market_total`
+  const h = {
+    ...betHistory,
+    market_total: betHistory.market_total ?? betHistory.total,
+    activated_at: betHistory.activated_at ?? betHistory.placedAt,
+    pregame_total: betHistory.pregame_total ?? betHistory.pregameTotal ?? null,
+    final_total: betHistory.final_total ?? betHistory.finalTotal ?? null,
+  };
+
+  const isWin = h.result === 'win';
+  const side = h.side;
+  const finalTotal = h.final_total;
+  const marketTotal = h.market_total;
+  const pregameTotal = h.pregame_total;
+  const edge = h.edge;
+  const sign = edge >= 0 ? '+' : '';
+  const title = h.title;
+  const date = new Date(h.activated_at).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', timeZone: 'America/New_York',
+  });
+
+  const resultColor = isWin ? '#4da6ff' : '#ff5a52';
+  const resultText = isWin
+    ? side === 'OVER' ? 'OVER HIT ✓' : 'UNDER HIT ✓'
+    : side === 'OVER' ? 'OVER MISSED ✗' : 'UNDER MISSED ✗';
+
+  goTo('s-snapshot');
+  document.getElementById('snapshot-content').innerHTML = `
+    <div class="snapshot-wrap">
+      <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Result Card</div>
+
+      <div id="result-share-card" style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${resultColor};border-radius:4px;padding:20px;margin-bottom:16px;font-family:'DM Sans',sans-serif;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#e8f2fb;">PARLAY<span style="color:#4da6ff;">KILLER</span></div>
+            <div style="font-size:13px;letter-spacing:0.12em;color:#ff453a;font-weight:500;">LIVE EDGE</div>
+          </div>
+          <div style="font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:${resultColor};background:${isWin ? 'rgba(77,166,255,0.1)' : 'rgba(255,90,82,0.1)'};border:0.5px solid ${resultColor};border-radius:2px;padding:3px 8px;">
+            ${isWin ? 'PREDICTION CORRECT' : 'PREDICTION MISSED'}
+          </div>
+        </div>
+
+        <div style="font-size:14px;font-weight:500;color:#e8f2fb;margin-bottom:2px;">${title}</div>
+        <div style="font-size:10px;color:#4a6480;margin-bottom:16px;">${h.period || ''} · ${date}</div>
+
+        <div style="border-top:0.5px solid #253042;border-bottom:0.5px solid #253042;padding:14px 0;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;">
+          ${pregameTotal ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Opened at</div>
+            <div style="font-size:16px;font-weight:500;color:#e8f2fb;">${pregameTotal}</div>
+          </div>` : ''}
+
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Live line when called</div>
+            <div style="font-size:16px;font-weight:500;color:#e8f2fb;">${marketTotal}</div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Parlay Killer said</div>
+            <div style="font-size:16px;font-weight:500;color:${resultColor};">${side} ${marketTotal} · ${sign}${edge} edge</div>
+          </div>
+
+          <div style="height:0.5px;background:#253042;"></div>
+
+          ${finalTotal != null ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Final total</div>
+            <div style="font-size:24px;font-weight:500;color:${resultColor};letter-spacing:-0.02em;">${finalTotal}</div>
+          </div>` : ''}
+
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Result</div>
+            <div style="font-size:16px;font-weight:500;color:${resultColor};">${resultText}</div>
+          </div>
+
+          ${finalTotal != null && isWin && side === 'UNDER' ? `
+          <div style="font-size:11px;color:#4a6480;font-style:italic;margin-top:2px;">Line was ${marketTotal} · Game finished ${Math.round((marketTotal - finalTotal) * 10) / 10} points under</div>
+          ` : finalTotal != null && isWin && side === 'OVER' ? `
+          <div style="font-size:11px;color:#4a6480;font-style:italic;margin-top:2px;">Line was ${marketTotal} · Game finished ${Math.round((finalTotal - marketTotal) * 10) / 10} points over</div>
+          ` : finalTotal != null ? `
+          <div style="font-size:11px;color:#4a6480;font-style:italic;margin-top:2px;">Model called ${side} but game finished at ${finalTotal}</div>
+          ` : ''}
+        </div>
+
+        <div style="font-size:9px;text-align:center;color:rgba(255,255,255,0.15);letter-spacing:0.14em;text-transform:uppercase;">PARLAYKILLERAPP.COM</div>
+      </div>
+
+      <div style="font-size:11px;color:var(--dim);line-height:1.6;margin-bottom:16px;">Screenshot the card above then post it to X with the tweet below.</div>
+
+      <button onclick="shareResultToX(${JSON.stringify(h).replace(/"/g, '&quot;')})" style="width:100%;padding:14px;background:var(--blue);color:var(--navy);font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;border:none;border-radius:2px;cursor:pointer;margin-bottom:10px;">Post to X (Screenshot first)</button>
+
+      <div style="background:var(--s1);border:0.5px solid var(--b2);border-radius:2px;padding:12px 14px;">
+        <div style="font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;">Copy tweet text</div>
+        <div id="result-tweet-text" style="font-size:12px;color:var(--white);line-height:1.7;white-space:pre-line;">${generateResultTweetText(h)}</div>
+        <button onclick="copyResultTweetText()" style="margin-top:10px;width:100%;padding:10px;background:none;border:0.5px solid var(--b2);color:var(--dim);font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">Copy Tweet Text</button>
+      </div>
+
+      <button onclick="goBack('s-home')" style="width:100%;padding:12px;margin-top:10px;background:none;border:0.5px solid var(--b2);color:var(--dim);font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">← Back to Board</button>
+    </div>
+  `;
+}
+
+function generateResultTweetText(h) {
+  const isWin = h.result === 'win';
+  const sign = h.edge >= 0 ? '+' : '';
+  const side = h.side;
+  const marketTotal = h.market_total ?? h.total;
+  const finalTotal = h.final_total ?? h.finalTotal;
+  const pregameTotal = h.pregame_total ?? h.pregameTotal;
+  const pregameStr = pregameTotal ? `Opened at: ${pregameTotal}\n` : '';
+  const missedBy = finalTotal != null ? Math.abs(Math.round((finalTotal - marketTotal) * 10) / 10) : null;
+
+  if (isWin && side === 'UNDER') {
+    return `🧊 UNDER RECEIPT\n\n${h.title}\n\n${pregameStr}Live line when called: ${marketTotal}\nParlay Killer said: UNDER ${marketTotal} (${sign}${h.edge} edge)\n${missedBy != null ? `\nFinal total: ${finalTotal}\nGame finished ${missedBy} points UNDER the line ✓` : '\nResult: UNDER HIT ✓'}\n\nparlaykillerapp.com`;
+  }
+  if (isWin && side === 'OVER') {
+    return `🔥 OVER RECEIPT\n\n${h.title}\n\n${pregameStr}Live line when called: ${marketTotal}\nParlay Killer said: OVER ${marketTotal} (${sign}${h.edge} edge)\n${missedBy != null ? `\nFinal total: ${finalTotal}\nGame finished ${missedBy} points OVER the line ✓` : '\nResult: OVER HIT ✓'}\n\nparlaykillerapp.com`;
+  }
+  return `📊 MODEL UPDATE\n\n${h.title}\n\nCalled: ${side} ${marketTotal} (${sign}${h.edge} edge)\n${finalTotal != null ? `Final: ${finalTotal}\n` : ''}Missed this one. Tracking every call transparently.\n\nparlaykillerapp.com`;
+}
+
+function shareResultToX(h) {
+  const text = encodeURIComponent(generateResultTweetText(h));
+  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+}
+
+function copyResultTweetText() {
+  const el = document.getElementById('result-tweet-text');
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText).then(() => {
+    showConfirmModal('✓', 'Copied', 'Paste it into X with your screenshot.');
+  }).catch(() => {
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
 }
 
 /* ── ONBOARDING ─────────────────────────────────────────── */
