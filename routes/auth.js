@@ -33,6 +33,12 @@ const registerLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many auth attempts — slow down.' }
+});
+
 // ── POST /api/auth/register ────────────────────────────────
 router.post('/register', registerLimiter, async (req, res) => {
   const { name, email, password } = req.body;
@@ -79,7 +85,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 });
 
 // ── POST /api/auth/login ───────────────────────────────────
-router.post('/login', async (req, res) => {
+router.post(`/login`, loginLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
