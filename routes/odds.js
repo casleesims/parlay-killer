@@ -128,7 +128,7 @@ function mergeGameData(scoresData, oddsData, sport) {
       const diffMins = (commence - now) / 60000;
       clock = diffMins < 60
         ? Math.round(diffMins) + ' min'
-        : commence.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        : commence.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' });
     }
 
     let baseEdge = 0;
