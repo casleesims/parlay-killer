@@ -584,7 +584,19 @@ let activeWinIdx = 0;
 let homeTab = 'live';
 let activeSportTab = 'all';
 let activeNavTab = 'board';
-let alerts = [];
+function loadAlerts() {
+  try {
+    return JSON.parse(localStorage.getItem('pk_alerts') || '[]');
+  } catch(e) { return []; }
+}
+
+function saveAlerts() {
+  try {
+    localStorage.setItem('pk_alerts', JSON.stringify(alerts));
+  } catch(e) {}
+}
+
+let alerts = loadAlerts();
 
 const SPORTSBOOK_LINKS = {
   draftkings: { name: 'DraftKings', nba: 'https://sportsbook.draftkings.com/leagues/basketball/nba', mlb: 'https://sportsbook.draftkings.com/leagues/baseball/mlb' },
@@ -867,7 +879,7 @@ function renderAlerts() {
             onclick="showResultModal(${a.betId})">Mark Result</button>` : ''}
           <button style="font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
             padding:6px 12px;background:none;border:0.5px solid var(--b2);color:var(--dim);border-radius:2px;cursor:pointer;"
-            onclick="alerts.splice(${i},1);renderAlerts();">Dismiss</button>
+            onclick="alerts.splice(${i},1);saveAlerts();renderAlerts();">Dismiss</button>
         </div>
       </div>
     </div>`;
@@ -1695,6 +1707,8 @@ function renderAccount() {
 }
 
 async function signOut() {
+  localStorage.removeItem('pk_alerts');
+  localStorage.removeItem('pk_alert_thresholds');
   try { await fetch('/api/auth/logout', { method:'POST', credentials:'include' }); } catch {}
   window.location.href = '/';
 }
@@ -1735,20 +1749,17 @@ async function runAnalysis(game, prop) {
 /* ── MODALS ─────────────────────────────────────────────── */
 function addAlert(alert) {
   alerts.unshift(alert);
-  // Show badge on alerts nav button
-  const btn = document.getElementById('bn-alerts');
-  if (btn) {
-    let badge = btn.querySelector('.alert-badge');
-    if (!badge) {
-      badge = document.createElement('span');
-      badge.className = 'alert-badge';
-      badge.style.cssText = 'position:absolute;top:2px;right:10px;background:#ff453a;color:#fff;font-size:9px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px;pointer-events:none;';
-      btn.style.position = 'relative';
-      btn.appendChild(badge);
-    }
-    const unread = alerts.length;
-    badge.textContent = unread > 9 ? '9+' : String(unread);
-    badge.style.display = 'flex';
+  saveAlerts();
+  const bn = document.getElementById('bn-alerts');
+  if (bn) {
+    const existing = bn.querySelector('.alert-badge');
+    if (existing) existing.remove();
+    const badge = document.createElement('div');
+    badge.className = 'alert-badge';
+    badge.textContent = alerts.length;
+    badge.style.cssText = 'position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;';
+    bn.style.position = 'relative';
+    bn.appendChild(badge);
   }
 }
 
@@ -2130,6 +2141,19 @@ async function initApp() {
     showBoardTabs();
     initAutoRefresh();
     showOnboarding();
+    if (alerts.length) {
+      const bn = document.getElementById('bn-alerts');
+      if (bn) {
+        const existing = bn.querySelector('.alert-badge');
+        if (existing) existing.remove();
+        const badge = document.createElement('div');
+        badge.className = 'alert-badge';
+        badge.textContent = alerts.length;
+        badge.style.cssText = 'position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;';
+        bn.style.position = 'relative';
+        bn.appendChild(badge);
+      }
+    }
   } catch(e) { window.location.href = '/'; }
 }
 
