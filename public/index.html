@@ -557,7 +557,6 @@ function goBack(to) {
 }
 
 function navTo(tab) {
-  activeSportTab = 'all';
   document.querySelectorAll('.bn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('bn-' + tab);
   if (btn) btn.classList.add('active');
@@ -570,46 +569,95 @@ function navTo(tab) {
   document.getElementById('s-home').classList.add('active');
 
   if (tab === 'board') {
+    showBoardTabs();
+    activeSportTab = 'all';
+    document.querySelectorAll('#home-tabs .tab').forEach(t => t.classList.remove('active'));
+    const allBtn = document.getElementById('tab-all');
+    if (allBtn) allBtn.classList.add('active');
     renderBoard();
   } else if (tab === 'alerts') {
+    hideBoardTabs();
     renderAlerts();
   } else if (tab === 'news') {
-    renderNews();
+    hideBoardTabs();
+    renderNewsTab();
   } else if (tab === 'account') {
+    hideBoardTabs();
     renderAccount();
   }
 }
 
-async function renderNews() {
+function showBoardTabs() {
+  const tabs = document.getElementById('home-tabs');
+  if (tabs) tabs.style.display = 'flex';
+}
+
+function hideBoardTabs() {
+  const tabs = document.getElementById('home-tabs');
+  if (tabs) tabs.style.display = 'none';
+}
+
+async function renderNewsTab() {
   const el = document.getElementById('home-content');
   document.getElementById('live-count-label').textContent = 'NEWS';
   document.getElementById('live-count-wrap').style.display = 'flex';
-  el.innerHTML = `<div style="padding:20px 16px;text-align:center;font-size:10px;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;">Loading headlines…</div>`;
+
+  el.innerHTML = `
+    <div class="tabs" id="news-sport-tabs" style="position:sticky;top:50px;z-index:9;background:var(--navy);border-bottom:0.5px solid var(--border);">
+      <button class="tab active" id="ntab-all" onclick="switchNewsSportTab('all')">All</button>
+      <button class="tab" id="ntab-nba" onclick="switchNewsSportTab('nba')">NBA</button>
+      <button class="tab" id="ntab-mlb" onclick="switchNewsSportTab('mlb')">MLB</button>
+    </div>
+    <div id="news-content"><div style="padding:20px 16px;text-align:center;font-size:10px;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;">Loading headlines…</div></div>
+  `;
+
+  const strip = document.getElementById('best-bet-strip');
+  if (strip) strip.style.display = 'none';
+
   try {
-    const r = await fetch('/api/news/feed', { credentials:'include' });
+    const r = await fetch('/api/news/feed', { credentials: 'include' });
     const d = await r.json();
-    if (!d.items || !d.items.length) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;">📰</div><div class="empty-title">No headlines right now</div></div>`;
-      return;
-    }
-    el.innerHTML = '<div style="padding:6px 0;">' + d.items.map(item => {
-      const age = timeAgo(new Date(item.pubDate));
-      const tl = (item.title || '').toLowerCase();
-      const isBreaking = tl.includes('injury') || tl.includes('questionable') || tl.includes('out ') || tl.includes('suspended');
-      return `<a class="news-card ${isBreaking?'breaking':''}" href="${item.link}" target="_blank" rel="noopener">
-        <div class="news-meta">
-          <span class="news-sport">${item.sport}</span>
-          <span class="news-age">${age}</span>
-          ${isBreaking?'<span class="news-breaking">INJURY/OUT</span>':''}
-        </div>
-        <div class="news-title">${item.title}</div>
-        ${item.description?`<div class="news-desc">${item.description.slice(0,120)}${item.description.length>120?'…':''}</div>`:''}
-        <div class="news-arrow">→</div>
-      </a>`;
-    }).join('') + '</div>';
+    window.__newsItems = d.items || [];
+    renderNewsItems('all');
   } catch(e) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-title" style="color:var(--dim);">Couldn't load news</div></div>`;
+    document.getElementById('news-content').innerHTML = `<div class="empty-state"><div class="empty-title">Couldn't load news</div></div>`;
   }
+}
+
+function switchNewsSportTab(sport) {
+  document.querySelectorAll('#news-sport-tabs .tab').forEach(t => t.classList.remove('active'));
+  const btn = document.getElementById('ntab-' + sport);
+  if (btn) btn.classList.add('active');
+  renderNewsItems(sport);
+}
+
+function renderNewsItems(sport) {
+  const el = document.getElementById('news-content');
+  if (!el) return;
+  const items = window.__newsItems || [];
+  const filtered = sport === 'all' ? items : items.filter(item => {
+    const s = (item.sport || '').toLowerCase();
+    return s === sport;
+  });
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-title">No ${sport === 'all' ? '' : sport.toUpperCase() + ' '}news right now</div></div>`;
+    return;
+  }
+  el.innerHTML = '<div style="padding:6px 0;">' + filtered.map(item => {
+    const age = timeAgo(new Date(item.pubDate));
+    const tl = (item.title || '').toLowerCase();
+    const isBreaking = tl.includes('injury') || tl.includes('questionable') || tl.includes('out ') || tl.includes('suspended');
+    return `<a class="news-card ${isBreaking ? 'breaking' : ''}" href="${item.link}" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;">
+      <div class="news-meta">
+        <span class="news-sport">${item.sport}</span>
+        <span class="news-age">${age}</span>
+        ${isBreaking ? '<span class="news-breaking">INJURY/OUT</span>' : ''}
+      </div>
+      <div class="news-title">${item.title}</div>
+      ${item.description ? `<div class="news-desc">${item.description.slice(0, 120)}${item.description.length > 120 ? '…' : ''}</div>` : ''}
+      <div class="news-arrow">→</div>
+    </a>`;
+  }).join('') + '</div>';
 }
 
 function timeAgo(date) {
@@ -696,12 +744,27 @@ function renderHomeContent() {
 
 function renderAlerts() {
   const el = document.getElementById('home-content');
-  document.getElementById('live-count-label').textContent = alerts.length + ' ALERTS';
+  document.getElementById('live-count-label').textContent = 'ALERTS';
   document.getElementById('live-count-wrap').style.display = 'flex';
+  const strip = document.getElementById('best-bet-strip');
+  if (strip) strip.style.display = 'none';
   if (!alerts.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;">🔔</div><div class="empty-title">No alerts yet</div><div class="empty-sub">Set an alert on any live game.</div></div>`;
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-title">No alerts yet</div>
+      <div class="empty-sub">Set an alert on any live game from the Board.</div>
+    </div>`;
   } else {
-    el.innerHTML = alerts.map(a => `<div class="game-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;"></span><span style="font-size:13px;font-weight:500;">${a.title}</span></div><div style="font-size:11px;color:var(--dim);">${a.msg}</div><div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div><button style="margin-top:10px;max-width:80px;font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:8px 0;background:none;border:1px solid var(--b2);color:var(--white);cursor:pointer;width:80px;" onclick="openGameView('${a.gameId}')">View</button></div>`).join('');
+    el.innerHTML = alerts.map(a => `
+      <div class="game-card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;flex-shrink:0;"></span>
+          <span style="font-size:13px;font-weight:500;color:var(--white);">${a.title}</span>
+        </div>
+        <div style="font-size:11px;color:var(--dim);">${a.msg}</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div>
+        <button class="gc-btn" style="margin-top:10px;max-width:80px;" onclick="openGameView('${a.gameId}')">View</button>
+      </div>
+    `).join('');
   }
 }
 
@@ -1344,6 +1407,11 @@ function shareToX() {
 
 /* ── ACCOUNT ────────────────────────────────────────────── */
 function renderAccount() {
+  hideBoardTabs();
+  const strip = document.getElementById('best-bet-strip');
+  if (strip) strip.style.display = 'none';
+  document.getElementById('live-count-label').textContent = 'ACCOUNT';
+  document.getElementById('live-count-wrap').style.display = 'flex';
   const user = window.__user || {};
   const plan = user.plan || 'free';
   const isPro = plan === 'pro';
@@ -1511,6 +1579,7 @@ async function initApp() {
     updateNavAvatar(data.user);
     await loadLiveGames();
     renderBoard();
+    showBoardTabs();
   } catch(e) { window.location.href = '/'; }
 }
 
@@ -1575,6 +1644,7 @@ function liveGameToCard(g) {
 }
 
 function renderBoard() {
+  showBoardTabs();
   const games = getAllGames();
   updateBestBet(games);
   renderHomeContent();
