@@ -81,6 +81,10 @@
     .gc-proj-label { font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
     .gc-proj-val { font-size: 14px; font-weight: 500; color: var(--white); margin-top: 2px; }
     .gc-proj-playable { color: var(--blue); }
+    .gc-bet-now { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; background: var(--blue); padding: 10px 14px; cursor: pointer; border-radius: 2px; }
+    .gc-bet-now:active { opacity: 0.85; }
+    .gc-bet-now-label { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--navy); }
+    .gc-bet-now-book { font-size: 11px; color: var(--navy); opacity: 0.7; }
 
     /* EMPTY STATE */
     .empty-state { padding: 60px 24px; text-align: center; }
@@ -355,7 +359,7 @@
         <div class="bb-game" id="bb-game">—</div>
         <div class="bb-sub" id="bb-sub">—</div>
       </div>
-      <div class="bb-right" onclick="openBestBet()">Act now →</div>
+      <div class="bb-right" onclick="if(bestBetGameId){const g=getGameById(bestBetGameId);openBetNow(g);}">Bet Now →</div>
     </div>
   </div>
 
@@ -533,6 +537,30 @@ let homeTab = 'live';
 let activeSportTab = 'all';
 let favorites = [];
 let alerts = [];
+
+const SPORTSBOOK_LINKS = {
+  draftkings: { name: 'DraftKings', nba: 'https://sportsbook.draftkings.com/leagues/basketball/nba', mlb: 'https://sportsbook.draftkings.com/leagues/baseball/mlb' },
+  fanduel:    { name: 'FanDuel',    nba: 'https://sportsbook.fanduel.com/basketball/nba',           mlb: 'https://sportsbook.fanduel.com/baseball/mlb' },
+  betmgm:     { name: 'BetMGM',     nba: 'https://sports.betmgm.com/en/sports/basketball-7/betting/usa-9/nba-6004', mlb: 'https://sports.betmgm.com/en/sports/baseball-23/betting/usa-9/mlb-75' },
+  caesars:    { name: 'Caesars',    nba: 'https://sportsbook.caesars.com/us/nj/bet/basketball/nba', mlb: 'https://sportsbook.caesars.com/us/nj/bet/baseball/mlb' },
+  bovada:     { name: 'Bovada',     nba: 'https://www.bovada.lv/sports/basketball/nba',             mlb: 'https://www.bovada.lv/sports/baseball/mlb' },
+  bet365:     { name: 'Bet365',     nba: 'https://www.bet365.com/#/AS/B3/',                         mlb: 'https://www.bet365.com/#/AS/B3/' },
+};
+
+function getSportsbookPref() {
+  return localStorage.getItem('pk_sportsbook') || 'draftkings';
+}
+
+function setSportsbookPref(key) {
+  localStorage.setItem('pk_sportsbook', key);
+}
+
+function openBetNow(game) {
+  const pref = getSportsbookPref();
+  const book = SPORTSBOOK_LINKS[pref] || SPORTSBOOK_LINKS.draftkings;
+  const sport = (game && game.isMLB) ? 'mlb' : 'nba';
+  window.open(book[sport], '_blank');
+}
 
 /* ── NAV ────────────────────────────────────────────────── */
 const screenStack = [];
@@ -865,6 +893,12 @@ function gameCardHTML(g) {
       </div>
     </div>
     ` : ''}
+    ${!isPregame && Math.abs(m.edge) >= 3 ? `
+    <div class="gc-bet-now" onclick="event.stopPropagation();openBetNow(${JSON.stringify({isMLB: g.isMLB || false})})">
+      <span class="gc-bet-now-label">Bet Now</span>
+      <span class="gc-bet-now-book">${(SPORTSBOOK_LINKS[getSportsbookPref()] || SPORTSBOOK_LINKS.draftkings).name} →</span>
+    </div>
+    ` : ''}
   </div>`;
 }
 
@@ -1078,9 +1112,10 @@ function renderEdgeTab(el) {
         <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
         <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
         <div class="ab-btns">
-          <button class="ab-btn primary" onclick="openTrackModal('${g.id}')">Track</button>
-          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Set Alert</button>
-          <button class="ab-btn danger" onclick="openSnapshot()">Snapshot</button>
+          <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${(SPORTSBOOK_LINKS[getSportsbookPref()] || SPORTSBOOK_LINKS.draftkings).name}</button>
+          <button class="ab-btn" onclick="openTrackModal('${g.id}')">Track</button>
+          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
+          <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
         </div>
       </div>
     </div>
@@ -1145,9 +1180,10 @@ function renderMLBEdgeTab(el, g) {
         <div class="ab-playable">Over playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span></div>
         <div class="ab-note">Edge decays each inning — act before late-game dampening kicks in.</div>
         <div class="ab-btns">
-          <button class="ab-btn primary" onclick="openTrackModal('${g.id}')">Track</button>
-          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Set Alert</button>
-          <button class="ab-btn danger" onclick="openSnapshot()">Snapshot</button>
+          <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${(SPORTSBOOK_LINKS[getSportsbookPref()] || SPORTSBOOK_LINKS.draftkings).name}</button>
+          <button class="ab-btn" onclick="openTrackModal('${g.id}')">Track</button>
+          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
+          <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
         </div>
       </div>
     </div>
@@ -1436,6 +1472,21 @@ function renderAccount() {
         <div class="acc-stat-row"><span class="acc-stat-label">Analyses today</span><span class="acc-stat-val">${usage}${!isPro?' / 3':''}</span></div>
         <div class="acc-stat-row"><span class="acc-stat-label">Games tracked</span><span class="acc-stat-val">${favorites.length}</span></div>
         <div class="acc-stat-row"><span class="acc-stat-label">Active alerts</span><span class="acc-stat-val">${alerts.length}</span></div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Preferred Sportsbook</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${Object.entries(SPORTSBOOK_LINKS).map(([key, book]) => `
+            <button onclick="setSportsbookPref('${key}');renderAccount();" style="
+              padding:10px 12px;font-size:12px;font-weight:500;
+              background:${getSportsbookPref()===key?'var(--blue)':'var(--s1)'};
+              color:${getSportsbookPref()===key?'var(--navy)':'var(--dim)'};
+              border:0.5px solid ${getSportsbookPref()===key?'var(--blue)':'var(--b2)'};
+              border-radius:2px;cursor:pointer;text-align:left;letter-spacing:0.03em;
+            ">${book.name}</button>
+          `).join('')}
+        </div>
+        <div style="font-size:10px;color:var(--dim);margin-top:8px;">Bet Now buttons will open your preferred sportsbook</div>
       </div>
       ${!isPro?`<button class="acc-btn green" onclick="window.location.href='/api/billing/create-checkout-session'">Upgrade to Live Edge Pro</button>`:''}
       <button class="acc-btn outline" onclick="signOut()">Sign Out</button>
