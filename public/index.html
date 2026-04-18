@@ -187,6 +187,26 @@
     .ab-btn.primary { background: var(--blue); color: var(--navy); border-color: var(--blue); }
     .ab-btn.danger { border-color: var(--avoid); color: var(--avoid); }
     .ab-btn:active { opacity: 0.85; }
+    .collapse-section { border-top: 0.5px solid var(--border); margin-top: 14px; }
+    .collapse-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; cursor: pointer; user-select: none; }
+    .collapse-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+    .collapse-arrow { font-size: 10px; color: var(--dim); transition: transform 0.2s; }
+    .collapse-arrow.open { transform: rotate(180deg); }
+    .collapse-body { padding-bottom: 14px; }
+    .book-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+    .book-row:last-child { border-bottom: none; }
+    .book-name { color: var(--dim); font-size: 12px; }
+    .book-total { font-weight: 500; color: var(--white); }
+    .book-total.best { color: var(--blue); }
+    .book-best-label { font-size: 9px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--blue); background: var(--blue-dim); border: 0.5px solid var(--blue-border); border-radius: 2px; padding: 2px 6px; }
+    .context-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
+    .context-row:last-child { border-bottom: none; }
+    .context-label { color: var(--dim); }
+    .context-val { font-weight: 500; color: var(--white); font-size: 12px; }
+    .game-news-item { padding: 10px 0; border-bottom: 0.5px solid var(--border); cursor: pointer; text-decoration: none; display: block; }
+    .game-news-item:last-child { border-bottom: none; }
+    .game-news-title { font-size: 12px; font-weight: 500; color: var(--white); line-height: 1.4; margin-bottom: 3px; }
+    .game-news-meta { font-size: 10px; color: var(--dim); }
 
     /* BOX SCORE */
     .bs-content { padding: 0 0 16px; }
@@ -1150,6 +1170,12 @@ function openGameView(gameId) {
   activeGameSecs = activeGame.secsRemaining;
   activeTab = 'edge';
   activeWinIdx = 0;
+  if (!window.__newsItems) {
+    fetch('/api/news/feed', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { window.__newsItems = d.items || []; })
+      .catch(() => {});
+  }
   renderGameView();
   goTo('s-game');
 }
@@ -1208,6 +1234,15 @@ function switchGameTab(t) {
   const edgeTab = document.getElementById('gtab-edge');
   if (edgeTab) edgeTab.classList.add('active');
   renderGameTabContent();
+}
+
+function toggleCollapse(id) {
+  const body = document.getElementById('collapse-' + id);
+  const arrow = document.getElementById('arrow-' + id);
+  if (!body || !arrow) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
 }
 
 function renderGameTabContent() {
@@ -1328,6 +1363,70 @@ function renderEdgeTab(el) {
           <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
         </div>
       </div>
+      <div class="collapse-section">
+        <div class="collapse-header" onclick="toggleCollapse('lines')">
+          <span class="collapse-label">Lines across books</span>
+          <span class="collapse-arrow open" id="arrow-lines">▼</span>
+        </div>
+        <div id="collapse-lines" class="collapse-body">
+          ${(() => {
+            const books = g.books || [];
+            if (!books.length) return '<div style="font-size:12px;color:var(--dim);font-style:italic;">No book data available</div>';
+            const side = m.edge >= 0 ? 'OVER' : 'UNDER';
+            const bestTotal = side === 'OVER'
+              ? Math.max(...books.map(b => b.total))
+              : Math.min(...books.map(b => b.total));
+            return books.map(b => `
+              <div class="book-row">
+                <span class="book-name">${b.book}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  ${b.total === bestTotal ? `<span class="book-best-label">Best ${side}</span>` : ''}
+                  <span class="book-total${b.total === bestTotal ? ' best' : ''}">${b.total}</span>
+                </div>
+              </div>
+            `).join('');
+          })()}
+        </div>
+      </div>
+      <div class="collapse-section">
+        <div class="collapse-header" onclick="toggleCollapse('context')">
+          <span class="collapse-label">Game context</span>
+          <span class="collapse-arrow" id="arrow-context">▼</span>
+        </div>
+        <div id="collapse-context" class="collapse-body" style="display:none;">
+          <div class="context-row"><span class="context-label">Pre-game total</span><span class="context-val">${g.marketTotal}</span></div>
+          <div class="context-row"><span class="context-label">Current pace projects</span><span class="context-val" style="color:var(--blue)">${m.model}</span></div>
+          <div class="context-row"><span class="context-label">Points scored so far</span><span class="context-val">${g.totalSoFar || (parseInt(g.awayScore)||0) + (parseInt(g.homeScore)||0)}</span></div>
+          <div class="context-row"><span class="context-label">Confidence</span><span class="context-val" style="color:${m.conf >= 70 ? 'var(--blue)' : 'var(--amber)'}">${m.conf}%</span></div>
+          <div class="context-row"><span class="context-label">Kelly bet size</span><span class="context-val">${Math.max(0, Math.min(25, Math.round(Math.abs(m.edge) / 2 * 10) / 10))}% of bankroll</span></div>
+          <div class="context-row"><span class="context-label">Alt lines</span><span class="context-val">${getAltState(secs).l}</span></div>
+        </div>
+      </div>
+      <div class="collapse-section">
+        <div class="collapse-header" onclick="toggleCollapse('news')">
+          <span class="collapse-label">Related news</span>
+          <span class="collapse-arrow" id="arrow-news">▼</span>
+        </div>
+        <div id="collapse-news" class="collapse-body" style="display:none;">
+          ${(() => {
+            const allNews = window.__newsItems || [];
+            const awayTeam = (g.awayTeam || g.away || '').toLowerCase();
+            const homeTeam = (g.homeTeam || g.home || '').toLowerCase();
+            const keywords = [...awayTeam.split(' '), ...homeTeam.split(' ')].filter(w => w.length > 3);
+            const relevant = allNews.filter(item => {
+              const title = (item.title || '').toLowerCase();
+              return keywords.some(kw => title.includes(kw));
+            }).slice(0, 4);
+            if (!relevant.length) return '<div style="font-size:12px;color:var(--dim);font-style:italic;">No recent news for these teams</div>';
+            return relevant.map(item => `
+              <a class="game-news-item" href="${item.link}" target="_blank" rel="noopener">
+                <div class="game-news-title">${item.title}</div>
+                <div class="game-news-meta">${item.sport || 'Sports'} · ${timeAgo(new Date(item.pubDate))}</div>
+              </a>
+            `).join('');
+          })()}
+        </div>
+      </div>
     </div>
   `;
 }
@@ -1408,6 +1507,70 @@ function renderMLBEdgeTab(el, g) {
           <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
           <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Log Bet</button>
           <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
+        </div>
+      </div>
+      <div class="collapse-section">
+        <div class="collapse-header" onclick="toggleCollapse('lines')">
+          <span class="collapse-label">Lines across books</span>
+          <span class="collapse-arrow open" id="arrow-lines">▼</span>
+        </div>
+        <div id="collapse-lines" class="collapse-body">
+          ${(() => {
+            const books = g.books || [];
+            if (!books.length) return '<div style="font-size:12px;color:var(--dim);font-style:italic;">No book data available</div>';
+            const side = m.edge >= 0 ? 'OVER' : 'UNDER';
+            const bestTotal = side === 'OVER'
+              ? Math.max(...books.map(b => b.total))
+              : Math.min(...books.map(b => b.total));
+            return books.map(b => `
+              <div class="book-row">
+                <span class="book-name">${b.book}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  ${b.total === bestTotal ? `<span class="book-best-label">Best ${side}</span>` : ''}
+                  <span class="book-total${b.total === bestTotal ? ' best' : ''}">${b.total}</span>
+                </div>
+              </div>
+            `).join('');
+          })()}
+        </div>
+      </div>
+      <div class="collapse-section">
+        <div class="collapse-header" onclick="toggleCollapse('context')">
+          <span class="collapse-label">Game context</span>
+          <span class="collapse-arrow" id="arrow-context">▼</span>
+        </div>
+        <div id="collapse-context" class="collapse-body" style="display:none;">
+          <div class="context-row"><span class="context-label">Pre-game total</span><span class="context-val">${g.marketTotal}</span></div>
+          <div class="context-row"><span class="context-label">Current pace projects</span><span class="context-val" style="color:var(--blue)">${m.model}</span></div>
+          <div class="context-row"><span class="context-label">Runs scored so far</span><span class="context-val">${g.totalSoFar || (parseInt(g.awayScore)||0) + (parseInt(g.homeScore)||0)}</span></div>
+          <div class="context-row"><span class="context-label">Confidence</span><span class="context-val" style="color:${m.conf >= 70 ? 'var(--blue)' : 'var(--amber)'}">${m.conf}%</span></div>
+          <div class="context-row"><span class="context-label">Kelly bet size</span><span class="context-val">${Math.max(0, Math.min(25, Math.round(Math.abs(m.edge) / 2 * 10) / 10))}% of bankroll</span></div>
+          <div class="context-row"><span class="context-label">Alt lines</span><span class="context-val">${getMLBAltState(innings).l}</span></div>
+        </div>
+      </div>
+      <div class="collapse-section">
+        <div class="collapse-header" onclick="toggleCollapse('news')">
+          <span class="collapse-label">Related news</span>
+          <span class="collapse-arrow" id="arrow-news">▼</span>
+        </div>
+        <div id="collapse-news" class="collapse-body" style="display:none;">
+          ${(() => {
+            const allNews = window.__newsItems || [];
+            const awayTeam = (g.awayTeam || g.away || '').toLowerCase();
+            const homeTeam = (g.homeTeam || g.home || '').toLowerCase();
+            const keywords = [...awayTeam.split(' '), ...homeTeam.split(' ')].filter(w => w.length > 3);
+            const relevant = allNews.filter(item => {
+              const title = (item.title || '').toLowerCase();
+              return keywords.some(kw => title.includes(kw));
+            }).slice(0, 4);
+            if (!relevant.length) return '<div style="font-size:12px;color:var(--dim);font-style:italic;">No recent news for these teams</div>';
+            return relevant.map(item => `
+              <a class="game-news-item" href="${item.link}" target="_blank" rel="noopener">
+                <div class="game-news-title">${item.title}</div>
+                <div class="game-news-meta">${item.sport || 'Sports'} · ${timeAgo(new Date(item.pubDate))}</div>
+              </a>
+            `).join('');
+          })()}
         </div>
       </div>
     </div>
