@@ -35,7 +35,7 @@ const registerLimiter = rateLimit({
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 50,
   message: { error: 'Too many auth attempts — slow down.' }
 });
 

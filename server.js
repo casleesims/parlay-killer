@@ -121,7 +121,7 @@ const playerStatsLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   message: { error: 'Too many auth attempts — slow down.' },
 });
 
@@ -156,7 +156,7 @@ app.use((req, res, next) => {
 });
 
 // ── Routes ─────────────────────────────────────────────────
-app.use('/api/auth',         authLimiter,       authRouter);
+app.use('/api/auth',         authRouter);
 app.use('/api/analyze',      analyzeLimiter,    analyzeRouter);
 app.use('/api/odds',         oddsLimiter,       oddsRouter);
 app.use('/api/scores',       scoresLimiter,     scoresRouter);

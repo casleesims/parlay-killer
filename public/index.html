@@ -541,6 +541,7 @@ function applyTheme(theme) {
 function initTheme() {
   applyTheme(getThemePref());
 }
+function initCookieBanner() {}
 
 /* ── MATH ──────────────────────────────────────────────── */
 function fmt(s) { return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
@@ -2258,19 +2259,39 @@ function initAutoRefresh() {
 }
 
 async function initApp() {
+  if (sessionStorage.getItem('pk_auth_checking')) {
+    sessionStorage.removeItem('pk_auth_checking');
+    return;
+  }
+
   initTheme();
+  initCookieBanner();
+
   try {
-    const r = await fetch('/api/auth/me', { credentials:'include' });
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
+
+    if (r.status === 429) {
+      console.warn('Rate limited on auth check — waiting before retry');
+      setTimeout(initApp, 15000);
+      return;
+    }
+
     const data = await r.json();
-    if (!data.user) { window.location.href = '/'; return; }
+
+    if (!data.user) {
+      sessionStorage.setItem('pk_auth_checking', '1');
+      window.location.href = '/';
+      return;
+    }
+
     window.__user = data.user;
     updateNavAvatar(data.user);
     await loadLiveGames();
     renderBoard();
-    showBoardTabs();
-    updateDesktopSidebar();
-    initAutoRefresh();
     showOnboarding();
+    initAutoRefresh();
+    updateDesktopSidebar();
+
     if (alerts.length) {
       const bn = document.getElementById('bn-alerts');
       if (bn) {
@@ -2284,7 +2305,11 @@ async function initApp() {
         bn.appendChild(badge);
       }
     }
-  } catch(e) { window.location.href = '/'; }
+
+  } catch(e) {
+    console.error('initApp error:', e);
+    setTimeout(initApp, 5000);
+  }
 }
 
 async function loadLiveGames() {

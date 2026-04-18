@@ -765,7 +765,10 @@ async function submitSignup() {
 }
 // Auth check — redirect if already logged in
 fetch('/api/auth/me', { credentials: 'include' })
-  .then(r => { if (r.ok) window.location.href = '/'; })
+  .then(r => {
+    if (r.status === 429) return;
+    if (r.ok) return r.json().then(d => { if (d.user) window.location.href = '/'; });
+  })
   .catch(() => {});
 </script>
 </body>
