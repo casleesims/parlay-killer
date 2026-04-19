@@ -27,5 +27,12 @@ CREATE TABLE IF NOT EXISTS sessions (
   expire TIMESTAMP NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS pregame_totals (
+  game_id VARCHAR(255) PRIMARY KEY,
+  total NUMERIC(5,1) NOT NULL,
+  sport VARCHAR(10),
+  fetched_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_usage_user_date ON usage(user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_expire ON sessions(expire);

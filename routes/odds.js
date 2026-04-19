@@ -16,6 +16,22 @@ const pregameTotalCache = {};
 async function fetchPregameTotal(gameId, sport, commenceTime) {
   if (pregameTotalCache[gameId]) return pregameTotalCache[gameId];
 
+  const pool = require('../db/index');
+
+  try {
+    const existing = await pool.query(
+      'SELECT total FROM pregame_totals WHERE game_id = $1',
+      [gameId]
+    );
+    if (existing.rows.length) {
+      const total = parseFloat(existing.rows[0].total);
+      pregameTotalCache[gameId] = total;
+      return total;
+    }
+  } catch(err) {
+    console.error('[Pregame] DB read error:', err.message);
+  }
+
   try {
     const apiKey = process.env.ODDS_API_KEY;
     const commence = new Date(commenceTime);
@@ -36,7 +52,7 @@ async function fetchPregameTotal(gameId, sport, commenceTime) {
     const game = games.find(g => g.id === gameId);
 
     if (!game) {
-      console.log(`[Pregame] Game ${gameId} not found in historical snapshot`);
+      console.log(`[Pregame] Game ${gameId} not found in snapshot`);
       return null;
     }
 
@@ -50,7 +66,7 @@ async function fetchPregameTotal(gameId, sport, commenceTime) {
         const over = totalsMarket?.outcomes?.find(o => o.name === 'Over');
         if (over?.point) {
           pregameTotal = over.point;
-          console.log(`[Pregame] Game ${gameId} · Pre-game total: ${pregameTotal} (${bk.title})`);
+          console.log(`[Pregame] ${gameId} · Pre-game total: ${pregameTotal} (${bk.title})`);
           break;
         }
       }
@@ -60,14 +76,31 @@ async function fetchPregameTotal(gameId, sport, commenceTime) {
       for (const bk of (game.bookmakers || [])) {
         const totalsMarket = bk.markets?.find(m => m.key === 'totals');
         const over = totalsMarket?.outcomes?.find(o => o.name === 'Over');
-        if (over?.point) { pregameTotal = over.point; break; }
+        if (over?.point) {
+          pregameTotal = over.point;
+          break;
+        }
       }
     }
 
-    if (pregameTotal) pregameTotalCache[gameId] = pregameTotal;
+    if (pregameTotal) {
+      pregameTotalCache[gameId] = pregameTotal;
+      try {
+        await pool.query(
+          `INSERT INTO pregame_totals (game_id, total, sport, fetched_at)
+           VALUES ($1, $2, $3, NOW())
+           ON CONFLICT (game_id) DO NOTHING`,
+          [gameId, pregameTotal, sport]
+        );
+        console.log(`[Pregame] Saved ${gameId} · ${pregameTotal} to DB`);
+      } catch(dbErr) {
+        console.error('[Pregame] DB write error:', dbErr.message);
+      }
+    }
+
     return pregameTotal;
   } catch(err) {
-    console.error(`[Pregame] Error fetching game ${gameId}:`, err.message);
+    console.error(`[Pregame] Fetch error for ${gameId}:`, err.message);
     return null;
   }
 }
@@ -91,6 +124,39 @@ async function fetchLiveScores() {
   return scoresCache;
 }
 
+async function prefetchUpcomingPregameTotals(oddsData, sport) {
+  const now = new Date();
+  const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const games = oddsData || [];
+
+  for (const game of games) {
+    const commence = new Date(game.commence_time);
+    if (commence > now && commence <= twoHoursFromNow) {
+      if (!pregameTotalCache[game.id]) {
+        let total = null;
+        game.bookmakers?.forEach(bk => {
+          const totalsMarket = bk.markets?.find(m => m.key === 'totals');
+          const over = totalsMarket?.outcomes?.find(o => o.name === 'Over');
+          if (over?.point && !total) total = over.point;
+        });
+        if (total) {
+          pregameTotalCache[game.id] = total;
+          const pool = require('../db/index');
+          try {
+            await pool.query(
+              `INSERT INTO pregame_totals (game_id, total, sport, fetched_at)
+               VALUES ($1, $2, $3, NOW())
+               ON CONFLICT (game_id) DO NOTHING`,
+              [game.id, total, sport]
+            );
+            console.log(`[Pregame] Pre-saved upcoming ${game.id} · ${total}`);
+          } catch(err) {}
+        }
+      }
+    }
+  }
+}
+
 async function fetchLiveOdds() {
   const now = Date.now();
   if (now - liveOddsCache.lastFetch < LIVE_ODDS_CACHE_MS) return liveOddsCache;
@@ -103,6 +169,10 @@ async function fetchLiveOdds() {
     const nbaData = nbaRes.ok ? await nbaRes.json() : [];
     const mlbData = mlbRes.ok ? await mlbRes.json() : [];
     liveOddsCache = { nba: nbaData, mlb: mlbData, lastFetch: now };
+
+    prefetchUpcomingPregameTotals(nbaData, 'NBA').catch(() => {});
+    prefetchUpcomingPregameTotals(mlbData, 'MLB').catch(() => {});
+
     console.log(`[Odds] NBA: ${nbaData.length}, MLB: ${mlbData.length}`);
   } catch(err) {
     console.error('[Odds] Error:', err.message);
@@ -557,5 +627,22 @@ router.get('/game/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+async function loadPregameTotalsFromDB() {
+  try {
+    const pool = require('../db/index');
+    const result = await pool.query(
+      'SELECT game_id, total FROM pregame_totals WHERE fetched_at > NOW() - INTERVAL \'7 days\''
+    );
+    result.rows.forEach(row => {
+      pregameTotalCache[row.game_id] = parseFloat(row.total);
+    });
+    console.log(`[Pregame] Loaded ${result.rows.length} cached totals from DB`);
+  } catch(err) {
+    console.error('[Pregame] Failed to load from DB:', err.message);
+  }
+}
+
+setTimeout(loadPregameTotalsFromDB, 2000);
 
 module.exports = router;
