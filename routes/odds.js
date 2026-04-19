@@ -13,6 +13,81 @@ const LIVE_ODDS_CACHE_MS = 90 * 1000;
 
 const pregameTotalCache = {};
 
+async function ensurePregameTotal(gameId, sport, commenceTime) {
+  if (pregameTotalCache[gameId]) return pregameTotalCache[gameId];
+
+  const pool = require('../db/index');
+
+  try {
+    const existing = await pool.query(
+      'SELECT total FROM pregame_totals WHERE game_id = $1',
+      [gameId]
+    );
+    if (existing.rows.length) {
+      const total = parseFloat(existing.rows[0].total);
+      pregameTotalCache[gameId] = total;
+      return total;
+    }
+  } catch(err) {}
+
+  const apiKey = process.env.ODDS_API_KEY;
+  const sportKey = sport === 'MLB' ? 'baseball_mlb' : 'basketball_nba';
+  const commence = new Date(commenceTime);
+
+  const offsets = [5, 30, 60, 120];
+
+  for (const mins of offsets) {
+    try {
+      const snapDate = new Date(commence.getTime() - mins * 60 * 1000);
+      const url = `https://api.the-odds-api.com/v4/historical/sports/${sportKey}/odds?apiKey=${apiKey}&regions=us&markets=totals&oddsFormat=american&date=${snapDate.toISOString()}`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+
+      const data = await res.json();
+      const games = data.data || [];
+      const game = games.find(g => g.id === gameId);
+      if (!game) continue;
+
+      let pregameTotal = null;
+      const bookPriority = ['draftkings', 'fanduel', 'betmgm', 'caesars', 'bovada'];
+
+      for (const bookKey of bookPriority) {
+        const bk = game.bookmakers?.find(b => b.key === bookKey);
+        const totalsMarket = bk?.markets?.find(m => m.key === 'totals');
+        const over = totalsMarket?.outcomes?.find(o => o.name === 'Over');
+        if (over?.point) { pregameTotal = over.point; break; }
+      }
+
+      if (!pregameTotal) {
+        for (const bk of (game.bookmakers || [])) {
+          const totalsMarket = bk.markets?.find(m => m.key === 'totals');
+          const over = totalsMarket?.outcomes?.find(o => o.name === 'Over');
+          if (over?.point) { pregameTotal = over.point; break; }
+        }
+      }
+
+      if (pregameTotal) {
+        pregameTotalCache[gameId] = pregameTotal;
+        try {
+          await pool.query(
+            `INSERT INTO pregame_totals (game_id, total, sport, fetched_at)
+             VALUES ($1, $2, $3, NOW())
+             ON CONFLICT (game_id) DO UPDATE SET total = $2`,
+            [gameId, pregameTotal, sport]
+          );
+          console.log(`[Pregame] Fetched ${gameId} · ${pregameTotal} (offset -${mins}min)`);
+        } catch(err) {}
+        return pregameTotal;
+      }
+    } catch(err) {
+      continue;
+    }
+  }
+
+  console.log(`[Pregame] Could not fetch total for ${gameId}`);
+  return null;
+}
+
 async function fetchPregameTotal(gameId, sport, commenceTime) {
   if (pregameTotalCache[gameId]) return pregameTotalCache[gameId];
 
@@ -317,7 +392,7 @@ function mergeGameData(scoresData, oddsData, sport) {
       period: isFinalGrace ? 'FINAL' : period,
       clock: isFinalGrace ? '' : clock,
       totalSoFar,
-      marketTotal: marketTotal || defaultTotal,
+      marketTotal: pregameTotalCache[game.id] || marketTotal || (isMLB ? 8.5 : null),
       pregameTotal: pregameTotalCache[game.id] || null,
       baseEdge: isFinalGrace ? 0 : baseEdge,
       side: baseEdge >= 0 ? 'OVER' : 'UNDER',
@@ -335,6 +410,11 @@ function mergeGameData(scoresData, oddsData, sport) {
       awayPlayers: [],
       homePlayers: [],
     });
+
+    if (isFinalGrace && !pregameTotalCache[game.id]) {
+      ensurePregameTotal(game.id, sport.toUpperCase(), game.commence_time)
+        .catch(err => console.error('[Pregame] ensure error:', err.message));
+    }
   });
 
   return games;
@@ -644,5 +724,19 @@ async function loadPregameTotalsFromDB() {
 }
 
 setTimeout(loadPregameTotalsFromDB, 2000);
+
+router.get('/fetch-pregame/:gameId', async (req, res) => {
+  const { gameId } = req.params;
+  const { sport, commenceTime } = req.query;
+  if (!sport || !commenceTime) {
+    return res.status(400).json({ error: 'sport and commenceTime required' });
+  }
+  try {
+    const total = await ensurePregameTotal(gameId, sport, commenceTime);
+    res.json({ gameId, pregameTotal: total, cached: !!pregameTotalCache[gameId] });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
