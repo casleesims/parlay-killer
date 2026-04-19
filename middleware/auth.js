@@ -32,8 +32,17 @@ async function checkUsage(req, res, next) {
 
     const user = userResult.rows[0];
 
-    // Pro users skip usage check
-    if (user && (user.plan === 'pro' || user.subscription_status === 'active')) {
+    // Pro users and bypass emails skip usage check
+    const BYPASS_EMAILS = [
+      'simscaslee@gmail.com',
+      'parlay@parlaykillerapp.com',
+    ];
+
+    if (user && (
+      user.plan === 'pro' ||
+      user.subscription_status === 'active' ||
+      BYPASS_EMAILS.includes(ownerCheck.rows[0]?.email)
+    )) {
       return next();
     }
 
