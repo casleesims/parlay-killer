@@ -122,7 +122,9 @@ function mergeGameData(scoresData, oddsData, sport) {
     const commence = new Date(game.commence_time);
     const isLive = !game.completed && commence <= now;
     const isUpcoming = commence > now;
-    if (game.completed) return;
+    const lastUpdate = game.last_update ? new Date(game.last_update) : null;
+    const isFinalGrace = game.completed && lastUpdate && ((now - lastUpdate) / 60000) <= 30;
+    if (game.completed && !isFinalGrace) return;
 
     if (isLive && !pregameTotalCache[game.id]) {
       fetchPregameTotal(game.id, sport.toUpperCase(), game.commence_time)
@@ -242,17 +244,17 @@ function mergeGameData(scoresData, oddsData, sport) {
       homeScore: isLive ? homeScore : '–',
       awayRec: '',
       homeRec: '',
-      period,
-      clock,
+      period: isFinalGrace ? 'FINAL' : period,
+      clock: isFinalGrace ? '' : clock,
       totalSoFar,
       marketTotal: marketTotal || defaultTotal,
       pregameTotal: pregameTotalCache[game.id] || null,
-      baseEdge,
+      baseEdge: isFinalGrace ? 0 : baseEdge,
       side: baseEdge >= 0 ? 'OVER' : 'UNDER',
       edgeColor: baseEdge >= 3 ? '#4da6ff' : baseEdge <= -3 ? '#ff5a52' : '#f5a623',
-      badge: isLive ? 'LIVE' : 'PREGAME',
+      badge: isFinalGrace ? 'FINAL' : (isLive ? 'LIVE' : 'PREGAME'),
       network: sport.toUpperCase(),
-      status: isLive ? 'live' : 'upcoming',
+      status: isFinalGrace ? 'final' : (isLive ? 'live' : 'upcoming'),
       books,
       commenceTime: game.commence_time,
       isMLB,

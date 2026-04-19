@@ -68,6 +68,10 @@
     .game-card.edge-over { border-left-color: var(--blue); }
     .game-card.edge-under { border-left-color: var(--avoid); }
     .game-card.edge-wait { border-left-color: var(--amber); }
+    .game-card.edge-final { border-left-color: var(--dim); opacity: 0.85; }
+    .gc-final-share { display: flex; gap: 8px; margin-top: 10px; }
+    .gc-share-btn { flex: 1; padding: 9px; font-size: 10px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; background: none; border: 0.5px solid var(--b2); color: var(--dim); cursor: pointer; border-radius: 2px; }
+    .gc-share-btn:active { background: var(--s2); }
     .gc-meta { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
     .gc-meta-live { color: var(--blue); }
     .gc-live-dot { display: inline-block; width: 5px; height: 5px; background: var(--blue); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; vertical-align: middle; margin-right: 3px; flex-shrink: 0; }
@@ -1009,7 +1013,8 @@ function renderHomeContent() {
   };
 
   const live = filterBySport(allGames.filter(g => g.status === 'live'));
-  const upcoming = filterBySport(allGames.filter(g => g.status !== 'live'));
+  const upcoming = filterBySport(allGames.filter(g => g.status === 'upcoming'));
+  const final = filterBySport(allGames.filter(g => g.status === 'final'));
 
   const liveAll = allGames.filter(g => g.status === 'live');
   const liveCountWrap = document.getElementById('live-count-wrap');
@@ -1027,7 +1032,10 @@ function renderHomeContent() {
   if (upcoming.length) {
     html += '<div class="section-label">Upcoming</div>' + upcoming.map(gameCardHTML).join('');
   }
-  if (!live.length && !upcoming.length) {
+  if (final.length) {
+    html += '<div class="section-label">Final — Results</div>' + final.map(gameCardHTML).join('');
+  }
+  if (!live.length && !upcoming.length && !final.length) {
     const sportName = activeSportTab === 'all' ? '' : activeSportTab.toUpperCase() + ' ';
     html = `<div class="empty-state"><div class="empty-title">No ${sportName}games right now</div><div class="empty-sub">Check back when games are scheduled.</div></div>`;
   }
@@ -1117,8 +1125,9 @@ function renderAlerts() {
 }
 
 function gameCardHTML(g) {
+  const isFinal = g.status === 'final';
   const m = calcModel(g, g.secsRemaining);
-  const isPregame = g.baseEdge === 0;
+  const isPregame = g.baseEdge === 0 && !isFinal;
   const innings = g.inningsRemaining || 9;
   const wins = g.isMLB ? getMLBWindows(innings) : getWindows(g.secsRemaining);
   const diff = Math.abs(g.homeScore - g.awayScore);
@@ -1127,7 +1136,12 @@ function gameCardHTML(g) {
 
   // Verdict logic
   let verdictText, verdictClass, edgeClass;
-  if (isPregame) {
+  if (isFinal) {
+    const finalHit = g.totalSoFar > g.marketTotal;
+    verdictText = finalHit ? `OVER ${g.marketTotal} HIT ✓` : `UNDER ${g.marketTotal} HIT ✓`;
+    verdictClass = finalHit ? 'gc-verdict-over' : 'gc-verdict-avoid';
+    edgeClass = 'edge-final';
+  } else if (isPregame) {
     verdictText = 'Edge calculates when live';
     verdictClass = 'gc-verdict-pregame';
     edgeClass = '';
@@ -1151,7 +1165,9 @@ function gameCardHTML(g) {
 
   // One-line why
   let why;
-  if (pace > 5.5) why = 'Pace elevated · scoring window open';
+  if (isFinal) {
+    why = `Final total: ${g.totalSoFar} · Line: ${g.marketTotal}`;
+  } else if (pace > 5.5) why = 'Pace elevated · scoring window open';
   else if (pace < 4.5) why = 'Pace stalled · scoring window closing';
   else if (diff > 15) why = 'Blowout risk · garbage time likely';
   else if (g.secsRemaining < 240 && diff < 8) why = 'Foul risk elevated · free throws incoming';
@@ -1164,7 +1180,9 @@ function gameCardHTML(g) {
   const clockPart = g.clock ? ` ${g.period} ${g.clock}` : ` ${g.period}`;
   const isFav = !!(window.__favs && window.__favs[g.id]);
 
-  return `<div class="game-card ${edgeClass}" onclick="openGameView('${g.id}')">
+  const hasLiveCallLog = !!(window.__bestBetLog && window.__bestBetLog[g.id]);
+
+  return `<div class="game-card ${edgeClass}" ${isFinal ? '' : `onclick="openGameView('${g.id}')"`}>
     <div class="gc-meta">
       <span>${isLive ? '<span class="gc-live-dot"></span><span class="gc-meta-live">Live</span> · ' : ''}${sport} ·${clockPart}</span>
       <span class="gc-fav">
@@ -1189,12 +1207,17 @@ function gameCardHTML(g) {
         <div class="gc-verdict ${verdictClass}">${verdictText}</div>
         <div class="gc-why">${why}</div>
       </div>
-      ${!isPregame ? `<div class="gc-edge-col">
+      ${!isPregame && !isFinal ? `<div class="gc-edge-col">
         <span class="gc-edge-num ${edgeNumClass}">${edgeSign}${m.edge}</span>
         <span class="gc-edge-lbl">model edge</span>
       </div>` : ''}
     </div>
-    ${!isPregame ? `
+    ${isFinal ? `
+    <div class="gc-final-share">
+      ${hasLiveCallLog ? `<button class="gc-share-btn" onclick="event.stopPropagation();openLiveCallShare('${g.id}')">Live Call Receipt →</button>` : ''}
+      <button class="gc-share-btn" onclick="event.stopPropagation();openPregameShare('${g.id}')">${g.pregameTotal ? 'Pre-Game → Final →' : 'View Result →'}</button>
+    </div>
+    ` : !isPregame ? `
     <div class="gc-projections">
       ${(() => {
         const cardUsage = getFreeUsage();
@@ -1233,7 +1256,7 @@ function gameCardHTML(g) {
       })()}
     </div>
     ` : ''}
-    ${!isPregame && Math.abs(m.edge) >= 3 ? `
+    ${!isPregame && !isFinal && Math.abs(m.edge) >= 3 ? `
     <div class="gc-bet-now" onclick="event.stopPropagation();openBetNow(${JSON.stringify({isMLB: g.isMLB || false})})">
       <span class="gc-bet-now-label">Bet Now</span>
       <span class="gc-bet-now-book">${(SPORTSBOOK_LINKS[getSportsbookPref()] || SPORTSBOOK_LINKS.draftkings).name} →</span>
@@ -1266,6 +1289,21 @@ function updateBestBet(games) {
   }
   bestBetGameId = best.id;
   const side = m.edge >= 0 ? 'OVER' : 'UNDER';
+  // Log for Live Call Receipt share card
+  if (!window.__bestBetLog) window.__bestBetLog = {};
+  if (!window.__bestBetLog[best.id]) {
+    window.__bestBetLog[best.id] = {
+      gameId: best.id,
+      game: best.away + ' vs ' + best.home,
+      edge: m.edge,
+      marketTotal: best.marketTotal,
+      side,
+      awayScore: best.awayScore,
+      homeScore: best.homeScore,
+      period: best.period,
+      timestamp: Date.now(),
+    };
+  }
   document.getElementById('bb-game').textContent = best.away + ' vs ' + best.home + ' · ' + side + ' ' + best.marketTotal;
   document.getElementById('bb-sub').textContent = '+' + Math.abs(m.edge) + ' edge · ' + getBestBetReason(best, m);
   strip.style.display = 'block';
@@ -2570,6 +2608,165 @@ function copyResultTweetText() {
     window.getSelection().removeAllRanges();
     window.getSelection().addRange(range);
   });
+}
+
+/* ── LIVE CALL RECEIPT ──────────────────────────────────── */
+function openLiveCallShare(gameId) {
+  const g = getGameById(gameId) || GAMES[gameId];
+  if (!g) return;
+  const log = window.__bestBetLog && window.__bestBetLog[gameId];
+  const finalTotal = g.totalSoFar;
+  const marketTotal = log ? log.marketTotal : g.marketTotal;
+  const side = log ? log.side : (g.side || 'OVER');
+  const edge = log ? log.edge : 0;
+  const sign = edge >= 0 ? '+' : '';
+  const hit = side === 'OVER' ? finalTotal > marketTotal : finalTotal < marketTotal;
+  const hitText = hit ? `${side} HIT ✓` : `${side} MISSED ✗`;
+  const hitColor = hit ? '#4da6ff' : '#ff5a52';
+  const gameTitle = g.title || ((g.awayTeam || g.away) + ' @ ' + (g.homeTeam || g.home));
+
+  goTo('s-snapshot');
+  document.getElementById('snapshot-content').innerHTML = `
+    <div class="snapshot-wrap">
+      <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Live Call Receipt</div>
+
+      <div style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${hitColor};border-radius:4px;padding:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#e8f2fb;">PARLAY<span style="color:#4da6ff;">KILLER</span></div>
+            <div style="font-size:13px;letter-spacing:0.12em;color:#ff453a;font-weight:500;">LIVE EDGE</div>
+          </div>
+          <div style="font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:${hitColor};background:${hit ? 'rgba(77,166,255,0.1)' : 'rgba(255,90,82,0.1)'};border:0.5px solid ${hitColor};border-radius:2px;padding:3px 8px;">${hitText}</div>
+        </div>
+
+        <div style="font-size:14px;font-weight:500;color:#e8f2fb;margin-bottom:14px;">${gameTitle}</div>
+
+        <div style="border-top:0.5px solid #253042;border-bottom:0.5px solid #253042;padding:14px 0;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;">
+          ${log ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Called live at</div>
+            <div style="font-size:16px;font-weight:500;color:#e8f2fb;">${side} ${marketTotal} · ${sign}${edge} edge</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Score when called</div>
+            <div style="font-size:14px;font-weight:500;color:#e8f2fb;">${log.awayScore}–${log.homeScore} · ${log.period}</div>
+          </div>
+          ` : ''}
+          <div style="height:0.5px;background:#253042;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Final score</div>
+            <div style="font-size:14px;font-weight:500;color:#e8f2fb;">${g.awayScore}–${g.homeScore}</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Final total</div>
+            <div style="font-size:24px;font-weight:500;color:${hitColor};letter-spacing:-0.02em;">${finalTotal}</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">vs line</div>
+            <div style="font-size:16px;font-weight:500;color:${hitColor};">${hitText}</div>
+          </div>
+        </div>
+        <div style="font-size:9px;text-align:center;color:rgba(255,255,255,0.15);letter-spacing:0.14em;text-transform:uppercase;">PARLAYKILLERAPP.COM</div>
+      </div>
+
+      <div style="font-size:11px;color:var(--dim);line-height:1.6;margin-bottom:16px;">Screenshot the card above then post it to X.</div>
+      <button onclick="shareLiveCallToX('${gameId}')" style="width:100%;padding:14px;background:var(--blue);color:var(--navy);font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;border:none;border-radius:2px;cursor:pointer;margin-bottom:10px;">Post to X (Screenshot first)</button>
+      <button onclick="goBack('s-home')" style="width:100%;padding:12px;background:none;border:0.5px solid var(--b2);color:var(--dim);font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">← Back to Board</button>
+    </div>
+  `;
+}
+
+function shareLiveCallToX(gameId) {
+  const g = getGameById(gameId) || GAMES[gameId];
+  if (!g) return;
+  const log = window.__bestBetLog && window.__bestBetLog[gameId];
+  const finalTotal = g.totalSoFar;
+  const marketTotal = log ? log.marketTotal : g.marketTotal;
+  const side = log ? log.side : (g.side || 'OVER');
+  const edge = log ? log.edge : 0;
+  const sign = edge >= 0 ? '+' : '';
+  const hit = side === 'OVER' ? finalTotal > marketTotal : finalTotal < marketTotal;
+  const emoji = hit ? (side === 'OVER' ? '🔥' : '🧊') : '📊';
+  const gameTitle = g.title || ((g.awayTeam || g.away) + ' @ ' + (g.homeTeam || g.home));
+  let txt = `${emoji} LIVE CALL RECEIPT\n${gameTitle}\n`;
+  if (log) txt += `Called: ${side} ${marketTotal} · ${sign}${edge} edge\nScore at call: ${log.awayScore}–${log.homeScore} · ${log.period}\n`;
+  txt += `Final: ${g.awayScore}–${g.homeScore} (Total: ${finalTotal})\n${hit ? `${side} HIT ✓` : `${side} MISSED ✗`}\n\nvia @ParlayKillerApp parlaykillerapp.com`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`, '_blank', 'noopener');
+}
+
+/* ── PRE-GAME → FINAL ───────────────────────────────────── */
+function openPregameShare(gameId) {
+  const g = getGameById(gameId) || GAMES[gameId];
+  if (!g) return;
+  const pregameTotal = g.pregameTotal;
+  const finalTotal = g.totalSoFar;
+  const line = pregameTotal || g.marketTotal;
+  const hit = finalTotal > line;
+  const hitText = hit ? 'OVER HIT ✓' : 'UNDER HIT ✓';
+  const hitColor = hit ? '#4da6ff' : '#ff5a52';
+  const diff = Math.abs(finalTotal - line).toFixed(1);
+  const gameTitle = g.title || ((g.awayTeam || g.away) + ' @ ' + (g.homeTeam || g.home));
+
+  goTo('s-snapshot');
+  document.getElementById('snapshot-content').innerHTML = `
+    <div class="snapshot-wrap">
+      <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Pre-Game → Final</div>
+
+      <div style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${hitColor};border-radius:4px;padding:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#e8f2fb;">PARLAY<span style="color:#4da6ff;">KILLER</span></div>
+            <div style="font-size:13px;letter-spacing:0.12em;color:#ff453a;font-weight:500;">LIVE EDGE</div>
+          </div>
+          <div style="font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:${hitColor};background:${hit ? 'rgba(77,166,255,0.1)' : 'rgba(255,90,82,0.1)'};border:0.5px solid ${hitColor};border-radius:2px;padding:3px 8px;">${hitText}</div>
+        </div>
+
+        <div style="font-size:14px;font-weight:500;color:#e8f2fb;margin-bottom:14px;">${gameTitle}</div>
+
+        <div style="border-top:0.5px solid #253042;border-bottom:0.5px solid #253042;padding:14px 0;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;">
+          ${pregameTotal ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Pre-game total</div>
+            <div style="font-size:16px;font-weight:500;color:#e8f2fb;">${pregameTotal}</div>
+          </div>` : ''}
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Final score</div>
+            <div style="font-size:14px;font-weight:500;color:#e8f2fb;">${g.awayScore}–${g.homeScore}</div>
+          </div>
+          <div style="height:0.5px;background:#253042;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">Final total</div>
+            <div style="font-size:24px;font-weight:500;color:${hitColor};letter-spacing:-0.02em;">${finalTotal}</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;color:#4a6480;letter-spacing:0.06em;text-transform:uppercase;">vs ${pregameTotal ? 'closing line' : 'line'}</div>
+            <div style="font-size:16px;font-weight:500;color:${hitColor};">${hitText} by ${diff}</div>
+          </div>
+        </div>
+        <div style="font-size:9px;text-align:center;color:rgba(255,255,255,0.15);letter-spacing:0.14em;text-transform:uppercase;">PARLAYKILLERAPP.COM</div>
+      </div>
+
+      <div style="font-size:11px;color:var(--dim);line-height:1.6;margin-bottom:16px;">Screenshot the card above then post it to X.</div>
+      <button onclick="sharePregameFinalToX('${gameId}')" style="width:100%;padding:14px;background:var(--blue);color:var(--navy);font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;border:none;border-radius:2px;cursor:pointer;margin-bottom:10px;">Post to X (Screenshot first)</button>
+      <button onclick="goBack('s-home')" style="width:100%;padding:12px;background:none;border:0.5px solid var(--b2);color:var(--dim);font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">← Back to Board</button>
+    </div>
+  `;
+}
+
+function sharePregameFinalToX(gameId) {
+  const g = getGameById(gameId) || GAMES[gameId];
+  if (!g) return;
+  const pregameTotal = g.pregameTotal;
+  const finalTotal = g.totalSoFar;
+  const line = pregameTotal || g.marketTotal;
+  const hit = finalTotal > line;
+  const emoji = hit ? '🔥' : '🧊';
+  const diff = Math.abs(finalTotal - line).toFixed(1);
+  const gameTitle = g.title || ((g.awayTeam || g.away) + ' @ ' + (g.homeTeam || g.home));
+  let txt = `${emoji} PRE-GAME → FINAL\n${gameTitle}\n`;
+  if (pregameTotal) txt += `Closing line: ${pregameTotal}\n`;
+  txt += `Final: ${g.awayScore}–${g.homeScore} (Total: ${finalTotal})\n${hit ? 'OVER HIT ✓' : 'UNDER HIT ✓'} by ${diff}\n\nvia @ParlayKillerApp parlaykillerapp.com`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`, '_blank', 'noopener');
 }
 
 /* ── ONBOARDING ─────────────────────────────────────────── */
