@@ -1094,19 +1094,26 @@ async function revealPlayableTo(gameId, buttonEl) {
 function updateUsageDisplay() {
   const el = document.getElementById('usage-counter');
   if (!el) return;
-  if (window.__isPro) { el.style.display = 'none'; return; }
+
+  if (window.__isPro) {
+    el.style.display = 'none';
+    return;
+  }
+
   const used = window.__usageCount || 0;
-  const limit = window.__usageLimit || FREE_GAME_LIMIT;
-  const remaining = Math.max(0, limit - used);
+  const limit = window.__usageLimit || 10;
+  const remaining = limit - used;
+
   el.style.display = 'flex';
-  el.innerHTML = `<div style="display:flex;align-items:center;gap:6px;">
-    <div style="display:flex;gap:2px;">
-      ${Array.from({length: limit}).map((_, i) =>
-        `<div style="width:4px;height:4px;border-radius:50%;background:${i < used ? '#00e676' : '#1e1e1e'};"></div>`
-      ).join('')}
-    </div>
-    <span style="font-size:9px;color:#555;letter-spacing:0.06em;">${remaining} left</span>
-  </div>`;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div style="display:flex;gap:2px;">
+        ${Array.from({length: limit}).map((_, i) =>
+          `<div style="width:4px;height:4px;border-radius:50%;background:${i < used ? '#00e676' : '#1e1e1e'};"></div>`
+        ).join('')}
+      </div>
+      <span style="font-size:9px;color:#333;letter-spacing:0.06em;">${remaining} left</span>
+    </div>`;
 }
 
 function getAllGames() {
@@ -1163,7 +1170,7 @@ function renderHomeContent() {
   updateBestBet(allGames);
 
   const freeUsage = getFreeUsage();
-  if (!freeUsage.isPro) {
+  if (!freeUsage.isPro && !window.__isPro) {
     const remaining = Math.max(0, freeUsage.limit - freeUsage.count);
     const strip = document.createElement('div');
     strip.style.cssText = 'padding:8px 16px;font-size:11px;color:var(--dim);display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);';
@@ -3239,7 +3246,7 @@ async function initApp() {
       .then(res => res.ok ? res.json() : null)
       .then(u => {
         if (!u) return;
-        window.__isPro = u.isPro;
+        window.__isPro = u.isPro || window.__user?.plan === 'pro';
         window.__usageCount = u.used;
         window.__usageLimit = u.limit;
         updateUsageDisplay();
