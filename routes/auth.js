@@ -116,6 +116,36 @@ router.post(`/login`, loginLimiter, async (req, res) => {
   }
 });
 
+// ── GET /api/auth/usage ────────────────────────────────────
+router.get('/usage', requireAuth, async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const userResult = await pool.query(
+      'SELECT plan, subscription_status, email FROM users WHERE id = $1',
+      [userId]
+    );
+    const user = userResult.rows[0];
+    const bypassEmails = (process.env.BYPASS_EMAILS || '').split(',').map(e => e.trim());
+    const isPro = user && (
+      user.plan === 'pro' ||
+      user.subscription_status === 'active' ||
+      bypassEmails.includes(user.email)
+    );
+    if (isPro) {
+      return res.json({ isPro: true, used: 0, limit: 10, remaining: 999 });
+    }
+    const result = await pool.query(
+      'SELECT COUNT(*) as count FROM usage WHERE user_id = $1',
+      [userId]
+    );
+    const used = parseInt(result.rows[0].count);
+    const limit = 10;
+    res.json({ isPro: false, used, limit, remaining: Math.max(0, limit - used) });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── POST /api/auth/logout ──────────────────────────────────
 router.post('/logout', (req, res) => {
   req.session.destroy(err => {

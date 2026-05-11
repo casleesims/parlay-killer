@@ -72,6 +72,13 @@
     .gc-final-share { display: flex; gap: 8px; margin-top: 10px; }
     .gc-share-btn { flex: 1; padding: 9px; font-size: 10px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; background: none; border: 0.5px solid var(--b2); color: var(--dim); cursor: pointer; border-radius: 2px; }
     .gc-share-btn:active { background: var(--s2); }
+    .gc-playable-reveal { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); margin-top: 4px; transition: all 0.15s; }
+    .gc-playable-reveal.locked { background: #0a0a0a; border: 1px solid #1e1e1e; border-left: 3px solid #00e676; color: #00e676; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; width: calc(100% - 20px); margin: 8px 10px; justify-content: space-between; cursor: pointer; }
+    .gc-playable-reveal.locked:active { opacity: 0.7; }
+    .gc-playable-reveal.revealed { justify-content: space-between; padding: 8px 14px; }
+    .gc-playable-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+    .gc-playable-num { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #00e676; letter-spacing: 0.04em; }
+    .gc-playable-use { font-size: 9px; color: #333; font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
     .gc-meta { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
     .gc-meta-live { color: var(--blue); }
     .gc-live-dot { display: inline-block; width: 5px; height: 5px; background: var(--blue); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; vertical-align: middle; margin-right: 3px; flex-shrink: 0; }
@@ -460,6 +467,7 @@
           <div class="logo-pk">Parlay<em>Killer</em></div>
           <div class="logo-le">Live Edge</div>
         </div>
+        <div id="usage-counter" style="display:none;align-items:center;"></div>
         <div class="live-count" id="live-count-wrap"><span class="live-dot"></span><span id="live-count-label">2 LIVE</span></div>
       </div>
       <div class="tabs" id="home-tabs">
@@ -599,46 +607,34 @@ function hasHitFreeLimit() {
 
 function showUpgradeWall(context) {
   showModal(`
-    <div class="modal-logo">
-      <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
-    </div>
-    <div class="modal-title">You've used your ${FREE_GAME_LIMIT} free analyses</div>
-    <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:20px;">
-      Upgrade to Live Edge Pro for unlimited game analyses, Best Bet alerts, window projections, and book comparison.
-    </div>
-    <div style="background:var(--s2);border:0.5px solid var(--b2);border-radius:4px;padding:14px;margin-bottom:20px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-        <div>
-          <div style="font-size:9px;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Free</div>
-          <div style="font-size:12px;color:var(--dim);line-height:1.8;">
-            ✓ Live board<br>
-            ✓ ${FREE_GAME_LIMIT} game analyses<br>
-            ✓ Basic verdict<br>
-            ✗ Window projections<br>
-            ✗ Book comparison<br>
-            ✗ Unlimited alerts<br>
-            ✗ Best Bet strip
-          </div>
-        </div>
-        <div style="border-left:0.5px solid var(--border);padding-left:12px;">
-          <div style="font-size:9px;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Pro · $9.99/mo</div>
-          <div style="font-size:12px;color:var(--white);line-height:1.8;">
-            ✓ Live board<br>
-            ✓ Unlimited analyses<br>
-            ✓ Full verdict + edge<br>
-            ✓ Window projections<br>
-            ✓ Book comparison<br>
-            ✓ Unlimited alerts<br>
-            ✓ Best Bet strip
-          </div>
-        </div>
+    <div style="text-align:center;padding:8px 0;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:#00e676;margin-bottom:4px;">You're out of free reveals</div>
+      <div style="font-size:13px;color:var(--dim);margin-bottom:24px;line-height:1.6;">You've used all ${FREE_GAME_LIMIT} free Playable To reveals.<br>Upgrade to Pro for unlimited edge analysis.</div>
+      <div style="background:var(--s2);border:1px solid var(--b2);border-top:2px solid #00e676;padding:20px;margin-bottom:16px;text-align:left;">
+        <div style="font-size:10px;color:var(--dim);font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:12px;">Pro — Unlimited</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--white);margin-bottom:4px;">$9.99<span style="font-size:16px;color:var(--dim);">/mo</span></div>
+        <ul style="list-style:none;margin-top:12px;padding:0;">
+          ${['Unlimited Playable To reveals','Real-time edge updates','Push alerts','Full alt line board','All math models'].map(f =>
+            `<li style="font-size:12px;color:var(--dim);padding:4px 0;display:flex;align-items:center;gap:6px;border-bottom:0.5px solid var(--border);">
+              <span style="width:4px;height:4px;border-radius:50%;background:#00e676;flex-shrink:0;display:inline-block;"></span>${f}
+            </li>`).join('')}
+        </ul>
       </div>
+      <button onclick="closeModal();startCheckout('monthly')" style="width:100%;background:#00e676;color:#080808;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border:none;padding:14px;cursor:pointer;margin-bottom:10px;">UPGRADE TO PRO — $9.99/MO</button>
+      <button onclick="closeModal()" style="width:100%;background:none;border:0.5px solid var(--b2);color:var(--dim);font-size:11px;padding:11px;cursor:pointer;">Maybe later</button>
+      <div style="text-align:center;margin-top:10px;font-size:10px;color:var(--dim);">$39.99/year · cancel anytime</div>
     </div>
-    <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="closeModal()">Maybe later</button>
-      <button class="modal-btn primary" onclick="closeModal();startCheckout('monthly')">Upgrade to Pro →</button>
+  `);
+}
+
+function showSignupWall() {
+  showModal(`
+    <div style="text-align:center;padding:8px 0;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);margin-bottom:4px;">Sign up to reveal</div>
+      <div style="font-size:13px;color:var(--dim);margin-bottom:24px;line-height:1.6;">Create a free account to get<br><strong style="color:var(--white);">${FREE_GAME_LIMIT} free Playable To reveals</strong>.<br>No credit card required.</div>
+      <button onclick="window.location.href='/'" style="width:100%;background:#00e676;color:#080808;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border:none;padding:14px;cursor:pointer;margin-bottom:10px;">START FREE — ${FREE_GAME_LIMIT} REVEALS</button>
+      <button onclick="closeModal()" style="width:100%;background:none;border:0.5px solid var(--b2);color:var(--dim);font-size:11px;padding:11px;cursor:pointer;">Keep browsing</button>
     </div>
-    <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--dim);">$39.99/year · cancel anytime</div>
   `);
 }
 
@@ -649,15 +645,29 @@ function calcModel(game, secs) {
   const minsPlayed = 48 - secs/60;
   const pace = minsPlayed > 0 ? game.totalSoFar/minsPlayed : 5.1;
   const diff = Math.abs(game.homeScore - game.awayScore);
+
   const foulAdj = secs<240&&diff<8 ? 1.10 : secs<120&&diff<6 ? 1.18 : 1.0;
   const blowoutDamp = diff>15 ? 0.78 : diff>10 ? 0.88 : 1.0;
-  const timeRatio = Math.max(0.15, secs/game.maxSecs);
-  const edgeNow = Math.round(game.baseEdge * timeRatio * 10) / 10;
-  const modelFair = Math.round((game.marketTotal + edgeNow) * 10) / 10;
-  const playableTo = Math.round((modelFair - 1.5) * 2) / 2;
-  const conf = Math.min(92, Math.max(48, Math.round(50 + Math.abs(edgeNow) * 3.8)));
   const adjPace = pace * foulAdj * blowoutDamp;
-  return { model:modelFair, edge:edgeNow, playableTo, conf, pace:Math.round(adjPace*10)/10 };
+
+  const projFinal = game.totalSoFar + adjPace * (secs/60);
+  const modelFair = Math.round(projFinal * 2) / 2;
+
+  const rawEdge = modelFair - game.marketTotal;
+  const timeRatio = Math.max(0.15, secs/game.maxSecs);
+  const edgeNow = Math.round(rawEdge * timeRatio * 10) / 10;
+
+  const side = edgeNow > 0 ? 'OVER' : edgeNow < 0 ? 'UNDER' : 'EVEN';
+  const edgeColor = edgeNow > 0 ? '#00e676' : edgeNow < 0 ? '#ff4444' : '#555';
+
+  const juiceBuffer = 1.5;
+  const playableTo = edgeNow > 0
+    ? Math.round((game.marketTotal + Math.abs(edgeNow) - juiceBuffer) * 2) / 2
+    : Math.round((game.marketTotal - Math.abs(edgeNow) + juiceBuffer) * 2) / 2;
+
+  const conf = Math.min(92, Math.max(48, Math.round(50 + Math.abs(edgeNow) * 3.8)));
+
+  return { model: modelFair, edge: edgeNow, side, edgeColor, playableTo, conf, pace: Math.round(adjPace*10)/10 };
 }
 
 function projWindow(game, secs, windowSecs) {
@@ -994,6 +1004,101 @@ function getGameById(id) {
   return GAMES[id] || null;
 }
 
+async function revealPlayableTo(gameId, buttonEl) {
+  if (buttonEl.classList.contains('loading')) return;
+  buttonEl.classList.add('loading');
+  const origHTML = buttonEl.innerHTML;
+  buttonEl.innerHTML = 'Calculating...';
+
+  try {
+    const g = getGameById(gameId);
+    if (!g) throw new Error('Game not found');
+
+    const payload = {
+      sport: g.sport || 'NBA',
+      homeScore: g.homeScore || 0,
+      awayScore: g.awayScore || 0,
+      period: g.period || 'Q1',
+      timeRemaining: g.clock || '12:00',
+      bookTotal: g.marketTotal,
+    };
+
+    const r = await fetch('/api/liveunder/game-total', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    if (r.status === 401) {
+      showSignupWall();
+      buttonEl.classList.remove('loading');
+      buttonEl.innerHTML = origHTML;
+      return;
+    }
+
+    const data = await r.json();
+
+    if (data.limitReached || data.requiresUpgrade) {
+      showUpgradeWall('playable-to');
+      buttonEl.classList.remove('loading');
+      buttonEl.innerHTML = origHTML;
+      return;
+    }
+
+    // Fallback: compute locally using calcModel
+    const m = calcModel(g, g.secsRemaining);
+    const playableTo = data.playableTo || data.projectedFinal || m.playableTo;
+
+    const parent = buttonEl.parentElement;
+    parent.innerHTML = `<div class="gc-playable-reveal revealed">
+      <span class="gc-playable-label">Playable to</span>
+      <span class="gc-playable-num">${playableTo}</span>
+    </div>`;
+
+    window.__usageCount = (window.__usageCount || 0) + 1;
+    updateUsageDisplay();
+
+  } catch(e) {
+    // Fallback: compute locally
+    try {
+      const g = getGameById(gameId);
+      if (g) {
+        const m = calcModel(g, g.secsRemaining);
+        const parent = buttonEl.parentElement;
+        parent.innerHTML = `<div class="gc-playable-reveal revealed">
+          <span class="gc-playable-label">Playable to</span>
+          <span class="gc-playable-num">${m.playableTo}</span>
+        </div>`;
+        window.__usageCount = (window.__usageCount || 0) + 1;
+        updateUsageDisplay();
+        return;
+      }
+    } catch(_) {}
+    buttonEl.classList.remove('loading');
+    buttonEl.innerHTML = origHTML;
+    console.error('revealPlayableTo error:', e);
+  }
+}
+
+function updateUsageDisplay() {
+  const el = document.getElementById('usage-counter');
+  if (!el) return;
+  if (window.__isPro) { el.style.display = 'none'; return; }
+  const used = window.__usageCount || 0;
+  const limit = window.__usageLimit || FREE_GAME_LIMIT;
+  const remaining = Math.max(0, limit - used);
+  el.style.display = 'flex';
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:6px;">
+    <div style="display:flex;gap:2px;">
+      ${Array.from({length: limit}).map((_, i) =>
+        `<div style="width:4px;height:4px;border-radius:50%;background:${i < used ? '#00e676' : '#1e1e1e'};"></div>`
+      ).join('')}
+    </div>
+    <span style="font-size:9px;color:#555;letter-spacing:0.06em;">${remaining} left</span>
+  </div>`;
+}
+
 function getAllGames() {
   if (window.__liveGames && window.__liveGames.length > 0) {
     return window.__liveGames.map(liveGameToCard);
@@ -1219,42 +1324,36 @@ function gameCardHTML(g) {
     </div>
     ` : !isPregame ? `
     <div class="gc-projections">
-      ${(() => {
-        const cardUsage = getFreeUsage();
-        if (cardUsage.isPro) {
-          return wins.slice(0, 2).map(w => {
-            const p = g.isMLB
-              ? projMLBWindow(g, innings, w.i || w.s/600)
-              : projWindow(g, g.secsRemaining, w.s);
-            const unit = g.isMLB ? 'runs' : 'pts';
-            return `<div class="gc-proj-item">
-              <span class="gc-proj-label">Next ${w.l}</span>
-              <span class="gc-proj-val">${p.pts} ${unit}</span>
-            </div>`;
-          }).join('') + `
-          <div class="gc-proj-item">
-            <span class="gc-proj-label">Playable to</span>
-            <span class="gc-proj-val gc-proj-playable">${m.playableTo}</span>
-          </div>`;
-        } else {
-          return `
-            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-              <div class="gc-proj-item" style="flex:1;">
-                <span class="gc-proj-label">Next ${wins[0]?.l || '5:00'}</span>
-                <span class="gc-proj-val" style="filter:blur(5px);user-select:none;">14.2</span>
-              </div>
-              <div class="gc-proj-item" style="flex:1;">
-                <span class="gc-proj-label">Playable to</span>
-                <span class="gc-proj-val gc-proj-playable" style="filter:blur(5px);user-select:none;">999.9</span>
-              </div>
-              <div style="flex-shrink:0;">
-                <button onclick="event.stopPropagation();showUpgradeWall('projections')" style="font-size:10px;font-weight:500;letter-spacing:0.04em;padding:5px 10px;background:var(--blue-dim);color:var(--blue);border:0.5px solid var(--blue-border);border-radius:2px;cursor:pointer;">Pro →</button>
-              </div>
-            </div>
-          `;
-        }
-      })()}
+      ${wins.slice(0, 2).map(w => {
+        const p = g.isMLB
+          ? projMLBWindow(g, innings, w.i || w.s/600)
+          : projWindow(g, g.secsRemaining, w.s);
+        const unit = g.isMLB ? 'runs' : 'pts';
+        return `<div class="gc-proj-item">
+          <span class="gc-proj-label">Next ${w.l}</span>
+          <span class="gc-proj-val">${p.pts} ${unit}</span>
+        </div>`;
+      }).join('')}
     </div>
+    ${(() => {
+      const cardUsage = getFreeUsage();
+      const remaining = window.__usageLimit != null
+        ? Math.max(0, window.__usageLimit - (window.__usageCount || 0))
+        : Math.max(0, cardUsage.limit - cardUsage.count);
+      if (cardUsage.isPro || window.__isPro) {
+        return `<div class="gc-playable-reveal revealed">
+          <span class="gc-playable-label">Playable to</span>
+          <span class="gc-playable-num">${m.playableTo}</span>
+        </div>`;
+      }
+      return `<button class="gc-playable-reveal locked" onclick="event.stopPropagation();revealPlayableTo('${g.id}', this)" data-game-id="${g.id}">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="5" width="8" height="6" rx="1"/><path d="M4 5V3.5a2 2 0 014 0V5"/></svg>
+          Reveal Playable To
+        </span>
+        <span class="gc-playable-use">uses 1 of ${remaining} free</span>
+      </button>`;
+    })()}
     ` : ''}
     ${!isPregame && !isFinal && Math.abs(m.edge) >= 3 ? `
     <div class="gc-bet-now" onclick="event.stopPropagation();openBetNow(${JSON.stringify({isMLB: g.isMLB || false})})">
@@ -3000,6 +3099,19 @@ async function initApp() {
 
     window.__user = data.user;
     updateNavAvatar(data.user);
+
+    // Load usage from server (fire-and-forget, don't block board render)
+    fetch('/api/auth/usage', { credentials: 'include' })
+      .then(res => res.ok ? res.json() : null)
+      .then(u => {
+        if (!u) return;
+        window.__isPro = u.isPro;
+        window.__usageCount = u.used;
+        window.__usageLimit = u.limit;
+        updateUsageDisplay();
+      })
+      .catch(() => {});
+
     await loadLiveGames();
     renderBoard();
     showOnboarding();
