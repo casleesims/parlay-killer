@@ -267,9 +267,8 @@ function mergeGameData(scoresData, oddsData, sport) {
     const commence = new Date(game.commence_time);
     const isLive = !game.completed && commence <= now;
     const isUpcoming = commence > now;
-    const lastUpdate = game.last_update ? new Date(game.last_update) : null;
-    const isFinalGrace = game.completed && lastUpdate && ((now - lastUpdate) / 60000) <= 30;
-    if (game.completed && !isFinalGrace) return;
+    if (game.completed) return;
+    const isFinalGrace = false;
 
     if (isLive && !pregameTotalCache[game.id]) {
       fetchPregameTotal(game.id, sport.toUpperCase(), game.commence_time)

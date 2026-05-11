@@ -55,7 +55,7 @@ async function checkUsage(req, res, next) {
     );
 
     const totalCount = parseInt(usageResult.rows[0].count);
-    const FREE_LIMIT = 3;
+    const FREE_LIMIT = 10;
 
     if (totalCount >= FREE_LIMIT) {
       return res.status(429).json({

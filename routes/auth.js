@@ -197,8 +197,8 @@ router.get('/me', async (req, res) => {
       user: {
         ...safe,
         todayUsage,
-        usageLimit: isPro ? null : 3,
-        remaining: isPro ? null : Math.max(0, 3 - todayUsage),
+        usageLimit: isPro ? null : 10,
+        remaining: isPro ? null : Math.max(0, 10 - todayUsage),
       },
     });
   } catch (err) {

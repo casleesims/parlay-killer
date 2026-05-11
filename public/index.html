@@ -568,7 +568,7 @@ function initTheme() {
 function initCookieBanner() {}
 
 /* ── FREE TIER ──────────────────────────────────────────── */
-const FREE_GAME_LIMIT = 3;
+const FREE_GAME_LIMIT = 10;
 const BYPASS_EMAILS = ['simscaslee@gmail.com', 'parlay@parlaykillerapp.com'];
 
 function getFreeUsage() {
@@ -2129,7 +2129,7 @@ function renderAccount() {
   const isPro = plan === 'pro' || user.isOwner;
   if (isPro) localStorage.removeItem('pk_free_usage');
   const usage = user.todayUsage || 0;
-  const remaining = Math.max(0, 3 - usage);
+  const remaining = Math.max(0, 10 - usage);
   const name = user.name || user.email || 'User';
   const email = user.email || '';
   const initial = name[0].toUpperCase();
