@@ -1525,22 +1525,6 @@ function openBestBet() {
 function openGameView(gameId) {
   const usage = getFreeUsage();
 
-  if (!usage.isPro && usage.count >= usage.limit) {
-    showUpgradeWall('game-view');
-    return;
-  }
-
-  if (!usage.isPro) {
-    incrementFreeUsage();
-    const newUsage = getFreeUsage();
-    const remaining = usage.limit - newUsage.count;
-    if (remaining === 1) {
-      setTimeout(() => showUpgradeBanner('1 free analysis remaining — upgrade for unlimited'), 2000);
-    } else if (remaining === 0) {
-      setTimeout(() => showUpgradeBanner('That was your last free analysis — upgrade to continue'), 2000);
-    }
-  }
-
   activeGame = getGameById(gameId) || GAMES[gameId];
   if (!activeGame) return;
   activeGameSecs = activeGame.secsRemaining;
@@ -1680,7 +1664,7 @@ function renderEdgeTab(el) {
         </div>
         <div class="eh-edge">
           <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
-          <div class="eh-playable">Playable to: ${usage.isPro
+          <div class="eh-playable">Playable to: ${(usage.isPro || usage.remaining > 0)
             ? `<span id="playable-to" style="color:var(--white);font-weight:500;">${m.playableTo}</span>`
             : `<span style="filter:blur(5px);user-select:none;color:var(--white);font-weight:500;">999.9</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;">Pro →</button>`
           }</div>
@@ -1704,7 +1688,7 @@ function renderEdgeTab(el) {
           <text x="4" y="20" font-size="7" fill="${m.edge>=0?'#4da6ff':'#ff5a52'}" font-family="DM Sans">Model</text>
         </svg>
       </div>
-      ${usage.isPro ? `
+      ${(usage.isPro || usage.remaining > 0) ? `
       <div class="windows-section">
         <div class="ws-label">Next window projections</div>
         <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
@@ -1757,7 +1741,7 @@ function renderEdgeTab(el) {
         <div style="font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;">% of bankroll suggested based on this edge. Half Kelly reduces variance.</div>
       </div>
       <div class="action-block">
-        <div class="ab-playable">${usage.isPro
+        <div class="ab-playable">${(usage.isPro || usage.remaining > 0)
           ? `Playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span>`
           : `Playable to: <span style="filter:blur(4px);opacity:0.3;">${m.playableTo}</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;">Unlock Pro →</button>`
         }</div>
@@ -1870,7 +1854,7 @@ function renderMLBEdgeTab(el, g) {
         </div>
         <div class="eh-edge">
           <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
-          <div class="eh-playable">Playable to: ${usage.isPro
+          <div class="eh-playable">Playable to: ${(usage.isPro || usage.remaining > 0)
             ? `<span id="playable-to" style="color:var(--white);font-weight:500;">${m.playableTo}</span>`
             : `<span style="filter:blur(5px);user-select:none;color:var(--white);font-weight:500;">999.9</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;">Pro →</button>`
           }</div>
@@ -1884,7 +1868,7 @@ function renderMLBEdgeTab(el, g) {
         <div class="conf-bar-bg"><div class="conf-bar-fill ${confColor}" id="conf-fill" style="width:${m.conf}%"></div></div>
         <div style="font-size:10px;color:var(--dim);margin-top:5px;" id="conf-label">${confLabel}</div>
       </div>
-      ${usage.isPro ? `
+      ${(usage.isPro || usage.remaining > 0) ? `
       <div class="windows-section">
         <div class="ws-label">Next inning projections</div>
         <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
@@ -1935,7 +1919,7 @@ function renderMLBEdgeTab(el, g) {
         <div style="font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;">% of bankroll suggested based on this edge. Half Kelly reduces variance.</div>
       </div>
       <div class="action-block">
-        <div class="ab-playable">${usage.isPro
+        <div class="ab-playable">${(usage.isPro || usage.remaining > 0)
           ? `Playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span>`
           : `Playable to: <span style="filter:blur(4px);opacity:0.3;">${m.playableTo}</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;">Unlock Pro →</button>`
         }</div>

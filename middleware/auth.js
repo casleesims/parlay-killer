@@ -78,12 +78,12 @@ async function checkUsage(req, res, next) {
     req.usageLimit = FREE_LIMIT;
 
     // Fire usage emails (fire-and-forget)
-    if (newCount === 2 || newCount === 3) {
+    if (newCount === 8 || newCount === 10) {
       pool.query('SELECT email, name FROM users WHERE id = $1', [userId])
         .then(r => {
           if (!r.rows.length) return;
           const { email, name } = r.rows[0];
-          if (newCount === 2) sendUsageWarningEmail(email, name);
+          if (newCount === 8) sendUsageWarningEmail(email, name);
           else sendLimitReachedEmail(email, name);
         })
         .catch(err => console.error('Usage email lookup error:', err));
