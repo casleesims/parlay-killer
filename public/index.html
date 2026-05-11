@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Parlay Killer Live Edge</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -28,8 +29,9 @@
 
     /* LOGO */
     .logo { display: flex; align-items: center; line-height: 1; }
-    .logo-pk { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--white); }
-    .logo-pk em { color: var(--blue); font-style: normal; }
+    .logo-pk { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; }
+    .logo-pk .w { color: #ffffff; }
+    .logo-pk .g { color: #00e676; }
     .logo-le { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--red); letter-spacing: 0.1em; margin-left: 7px; position: relative; top: 1px; }
 
     /* APP SHELL */
@@ -53,6 +55,11 @@
     .live-dot { width: 7px; height: 7px; background: var(--blue); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: #00e676; color: #080808; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; padding: 10px 20px; z-index: 9999; opacity: 0; transition: all 0.3s cubic-bezier(.4,0,.2,1); white-space: nowrap; pointer-events: none; border-radius: 2px; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { background: #ff453a; color: #fff; }
+    .toast.info { background: #0d0d0d; color: #fff; border: 1px solid #1e1e1e; }
     .ptr-indicator { display: flex; align-items: center; justify-content: center; gap: 8px; height: 0; overflow: hidden; transition: height 0.2s ease; background: var(--bg); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
     .ptr-indicator.visible { height: 48px; }
     .ptr-spinner { width: 14px; height: 14px; border: 2px solid var(--b2); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; }
@@ -403,7 +410,7 @@
   <aside class="desktop-sidebar-left" id="desktop-sidebar-left">
     <div class="ds-logo">
       <div class="logo">
-        <div class="logo-pk">Parlay<em>Killer</em></div>
+        <div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div>
         <div class="logo-le">Live Edge</div>
       </div>
       <div class="ds-tagline">The math sees it before you do.</div>
@@ -464,12 +471,13 @@
     <div class="scr active" id="s-home">
       <div class="top-bar">
         <div class="logo">
-          <div class="logo-pk">Parlay<em>Killer</em></div>
+          <div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div>
           <div class="logo-le">Live Edge</div>
         </div>
         <div id="usage-counter" style="display:none;align-items:center;"></div>
         <div class="live-count" id="live-count-wrap"><span class="live-dot"></span><span id="live-count-label">2 LIVE</span></div>
       </div>
+      <div class="ptr-indicator" id="ptr-indicator">↓ Pull to refresh</div>
       <div class="tabs" id="home-tabs">
         <button class="tab active" id="tab-all" onclick="switchSportTab('all')">All</button>
         <button class="tab" id="tab-nba" onclick="switchSportTab('nba')">NBA</button>
@@ -487,7 +495,7 @@
             Board
           </button>
         </div>
-        <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
         <button class="share-btn" onclick="openSnapshot()">Share</button>
       </div>
       <div id="game-view-content"></div>
@@ -502,7 +510,7 @@
             Game
           </button>
         </div>
-        <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
         <div></div>
       </div>
       <div id="snapshot-content"></div>
@@ -511,7 +519,7 @@
     <!-- SCREEN: ACCOUNT -->
     <div class="scr inactive" id="s-account">
       <div class="top-bar">
-        <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
       </div>
       <div id="account-content"></div>
     </div>
@@ -1058,6 +1066,7 @@ async function revealPlayableTo(gameId, buttonEl) {
 
     window.__usageCount = (window.__usageCount || 0) + 1;
     updateUsageDisplay();
+    showToast('Tap Share Edge Call to post your edge call', 'info', 4000);
 
   } catch(e) {
     // Fallback: compute locally
@@ -1142,7 +1151,12 @@ function renderHomeContent() {
   }
   if (!live.length && !upcoming.length && !final.length) {
     const sportName = activeSportTab === 'all' ? '' : activeSportTab.toUpperCase() + ' ';
-    html = `<div class="empty-state"><div class="empty-title">No ${sportName}games right now</div><div class="empty-sub">Check back when games are scheduled.</div></div>`;
+    html = `<div class="empty-state" style="padding:60px 24px;text-align:center;">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin:0 auto 16px;display:block;opacity:0.2;" stroke="#fff" stroke-width="1.5"><circle cx="24" cy="24" r="20"/><path d="M24 14v10l6 6" stroke-linecap="round"/></svg>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#fff;letter-spacing:0.04em;margin-bottom:8px;">No ${sportName}Live Games Right Now</div>
+      <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:24px;">The edge board updates automatically.<br>Check back when games tip off.</div>
+      <button onclick="window.__liveGames=null;loadLiveGames().then(renderBoard)" style="background:none;border:1px solid #1e1e1e;color:#555;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:10px 20px;cursor:pointer;">Check Again</button>
+    </div>`;
   }
   el.innerHTML = html;
   updateBestBet(allGames);
@@ -1572,11 +1586,11 @@ function renderEdgeTab(el) {
 
   el.innerHTML = `
     <div class="edge-tab-content">
-      <div class="clock-strip">
+      ${(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1') ? `<div class="clock-strip">
         <span class="clock-label">Clock</span>
         <input type="range" class="clock-slider" min="0" max="${g.maxSecs}" value="${secs}" oninput="onClockSlide(this.value)">
         <span class="clock-display" id="clock-disp">${fmt(secs)}</span>
-      </div>
+      </div>` : ''}
       <div class="edge-hero">
         <div class="eh-row1">
           <div><div class="eh-col-label">Score</div><div class="eh-score-val">${g.awayScore}–${g.homeScore}</div></div>
@@ -1668,9 +1682,9 @@ function renderEdgeTab(el) {
         <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
         <div class="ab-btns">
           <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${SPORTSBOOK_LINKS[getSportsbookPref()]?.name || 'DraftKings'}</button>
-          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
-          <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Log Bet</button>
-          <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
+          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert When Edge Moves</button>
+          <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Track This Game</button>
+          <button class="ab-btn danger" onclick="openSnapshot()">Share Edge Call</button>
         </div>
       </div>
       <div class="collapse-section">
@@ -1759,11 +1773,11 @@ function renderMLBEdgeTab(el, g) {
   ).join('');
   el.innerHTML = `
     <div class="edge-tab-content">
-      <div class="clock-strip">
+      ${(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1') ? `<div class="clock-strip">
         <span class="clock-label">Innings remaining</span>
         <input type="range" class="clock-slider" min="0" max="9" step="0.5" value="${innings}" oninput="onInningSlide(this.value)">
         <span class="clock-display" id="clock-disp">${innings.toFixed(1)}</span>
-      </div>
+      </div>` : ''}
       <div class="edge-hero">
         <div class="eh-row1">
           <div><div class="eh-col-label">Score</div><div class="eh-score-val">${g.awayScore}–${g.homeScore}</div></div>
@@ -1843,9 +1857,9 @@ function renderMLBEdgeTab(el, g) {
         <div class="ab-note">Edge decays each inning — act before late-game dampening kicks in.</div>
         <div class="ab-btns">
           <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${SPORTSBOOK_LINKS[getSportsbookPref()]?.name || 'DraftKings'}</button>
-          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert</button>
-          <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Log Bet</button>
-          <button class="ab-btn danger" onclick="openSnapshot()">Share</button>
+          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert When Edge Moves</button>
+          <button class="ab-btn" onclick="logBet(activeGame, ${m.edge}, '${g.side}', ${g.marketTotal})">Track This Game</button>
+          <button class="ab-btn danger" onclick="openSnapshot()">Share Edge Call</button>
         </div>
       </div>
       <div class="collapse-section">
@@ -2135,7 +2149,7 @@ function renderSnapshot() {
 
   document.getElementById('snapshot-content').innerHTML = `
     <div class="snapshot-wrap">
-      <div class="share-card" style="background:#1a2535;border:1px solid #2d3d52;border-top:3px solid ${m.edge>=0?'#4da6ff':'#ff453a'};border-radius:8px;padding:20px;margin-bottom:16px;color:#e8f2fb;">
+      <div class="share-card" id="share-card-el" style="background:#1a2535;border:1px solid #2d3d52;border-top:3px solid ${m.edge>=0?'#4da6ff':'#ff453a'};border-radius:8px;padding:20px;margin-bottom:16px;color:#e8f2fb;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;color:#4da6ff;">PARLAY<span style="color:#e8f2fb;">KILLER</span></div>
           <div style="font-size:9px;letter-spacing:0.15em;color:#4a6480;text-transform:uppercase;">Live Edge</div>
@@ -2213,7 +2227,7 @@ function copyTweetTextToClipboard() {
 function shareToX() {
   const txt = copyTweetText();
   if (!txt) return;
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`, '_blank');
+  shareAsImage('share-card-el', txt);
 }
 
 /* ── ACCOUNT ────────────────────────────────────────────── */
@@ -2402,7 +2416,7 @@ function openAlertModal(gameId) {
   const g = GAMES[gameId];
   if (!g) return;
   showModal(`
-    <div class="modal-logo"><div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
     <div class="modal-title">Set Alert</div>
     <div class="modal-game-info">${g.title} · ${g.period} · ${g.clock}</div>
     <div class="modal-section-label">Alert when:</div>
@@ -2547,7 +2561,7 @@ function markResult(betId, result) {
 
 function showResultModal(betId) {
   showModal(`
-    <div class="modal-logo"><div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
     <div class="modal-title">Bet Logged</div>
     <div class="modal-game-info">Mark the result after the game ends</div>
     <div class="modal-btns" style="flex-direction:column;gap:8px;margin-top:16px;">
@@ -2601,7 +2615,7 @@ function renderResultShareCard(betHistory) {
     <div class="snapshot-wrap">
       <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Result Card</div>
 
-      <div id="result-share-card" style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${resultColor};border-radius:4px;padding:20px;margin-bottom:16px;font-family:'DM Sans',sans-serif;">
+      <div id="share-card-el" style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${resultColor};border-radius:4px;padding:20px;margin-bottom:16px;font-family:'DM Sans',sans-serif;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:6px;">
             <div style="font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#e8f2fb;">PARLAY<span style="color:#4da6ff;">KILLER</span></div>
@@ -2692,8 +2706,8 @@ function generateResultTweetText(h) {
 }
 
 function shareResultToX(h) {
-  const text = encodeURIComponent(generateResultTweetText(h));
-  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+  const text = generateResultTweetText(h);
+  shareAsImage('share-card-el', text);
 }
 
 function copyResultTweetText() {
@@ -2729,7 +2743,7 @@ function openLiveCallShare(gameId) {
     <div class="snapshot-wrap">
       <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Live Call Receipt</div>
 
-      <div style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${hitColor};border-radius:4px;padding:20px;margin-bottom:16px;">
+      <div id="share-card-el" style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${hitColor};border-radius:4px;padding:20px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:6px;">
             <div style="font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#e8f2fb;">PARLAY<span style="color:#4da6ff;">KILLER</span></div>
@@ -2790,7 +2804,7 @@ function shareLiveCallToX(gameId) {
   let txt = `${emoji} LIVE CALL RECEIPT\n${gameTitle}\n`;
   if (log) txt += `Called: ${side} ${marketTotal} · ${sign}${edge} edge\nScore at call: ${log.awayScore}–${log.homeScore} · ${log.period}\n`;
   txt += `Final: ${g.awayScore}–${g.homeScore} (Total: ${finalTotal})\n${hit ? `${side} HIT ✓` : `${side} MISSED ✗`}\n\nvia @ParlayKillerApp parlaykillerapp.com`;
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`, '_blank', 'noopener');
+  shareAsImage('share-card-el', txt);
 }
 
 /* ── PRE-GAME → FINAL ───────────────────────────────────── */
@@ -2811,7 +2825,7 @@ function openPregameShare(gameId) {
     <div class="snapshot-wrap">
       <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Pre-Game → Final</div>
 
-      <div style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${hitColor};border-radius:4px;padding:20px;margin-bottom:16px;">
+      <div id="share-card-el" style="background:#141e2b;border:1px solid #2d3d52;border-top:3px solid ${hitColor};border-radius:4px;padding:20px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:6px;">
             <div style="font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#e8f2fb;">PARLAY<span style="color:#4da6ff;">KILLER</span></div>
@@ -2865,7 +2879,7 @@ function sharePregameFinalToX(gameId) {
   let txt = `${emoji} PRE-GAME → FINAL\n${gameTitle}\n`;
   if (pregameTotal) txt += `Closing line: ${pregameTotal}\n`;
   txt += `Final: ${g.awayScore}–${g.homeScore} (Total: ${finalTotal})\n${hit ? 'OVER HIT ✓' : 'UNDER HIT ✓'} by ${diff}\n\nvia @ParlayKillerApp parlaykillerapp.com`;
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`, '_blank', 'noopener');
+  shareAsImage('share-card-el', txt);
 }
 
 /* ── ONBOARDING ─────────────────────────────────────────── */
@@ -2928,7 +2942,7 @@ function renderOnboardingSlide() {
   el.className = 'onboarding-overlay';
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:0.5px solid var(--border);">
-      <div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div>
+      <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
       <button class="onboarding-skip" onclick="completeOnboarding()">Skip</button>
     </div>
     <div class="onboarding-slide">
@@ -2963,7 +2977,7 @@ function completeOnboarding() {
 /* ── DELETE ACCOUNT ─────────────────────────────────────── */
 function confirmDeleteAccount() {
   showModal(`
-    <div class="modal-logo"><div class="logo"><div class="logo-pk">Parlay<em>Killer</em></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
     <div class="modal-title">Delete Account</div>
     <div class="modal-game-info" style="color:var(--avoid);margin-bottom:16px;">This cannot be undone.</div>
     <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:20px;">
@@ -3049,8 +3063,125 @@ function dismissInstallPrompt() {
   if (banner) banner.remove();
 }
 
+/* ── TOAST ──────────────────────────────────────────────── */
+function showToast(message, type = 'success', duration = 3000) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  toast.offsetHeight; // force reflow
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+/* ── IMAGE SHARE ────────────────────────────────────────── */
+async function shareAsImage(cardElementId, tweetText) {
+  const el = document.getElementById(cardElementId);
+  if (!el || typeof html2canvas === 'undefined') {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank', 'noopener');
+    return;
+  }
+
+  const shareBtn = document.querySelector('.ab-btn.danger, .share-btn');
+  const originalHTML = shareBtn?.innerHTML;
+  if (shareBtn) shareBtn.innerHTML = 'Generating...';
+
+  try {
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#1a2535',
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+    });
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) throw new Error('Canvas blob failed');
+      if (shareBtn) shareBtn.innerHTML = originalHTML;
+
+      if (navigator.share && navigator.canShare) {
+        const file = new File([blob], 'parlay-killer-edge.png', { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ title: 'ParlayKiller Live Edge', text: tweetText, files: [file] });
+          showToast('Shared!');
+          return;
+        }
+      }
+
+      // Desktop: download + open Twitter
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'parlay-killer-edge.png'; a.click();
+      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank', 'noopener');
+      }, 500);
+      showToast('Image saved! Post it with your tweet.');
+    }, 'image/png');
+  } catch(e) {
+    console.error('Share image error:', e);
+    if (shareBtn) shareBtn.innerHTML = originalHTML;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank', 'noopener');
+  }
+}
+
+/* ── BOARD SKELETON ─────────────────────────────────────── */
+function showBoardSkeleton() {
+  const el = document.getElementById('home-content');
+  if (!el) return;
+  el.innerHTML = Array(3).fill(0).map(() => `
+    <div style="background:#0d0d0d;border-bottom:1px solid #141414;padding:16px;">
+      <div style="height:10px;background:#141414;width:40%;margin-bottom:12px;animation:shimmer 1.5s ease-in-out infinite;"></div>
+      <div style="height:14px;background:#141414;width:70%;margin-bottom:8px;animation:shimmer 1.5s ease-in-out infinite;"></div>
+      <div style="height:32px;background:#141414;width:55%;margin-bottom:8px;animation:shimmer 1.5s ease-in-out infinite;"></div>
+      <div style="height:10px;background:#141414;width:90%;animation:shimmer 1.5s ease-in-out infinite;"></div>
+    </div>`).join('');
+}
+
+/* ── PULL-TO-REFRESH ────────────────────────────────────── */
+let ptrStartY = 0;
+let ptrActive = false;
+
+document.addEventListener('touchstart', (e) => {
+  if (document.getElementById('s-home')?.classList.contains('active')) {
+    ptrStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  const homeScr = document.getElementById('s-home');
+  if (!homeScr?.classList.contains('active')) return;
+  if (homeScr.scrollTop === 0 && e.touches[0].clientY - ptrStartY > 60) {
+    ptrActive = true;
+    const ptr = document.getElementById('ptr-indicator');
+    if (ptr) { ptr.classList.add('visible'); ptr.textContent = '↓ Release to refresh'; }
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', async () => {
+  if (!ptrActive) return;
+  ptrActive = false;
+  const ptr = document.getElementById('ptr-indicator');
+  if (ptr) { ptr.classList.add('loading'); ptr.textContent = 'Refreshing...'; }
+  window.__liveGames = null;
+  await loadLiveGames();
+  renderBoard();
+  showToast('Board updated', 'info');
+  if (ptr) { ptr.classList.remove('visible', 'loading'); ptr.textContent = '↓ Pull to refresh'; }
+});
+
 /* ── AUTO REFRESH ───────────────────────────────────────── */
 function initAutoRefresh() {
+  // Refresh every 5 minutes
+  setInterval(async () => {
+    if (document.visibilityState !== 'visible') return;
+    if (activeNavTab !== 'board') return;
+    window.__liveGames = null;
+    await loadLiveGames();
+    renderBoard();
+  }, 5 * 60 * 1000);
+
+  // 45-second lightweight refresh when on board
   setInterval(async () => {
     if (activeNavTab !== 'board') return;
     if (document.hidden) return;
@@ -3062,11 +3193,13 @@ function initAutoRefresh() {
   }, 45000);
 
   document.addEventListener('visibilitychange', async () => {
-    if (!document.hidden && activeNavTab === 'board') {
-      try {
+    if (document.visibilityState === 'visible' && activeNavTab === 'board') {
+      const lastUpdate = window.__lastUpdate || 0;
+      if (Date.now() - lastUpdate > 2 * 60 * 1000) {
+        window.__liveGames = null;
         await loadLiveGames();
-        renderHomeContent();
-      } catch(e) {}
+        renderBoard();
+      }
     }
   });
 }
@@ -3139,6 +3272,7 @@ async function initApp() {
 }
 
 async function loadLiveGames() {
+  if (!window.__liveGames) showBoardSkeleton();
   try {
     const r = await fetch('/api/odds/live-games', { credentials:'include' });
     const d = await r.json();
@@ -3153,6 +3287,7 @@ async function loadLiveGames() {
     window.__liveGames = null;
     window.__dataSource = 'mock';
   }
+  window.__lastUpdate = Date.now();
 }
 
 function liveGameToCard(g) {
@@ -3418,5 +3553,6 @@ initApp();
   </aside>
 
 </div><!-- end desktop-layout -->
+<div class="toast" id="toast"></div>
 </body>
 </html>
