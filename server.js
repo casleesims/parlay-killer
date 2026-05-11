@@ -144,6 +144,14 @@ app.get('/', (req, res) => {
   }
 });
 
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
+
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+});
+
 // { index: false } prevents express.static from auto-serving index.html for /
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
