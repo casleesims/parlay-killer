@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Parlay Killer Live Edge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080808; --s1: #0d0d0d; --s2: #111111;
+      --border: #141414; --b2: #1e1e1e;
+      --green: #00e676; --red: #ff453a; --amber: #f5a623;
+      --white: #ffffff; --dim: #555555; --muted: #2a2a2a;
+    }
+    html { height: 100%; }
+    body { height: 100%; overflow: auto; background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-serif; }
+
+    /* LOGO */
+    .logo { display: flex; align-items: center; line-height: 1; }
+    .logo-pk { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+    .logo-pk .w { color: #ffffff; }
+    .logo-pk .g { color: #00e676; }
+    .logo-le { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #ff453a; letter-spacing: 0.1em; margin-left: 7px; position: relative; top: 1px; }
+
+    /* APP SHELL */
+    #app { position: fixed; inset: 0; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
+    #screens { position: relative; flex: 1; overflow: hidden; }
+
+    /* SCREENS */
+    .scr { position: absolute; inset: 0; background: var(--bg); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1); overflow-y: auto; overflow-x: hidden; padding-bottom: 56px; }
+    .scr.active { transform: translateX(0); }
+    .scr.behind { transform: translateX(-25%); pointer-events: none; }
+    .scr.inactive { transform: translateX(100%); }
+
+    /* TOP BAR */
+    .top-bar { display: flex; justify-content: space-between; align-items: center; height: 50px; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+    .top-bar-left { display: flex; align-items: center; gap: 8px; }
+    .top-bar-right { display: flex; align-items: center; gap: 8px; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); background: none; border: none; cursor: pointer; padding: 0; }
+    .back-btn svg { flex-shrink: 0; }
+    .share-btn { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--red); background: none; border: none; cursor: pointer; }
+    .live-count { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--white); }
+    .live-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+    /* TABS */
+    .tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; position: sticky; top: 50px; z-index: 9; background: var(--bg); }
+    .tab { flex: 1; padding: 11px 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; background: none; border-left: none; border-right: none; border-top: none; }
+    .tab.active { color: var(--white); border-bottom-color: var(--green); }
+
+    /* GAME CARD */
+    .game-card { border-left: 3px solid transparent; border-bottom: 1px solid var(--border); padding: 14px 16px; cursor: pointer; transition: background 0.12s; }
+    .game-card:active { background: var(--s1); }
+    .game-card.edge-over { border-left-color: var(--green); }
+    .game-card.edge-under { border-left-color: var(--red); }
+    .gc-score-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .gc-team { }
+    .gc-team.right { text-align: right; }
+    .gc-abbr { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: var(--white); line-height: 1; }
+    .gc-score { font-family: 'Bebas Neue', sans-serif; font-size: 38px; letter-spacing: -0.01em; color: var(--white); line-height: 1; }
+    .gc-rec { font-size: 10px; color: var(--dim); margin-top: 2px; }
+    .gc-center { text-align: center; }
+    .gc-sep { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--dim); line-height: 1; }
+    .gc-period { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: var(--dim); }
+    .gc-clock { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--white); }
+    .gc-network { font-size: 9px; color: var(--dim); margin-top: 2px; }
+    .gc-edge-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .gc-edge-nums { font-size: 12px; color: var(--dim); }
+    .gc-edge-nums .edge-val { font-weight: 600; }
+    .gc-edge-nums .edge-val.green { color: var(--green); }
+    .gc-edge-nums .edge-val.red { color: var(--red); }
+    .gc-badge { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.1em; padding: 2px 7px; border: 1px solid; }
+    .gc-badge.heating { color: var(--green); border-color: var(--green); }
+    .gc-badge.closing { color: var(--amber); border-color: var(--amber); }
+    .gc-windows { display: flex; gap: 0; margin-bottom: 10px; border: 1px solid var(--border); }
+    .gc-win { flex: 1; text-align: center; padding: 7px 4px; border-right: 1px solid var(--border); }
+    .gc-win:last-child { border-right: none; }
+    .gc-win-label { font-size: 9px; color: var(--dim); margin-bottom: 2px; }
+    .gc-win-pts { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.04em; color: var(--white); }
+    .gc-win.full .gc-win-label { color: var(--green); }
+    .gc-win.full .gc-win-pts { color: var(--green); }
+    .gc-signals { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .signal-pill { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; padding: 3px 8px; background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+    .signal-pill.warn { background: rgba(245,166,35,0.1); color: var(--amber); border-color: rgba(245,166,35,0.2); }
+    .gc-actions { display: flex; gap: 8px; }
+    .gc-btn { flex: 1; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 0; background: none; border: 1px solid var(--b2); color: var(--white); cursor: pointer; transition: background 0.12s; }
+    .gc-btn:active { background: var(--s1); }
+    .gc-btn.primary { background: var(--green); color: #080808; border-color: var(--green); }
+    .gc-btn.primary:active { opacity: 0.85; }
+
+    /* EMPTY STATE */
+    .empty-state { padding: 60px 24px; text-align: center; }
+    .empty-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.3; }
+    .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.06em; color: var(--dim); margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; font-weight: 300; color: var(--dim); }
+
+    /* SECTION LABEL */
+    .section-label { padding: 10px 16px 6px; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+
+    /* ── GAME VIEW ─────────────────────────────── */
+    .score-header { padding: 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sh-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .sh-team { }
+    .sh-team.right { text-align: right; }
+    .sh-abbr { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.04em; color: var(--white); line-height: 1; }
+    .sh-score { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: -0.02em; color: var(--white); line-height: 1; }
+    .sh-rec { font-size: 10px; color: var(--dim); margin-top: 3px; }
+    .sh-center { text-align: center; }
+    .sh-period { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--white); letter-spacing: 0.04em; }
+    .sh-clock { font-size: 22px; font-weight: 300; color: var(--white); }
+    .sh-live { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; color: var(--green); display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 4px; }
+    .sh-live-dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; animation: pulse 1.4s ease-in-out infinite; }
+    .qtr-chart { display: flex; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .qtr-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .qtr-bars { display: flex; gap: 2px; align-items: flex-end; height: 28px; }
+    .qtr-bar-away { background: #444; width: 8px; }
+    .qtr-bar-home { background: rgba(0,230,118,0.6); width: 8px; }
+    .qtr-label { font-size: 6px; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* EDGE TAB */
+    .edge-tab-content { padding: 16px; }
+    .clock-strip { display: flex; align-items: center; gap: 10px; padding: 10px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .clock-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: var(--dim); text-transform: uppercase; flex-shrink: 0; }
+    .clock-slider { flex: 1; accent-color: var(--green); }
+    .clock-display { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.06em; flex-shrink: 0; min-width: 40px; text-align: right; }
+    .edge-hero { background: var(--s1); border: 1px solid var(--b2); padding: 16px; margin-bottom: 14px; }
+    .eh-row1 { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); gap: 4px; }
+    .eh-col-label { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+    .eh-score-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--white); }
+    .eh-market-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--white); }
+    .eh-model-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+    .eh-model-val.green { color: var(--green); }
+    .eh-model-val.red { color: var(--red); }
+    .eh-edge { text-align: center; }
+    .eh-edge-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; }
+    .eh-edge-num.green { color: var(--green); }
+    .eh-edge-num.red { color: var(--red); }
+    .eh-playable { font-size: 11px; color: var(--dim); margin-top: 4px; }
+    .eh-playable span { color: var(--white); font-weight: 600; }
+    .conf-bar-wrap { margin-bottom: 14px; }
+    .conf-bar-header { display: flex; justify-content: space-between; align-items: center; font-size: 10px; margin-bottom: 6px; }
+    .conf-bar-label { font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; }
+    .conf-bar-pct { font-weight: 700; }
+    .conf-bar-bg { height: 4px; background: var(--muted); }
+    .conf-bar-fill { height: 4px; transition: width 0.4s ease; }
+    .conf-bar-fill.green { background: var(--green); }
+    .conf-bar-fill.amber { background: var(--amber); }
+    .market-chart { margin-bottom: 14px; }
+    .market-chart-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+    .windows-section { margin-bottom: 14px; }
+    .ws-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+    .win-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .win-tab { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; padding: 5px 10px; border: 1px solid var(--b2); color: var(--dim); cursor: pointer; background: none; transition: all 0.12s; }
+    .win-tab.active { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.06); }
+    .win-detail { background: var(--s1); border: 1px solid var(--b2); padding: 12px 14px; }
+    .wd-pts { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.02em; color: var(--white); }
+    .wd-range { font-size: 11px; color: var(--dim); margin-top: 2px; }
+    .wd-note { font-size: 11px; color: var(--dim); margin-top: 4px; font-style: italic; }
+    .alt-line { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; padding: 5px 10px; border: 1px solid; margin-bottom: 14px; }
+    .alt-line.full { color: var(--green); border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.05); }
+    .alt-line.thin { color: var(--amber); border-color: rgba(245,166,35,0.3); background: rgba(245,166,35,0.05); }
+    .alt-line.gone { color: var(--red); border-color: rgba(255,69,58,0.3); background: rgba(255,69,58,0.05); }
+    .signals-section { margin-bottom: 14px; }
+    .sig-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .sig-row:last-child { border-bottom: none; }
+    .sig-name { color: var(--dim); }
+    .sig-val { font-weight: 600; }
+    .sig-val.green { color: var(--green); }
+    .sig-val.amber { color: var(--amber); }
+    .sig-val.red { color: var(--red); }
+    .action-block { padding: 14px; background: var(--s1); border: 1px solid var(--b2); margin-bottom: 14px; }
+    .ab-playable { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.04em; color: var(--white); margin-bottom: 4px; }
+    .ab-note { font-size: 11px; color: var(--dim); margin-bottom: 14px; }
+    .ab-btns { display: flex; gap: 8px; }
+    .ab-btn { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 0; border: 1px solid var(--b2); color: var(--white); background: none; cursor: pointer; transition: background 0.12s; }
+    .ab-btn.primary { background: var(--green); color: #080808; border-color: var(--green); }
+    .ab-btn.danger { border-color: var(--red); color: var(--red); }
+    .ab-btn:active { opacity: 0.85; }
+
+    /* BOX SCORE */
+    .bs-content { padding: 0 0 16px; }
+    .bs-team-header { padding: 10px 16px 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border); background: var(--s1); }
+    .bs-col-headers { display: grid; grid-template-columns: 1fr 40px 40px 40px 44px; padding: 6px 16px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border); }
+    .bs-row { display: grid; grid-template-columns: 1fr 40px 40px 40px 44px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; }
+    .bs-row:last-child { border-bottom: none; }
+    .bs-name { font-size: 13px; font-weight: 700; color: var(--white); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .bs-pos { font-size: 9px; color: var(--dim); font-weight: 400; }
+    .hot-pill { font-family: 'Bebas Neue', sans-serif; font-size: 9px; letter-spacing: 0.08em; color: #080808; background: var(--green); padding: 1px 5px; }
+    .bs-stat { font-size: 13px; text-align: center; color: var(--white); }
+    .bs-stat.hot { color: var(--green); font-weight: 700; }
+
+    /* SNAPSHOT */
+    .snapshot-wrap { padding: 16px; }
+    .share-card { border: 1px solid var(--b2); border-top: 3px solid var(--red); background: var(--s1); padding: 20px; margin-bottom: 16px; }
+    .sc-logo { margin-bottom: 14px; }
+    .sc-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 2px; }
+    .sc-meta { font-size: 10px; color: var(--dim); margin-bottom: 14px; }
+    .sc-score { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: -0.01em; color: var(--white); text-align: center; margin-bottom: 14px; }
+    .sc-row { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); gap: 4px; }
+    .sc-row-label { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 3px; }
+    .sc-row-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--white); }
+    .sc-row-val.green { color: var(--green); }
+    .sc-edge { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.04em; text-align: center; margin-bottom: 10px; }
+    .sc-edge.green { color: var(--green); }
+    .sc-edge.red { color: var(--red); }
+    .sc-window { font-size: 11px; text-align: center; color: var(--dim); margin-bottom: 12px; }
+    .sc-window span { color: var(--green); font-weight: 600; }
+    .sc-badge-row { text-align: center; margin-bottom: 12px; }
+    .sc-badge { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; padding: 4px 12px; border: 1px solid; }
+    .sc-badge.heating { color: var(--green); border-color: var(--green); }
+    .sc-badge.closing { color: var(--amber); border-color: var(--amber); }
+    .sc-watermark { font-size: 9px; text-align: center; color: rgba(255,255,255,0.08); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 12px; font-weight: 700; }
+    .share-note { font-size: 11px; color: var(--dim); text-align: center; margin-bottom: 16px; }
+    .share-btns { display: flex; gap: 10px; }
+    .share-btn-el { flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; padding: 12px; border: none; cursor: pointer; }
+    .share-btn-el.green { background: var(--green); color: #080808; }
+    .share-btn-el.ghost { background: none; border: 1px solid var(--b2); color: var(--white); }
+
+    /* ACCOUNT */
+    .account-wrap { padding: 24px 16px; }
+    .acc-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; color: var(--white); margin-bottom: 2px; }
+    .acc-email { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
+    .acc-plan-badge { display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.1em; padding: 4px 10px; border: 1px solid; margin-bottom: 24px; }
+    .acc-plan-badge.free { color: var(--amber); border-color: var(--amber); }
+    .acc-plan-badge.pro { color: var(--green); border-color: var(--green); }
+    .acc-stats { border: 1px solid var(--b2); margin-bottom: 20px; }
+    .acc-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .acc-stat-row:last-child { border-bottom: none; }
+    .acc-stat-label { color: var(--dim); }
+    .acc-stat-val { font-weight: 600; color: var(--white); }
+    .acc-btn { width: 100%; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.1em; padding: 14px; border: none; cursor: pointer; margin-bottom: 10px; }
+    .acc-btn.green { background: var(--green); color: #080808; }
+    .acc-btn.outline { background: none; border: 1px solid var(--b2); color: var(--dim); }
+    .acc-btn.outline:hover { color: var(--white); border-color: #555; }
+
+    /* BOTTOM NAV */
+    #bottom-nav { display: flex; background: #060606; border-top: 1px solid var(--border); flex-shrink: 0; position: relative; z-index: 20; }
+    .bn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 8px 0; cursor: pointer; transition: opacity 0.12s; border: none; background: none; -webkit-tap-highlight-color: transparent; }
+    .bn svg { display: block; }
+    .bn span { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2a2a2a; }
+    .bn.active span { color: var(--green); }
+    .bn.active svg { opacity: 1; }
+    .bn svg { opacity: 0.2; color: var(--white); }
+    .bn.active svg { opacity: 1; color: var(--green); }
+    .bn-icon-color { fill: none; stroke: var(--white); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .bn.active .bn-icon-color { stroke: var(--green); }
+
+    /* FAV BUTTON */
+    .fav-btn { background:none; border:none; cursor:pointer; color:#333; padding:4px; transition:color 0.15s; line-height:1; }
+    .fav-btn.on { color:#f5a623; }
+    .fav-btn:active { opacity:0.7; }
+
+    /* NEWS CARDS */
+    .news-card { background:#0d0d0d; border:1px solid #141414; border-left:3px solid #141414; padding:14px 16px; margin:0 0 1px; cursor:pointer; transition:border-color 0.15s; }
+    .news-card.breaking { border-left-color:#ff453a; }
+    .news-card:active { opacity:0.8; }
+    .news-meta { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .news-sport { font-size:9px; font-weight:700; color:#00e676; letter-spacing:0.1em; text-transform:uppercase; }
+    .news-age { font-size:9px; color:#333; }
+    .news-breaking { font-size:8px; font-weight:900; color:#ff453a; letter-spacing:0.08em; text-transform:uppercase; background:#1a0000; border:1px solid #ff453a; padding:1px 6px; }
+    .news-title { font-size:13px; font-weight:700; color:#fff; line-height:1.4; margin-bottom:6px; }
+    .news-desc { font-size:11px; color:#555; line-height:1.6; margin-bottom:6px; font-weight:300; }
+    .news-arrow { font-size:12px; color:#333; text-align:right; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; align-items: flex-end; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--s1); border: 1px solid var(--b2); border-top: 3px solid var(--green); width: 100%; max-width: 480px; padding: 24px 20px 32px; position: relative; }
+    .modal-logo { margin-bottom: 14px; }
+    .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; color: var(--white); margin-bottom: 4px; }
+    .modal-game-info { font-size: 12px; color: var(--dim); margin-bottom: 16px; }
+    .modal-edge { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.04em; margin-bottom: 16px; }
+    .modal-edge.green { color: var(--green); }
+    .modal-edge.red { color: var(--red); }
+    .modal-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+    .modal-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .modal-pill { font-size: 11px; font-weight: 500; padding: 7px 12px; border: 1px solid var(--b2); color: var(--dim); cursor: pointer; background: none; transition: all 0.12s; }
+    .modal-pill.on { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.08); }
+    .modal-btns { display: flex; gap: 8px; margin-top: 6px; }
+    .modal-btn { flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.1em; padding: 12px; border: none; cursor: pointer; }
+    .modal-btn.cancel { background: none; border: 1px solid var(--b2); color: var(--dim); }
+    .modal-btn.primary { background: var(--green); color: #080808; }
+    .confirm-modal .modal { text-align: center; }
+    .confirm-icon { font-size: 40px; margin-bottom: 14px; display: block; }
+    .confirm-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.06em; color: var(--green); margin-bottom: 8px; }
+    .confirm-msg { font-size: 13px; font-weight: 300; color: #aaa; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="screens">
+
+    <!-- SCREEN: HOME/BOARD -->
+    <div class="scr active" id="s-home">
+      <div class="top-bar">
+        <div class="logo">
+          <div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div>
+          <div class="logo-le">Live Edge</div>
+        </div>
+        <div class="live-count"><span class="live-dot"></span><span id="live-count-label">2 LIVE</span></div>
+      </div>
+      <div class="tabs" id="home-tabs">
+        <button class="tab active" id="tab-live" onclick="switchHomeTab('live')">Live</button>
+      </div>
+      <div id="home-content"></div>
+    </div>
+
+    <!-- SCREEN: GAME VIEW -->
+    <div class="scr inactive" id="s-game">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button class="back-btn" onclick="goBack('s-home')">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Board
+          </button>
+        </div>
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        <button class="share-btn" onclick="openSnapshot()">Share</button>
+      </div>
+      <div id="game-view-content"></div>
+    </div>
+
+    <!-- SCREEN: SNAPSHOT -->
+    <div class="scr inactive" id="s-snapshot">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button class="back-btn" onclick="goBack('s-game')">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Game
+          </button>
+        </div>
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        <div></div>
+      </div>
+      <div id="snapshot-content"></div>
+    </div>
+
+    <!-- SCREEN: ACCOUNT -->
+    <div class="scr inactive" id="s-account">
+      <div class="top-bar">
+        <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+      </div>
+      <div id="account-content"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <button class="bn active" id="bn-board" onclick="navTo('board')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 7L10 2L18 7V18H13V13H7V18H2V7Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Board</span>
+    </button>
+    <button class="bn" id="bn-alerts" onclick="navTo('alerts')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 2a6 6 0 00-6 6v3L2.5 14h15L16 11V8a6 6 0 00-6-6z"/><path d="M8 17a2 2 0 004 0" stroke-linecap="round"/></svg>
+      <span>Alerts</span>
+    </button>
+    <button class="bn" id="bn-news" onclick="navTo('news')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="16" height="14" rx="1"/><path d="M5 7h10M5 10h10M5 13h6" stroke-linecap="round"/></svg>
+      <span>News</span>
+    </button>
+    <button class="bn" id="bn-account" onclick="navTo('account')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10" cy="7" r="3"/><path d="M3 18c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke-linecap="round"/></svg>
+      <span>Account</span>
+    </button>
+  </nav>
+
+  <!-- MODAL LAYER -->
+  <div id="modal-layer"></div>
+</div>
+
+<script>
+/* ── MATH ──────────────────────────────────────────────── */
+function fmt(s) { return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+function calcModel(game, secs) {
+  const minsPlayed = 48 - secs/60;
+  const pace = minsPlayed > 0 ? game.totalSoFar/minsPlayed : 5.1;
+  const diff = Math.abs(game.homeScore - game.awayScore);
+  const foulAdj = secs<240&&diff<8 ? 1.10 : secs<120&&diff<6 ? 1.18 : 1.0;
+  const blowoutDamp = diff>15 ? 0.78 : diff>10 ? 0.88 : 1.0;
+  const timeRatio = Math.max(0.15, secs/game.maxSecs);
+  const edgeNow = Math.round(game.baseEdge * timeRatio * 10) / 10;
+  const modelFair = Math.round((game.marketTotal + edgeNow) * 10) / 10;
+  const playableTo = Math.round((modelFair - 1.5) * 2) / 2;
+  const conf = Math.min(92, Math.max(48, Math.round(50 + Math.abs(edgeNow) * 3.8)));
+  const adjPace = pace * foulAdj * blowoutDamp;
+  return { model:modelFair, edge:edgeNow, playableTo, conf, pace:Math.round(adjPace*10)/10 };
+}
+
+function projWindow(game, secs, windowSecs) {
+  const useSecs = Math.min(windowSecs, secs);
+  const minsPlayed = 48 - secs/60;
+  const pace = minsPlayed > 0 ? game.totalSoFar/minsPlayed : 5.1;
+  const diff = Math.abs(game.homeScore - game.awayScore);
+  const foul = secs<240&&diff<8 ? 1.08 : 1.0;
+  const blow = diff>15 ? 0.80 : diff>10 ? 0.90 : 1.0;
+  const pts = Math.round(pace*(useSecs/60)*foul*blow*10)/10;
+  return { pts, lo:Math.round(pts*0.83*10)/10, hi:Math.round(pts*1.17*10)/10 };
+}
+
+function getWindows(secs) {
+  const m = secs/60, w = [];
+  if(m>10){ w.push({l:'3:00',s:180}); w.push({l:'5:00',s:300}); w.push({l:'9:00',s:540}); }
+  else if(m>6){ w.push({l:'2:00',s:120}); w.push({l:'3:30',s:210}); w.push({l:'5:00',s:300}); }
+  else if(m>3.5){ w.push({l:'1:30',s:90}); w.push({l:'3:00',s:180}); }
+  else if(m>1){ w.push({l:'1:00',s:60}); }
+  w.push({l:fmt(secs)+' ★',s:secs,full:true});
+  return w;
+}
+
+function getAltState(secs) {
+  const m = secs/60;
+  if(m>3.5) return {l:'Full board available',cls:'full'};
+  if(m>1.5) return {l:'Lines thinning',cls:'thin'};
+  return {l:'Main only · -110 both ways',cls:'gone'};
+}
+
+/* ── MLB MATH ──────────────────────────────────────────── */
+function getMLBWindows(inningsRemaining) {
+  const w = [];
+  if (inningsRemaining > 4) { w.push({l:'1 inn',i:1}); w.push({l:'2 inn',i:2}); w.push({l:'3 inn',i:3}); }
+  else if (inningsRemaining > 2) { w.push({l:'1 inn',i:1}); w.push({l:'2 inn',i:2}); }
+  else if (inningsRemaining > 1) { w.push({l:'1 inn',i:1}); }
+  w.push({l: inningsRemaining.toFixed(1) + ' inn ★', i: inningsRemaining, full: true });
+  return w;
+}
+
+function calcMLBModel(game, inningsRemaining) {
+  const inningsPlayed = Math.max(0.5, 9 - inningsRemaining);
+  const pace = game.totalSoFar > 0 ? game.totalSoFar / inningsPlayed : 1.0;
+  const diff = Math.abs((game.homeScore||0) - (game.awayScore||0));
+  const lateDamp = inningsRemaining <= 2 ? 0.82 : inningsRemaining <= 3 ? 0.90 : 1.0;
+  const blowDamp = diff > 5 ? 0.72 : diff > 3 ? 0.85 : 1.0;
+  const timeRatio = Math.max(0.15, inningsRemaining / 9);
+  const edgeNow = Math.round((game.baseEdge || 0) * timeRatio * 10) / 10;
+  const modelFair = Math.round(((game.marketTotal || 8.5) + edgeNow) * 10) / 10;
+  const playableTo = Math.round((modelFair - 0.5) * 2) / 2;
+  const conf = Math.min(88, Math.max(48, Math.round(50 + Math.abs(edgeNow) * 4.2)));
+  const adjPace = pace * lateDamp * blowDamp;
+  return { model: modelFair, edge: edgeNow, playableTo, conf, pace: Math.round(adjPace * 10) / 10 };
+}
+
+function projMLBWindow(game, inningsRemaining, windowInnings) {
+  const useInnings = Math.min(windowInnings, inningsRemaining);
+  const inningsPlayed = Math.max(0.5, 9 - inningsRemaining);
+  const pace = game.totalSoFar > 0 ? game.totalSoFar / inningsPlayed : 1.0;
+  const diff = Math.abs((game.homeScore||0) - (game.awayScore||0));
+  const late = inningsRemaining <= 2 ? 0.82 : 1.0;
+  const blow = diff > 5 ? 0.72 : diff > 3 ? 0.85 : 1.0;
+  const runs = Math.round(pace * useInnings * late * blow * 10) / 10;
+  return { pts: runs, lo: Math.round(runs * 0.70 * 10) / 10, hi: Math.round(runs * 1.30 * 10) / 10 };
+}
+
+function getMLBAltState(inningsRemaining) {
+  if (inningsRemaining > 2) return { l:'Full board available', cls:'full' };
+  if (inningsRemaining > 1) return { l:'Lines thinning', cls:'thin' };
+  return { l:'Main only · -110 both ways', cls:'gone' };
+}
+
+/* ── MOCK DATA ──────────────────────────────────────────── */
+const GAMES = {
+  kc: {
+    id:'kc', title:'Knicks @ Celtics', away:'NYK', home:'BOS',
+    awayScore:90, homeScore:111, awayRec:'44-26', homeRec:'52-18',
+    period:'Q4', clock:'6:31', maxSecs:720, secsRemaining:391,
+    totalSoFar:201, marketTotal:200.5, baseEdge:6.4, side:'OVER',
+    edgeColor:'#00e676', badge:'HEATING', network:'ESPN', status:'live',
+    qtrs:[[28,30],[24,26],[22,30],[16,25]],
+    awayPlayers:[
+      {n:'J. Brunson',p:'PG',pts:22,r:3,a:5,hot:true,seasonPts:29.0},
+      {n:'K-A. Towns',p:'C',pts:18,r:10,a:2,hot:false,seasonPts:24.5},
+      {n:'M. Bridges',p:'SF',pts:14,r:4,a:2,hot:false,seasonPts:19.6},
+      {n:'OG Anunoby',p:'PF',pts:6,r:4,a:1,hot:false,seasonPts:15.7},
+      {n:'J. Hart',p:'G',pts:8,r:7,a:3,hot:false,seasonPts:12.4},
+      {n:'D. DiVincenzo',p:'G',pts:10,r:3,a:2,hot:false,seasonPts:14.8},
+      {n:'M. McBride',p:'G',pts:4,r:1,a:2,hot:false,seasonPts:8.2},
+    ],
+    homePlayers:[
+      {n:'J. Tatum',p:'SF',pts:30,r:7,a:3,hot:true,seasonPts:26.9},
+      {n:'J. Brown',p:'SG',pts:24,r:4,a:2,hot:false,seasonPts:23.0},
+      {n:'K. Porzingis',p:'C',pts:14,r:6,a:1,hot:false,seasonPts:20.1},
+      {n:'D. White',p:'PG',pts:12,r:3,a:4,hot:false,seasonPts:15.2},
+      {n:'A. Horford',p:'C',pts:8,r:7,a:2,hot:false,seasonPts:9.8},
+      {n:'P. Pritchard',p:'G',pts:11,r:2,a:3,hot:false,seasonPts:14.9},
+      {n:'S. Hauser',p:'F',pts:6,r:2,a:0,hot:false,seasonPts:10.8},
+    ]
+  },
+  ls: {
+    id:'ls', title:'Lakers @ Suns', away:'LAL', home:'PHX',
+    awayScore:88, homeScore:103, awayRec:'40-30', homeRec:'36-34',
+    period:'Q3', clock:'2:47', maxSecs:2880, secsRemaining:887,
+    totalSoFar:191, marketTotal:215.5, baseEdge:-6.4, side:'UNDER',
+    edgeColor:'#ff4444', badge:'CLOSING', network:'TNT', status:'live',
+    qtrs:[[28,30],[26,28],[20,25]],
+    awayPlayers:[
+      {n:'LeBron James',p:'SF',pts:22,r:6,a:7,hot:false,seasonPts:23.7},
+      {n:'A. Davis',p:'C',pts:24,r:10,a:2,hot:true,seasonPts:24.7},
+      {n:'A. Reaves',p:'G',pts:12,r:3,a:4,hot:false,seasonPts:15.9},
+      {n:'R. Hachimura',p:'F',pts:6,r:3,a:1,hot:false,seasonPts:13.2},
+      {n:'D. Knecht',p:'G',pts:8,r:2,a:1,hot:false,seasonPts:9.2},
+    ],
+    homePlayers:[
+      {n:'K. Durant',p:'F',pts:28,r:6,a:3,hot:true,seasonPts:27.1},
+      {n:'D. Booker',p:'G',pts:22,r:4,a:5,hot:false,seasonPts:25.6},
+      {n:'B. Beal',p:'G',pts:14,r:3,a:4,hot:false,seasonPts:18.2},
+      {n:'J. Nurkic',p:'C',pts:8,r:9,a:2,hot:false,seasonPts:11.4},
+      {n:'R. Ingram',p:'G',pts:7,r:2,a:2,hot:false,seasonPts:9.8},
+    ]
+  }
+};
+
+/* ── STATE ──────────────────────────────────────────────── */
+let activeGame = null;
+let activeGameSecs = 0;
+let activeTab = 'edge';
+let activeWinIdx = 0;
+let homeTab = 'live';
+let favorites = [];
+let alerts = [];
+
+/* ── NAV ────────────────────────────────────────────────── */
+const screenStack = [];
+
+function goTo(id) {
+  const cur = document.querySelector('.scr.active');
+  if (cur) { cur.classList.remove('active'); cur.classList.add('behind'); }
+  document.getElementById(id).classList.remove('inactive');
+  document.getElementById(id).classList.add('active');
+  screenStack.push(id);
+}
+
+function goBack(to) {
+  document.querySelectorAll('.scr').forEach(s => {
+    s.classList.remove('active','behind');
+    s.classList.add('inactive');
+  });
+  const target = document.getElementById(to);
+  target.classList.remove('inactive');
+  target.classList.add('active');
+  screenStack.length = 0;
+}
+
+function navTo(tab) {
+  document.querySelectorAll('.bn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('bn-' + tab);
+  if (btn) btn.classList.add('active');
+
+  document.querySelectorAll('.scr').forEach(s => {
+    s.classList.remove('active', 'behind');
+    s.classList.add('inactive');
+  });
+  document.getElementById('s-home').classList.remove('inactive');
+  document.getElementById('s-home').classList.add('active');
+
+  if (tab === 'board') {
+    renderBoard();
+  } else if (tab === 'alerts') {
+    renderAlerts();
+  } else if (tab === 'news') {
+    renderNews();
+  } else if (tab === 'account') {
+    renderAccount();
+  }
+}
+
+async function renderNews() {
+  const el = document.getElementById('home-content');
+  document.getElementById('live-count-label').textContent = 'NEWS';
+  el.innerHTML = `<div style="padding:20px 16px;text-align:center;font-size:10px;color:#333;letter-spacing:0.1em;text-transform:uppercase;">Loading headlines…</div>`;
+  try {
+    const r = await fetch('/api/news/feed', { credentials:'include' });
+    const d = await r.json();
+    if (!d.items || !d.items.length) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;opacity:0.3;">📰</div><div class="empty-title">No headlines right now</div></div>`;
+      return;
+    }
+    el.innerHTML = '<div style="padding:6px 0;">' + d.items.map(item => {
+      const age = timeAgo(new Date(item.pubDate));
+      const tl = (item.title || '').toLowerCase();
+      const isBreaking = tl.includes('injury') || tl.includes('questionable') || tl.includes('out ') || tl.includes('suspended');
+      return `<a class="news-card ${isBreaking?'breaking':''}" href="${item.link}" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;">
+        <div class="news-meta">
+          <span class="news-sport">${item.sport}</span>
+          <span class="news-age">${age}</span>
+          ${isBreaking?'<span class="news-breaking">INJURY/OUT</span>':''}
+        </div>
+        <div class="news-title">${item.title}</div>
+        ${item.description?`<div class="news-desc">${item.description.slice(0,120)}${item.description.length>120?'…':''}</div>`:''}
+        <div class="news-arrow">→</div>
+      </a>`;
+    }).join('') + '</div>';
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-title" style="color:var(--dim);">Couldn't load news</div></div>`;
+  }
+}
+
+function timeAgo(date) {
+  const mins = Math.round((Date.now() - date) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.round(hrs / 24) + 'd ago';
+}
+
+function toggleFav(id) {
+  if (!window.__favs) window.__favs = {};
+  window.__favs[id] = !window.__favs[id];
+  renderBoard();
+}
+
+/* ── HOME / BOARD ───────────────────────────────────────── */
+function switchHomeTab(t) {
+  homeTab = t;
+  renderHomeContent();
+}
+
+function getGameById(id) {
+  if (window.__liveGames) {
+    const lg = window.__liveGames.find(g => g.id === id);
+    if (lg) return liveGameToCard(lg);
+  }
+  return GAMES[id] || null;
+}
+
+function getAllGames() {
+  if (window.__liveGames && window.__liveGames.length > 0) {
+    return window.__liveGames.map(liveGameToCard);
+  }
+  return Object.values(GAMES);
+}
+
+function renderHomeContent() {
+  const el = document.getElementById('home-content');
+  const allGames = getAllGames();
+  const live = allGames.filter(g => g.status === 'live');
+  const upcoming = allGames.filter(g => g.status !== 'live');
+  document.getElementById('live-count-label').textContent = live.length + ' LIVE';
+  let html = '';
+  if (live.length) {
+    html += '<div class="section-label">Live Now</div>' + live.map(gameCardHTML).join('');
+  }
+  if (upcoming.length) {
+    html += '<div class="section-label">Upcoming</div>' + upcoming.map(gameCardHTML).join('');
+  }
+  if (!allGames.length) {
+    html = `<div class="empty-state"><div class="empty-icon">🏀</div><div class="empty-title">No games right now</div><div class="empty-sub">Check back when games are scheduled.</div></div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderAlerts() {
+  const el = document.getElementById('home-content');
+  document.getElementById('live-count-label').textContent = alerts.length + ' ALERTS';
+  if (!alerts.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon" style="font-size:32px;opacity:0.3;">🔔</div><div class="empty-title">No alerts yet</div><div class="empty-sub">Set an alert on any live game.</div></div>`;
+  } else {
+    el.innerHTML = alerts.map(a => `<div class="game-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="width:8px;height:8px;background:${a.color};border-radius:50%;display:inline-block;"></span><span style="font-size:13px;font-weight:600;">${a.title}</span></div><div style="font-size:11px;color:var(--dim);">${a.msg}</div><div style="font-size:10px;color:var(--dim);margin-top:6px;">${a.time}</div><button class="gc-btn" style="margin-top:10px;max-width:80px;" onclick="openGameView('${a.gameId}')">View</button></div>`).join('');
+  }
+}
+
+function gameCardHTML(g) {
+  const m = calcModel(g, g.secsRemaining);
+  const wins = getWindows(g.secsRemaining);
+  const isPregame = g.baseEdge === 0;
+  const edgeClass = isPregame ? '' : g.side === 'OVER' ? 'edge-over' : 'edge-under';
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const badgeClass = g.badge === 'HEATING' ? 'heating' : g.badge === 'LIVE' ? 'heating' : 'closing';
+
+  const winCols = wins.map((w, i) => {
+    const p = projWindow(g, g.secsRemaining, w.s);
+    return `<div class="gc-win${w.full?' full':''}">
+      <div class="gc-win-label">${w.l}</div>
+      <div class="gc-win-pts">${p.pts}</div>
+    </div>`;
+  }).join('');
+
+  const diff = Math.abs(g.homeScore - g.awayScore);
+  const signals = [];
+  const minsPlayed = 48 - g.secsRemaining/60;
+  const pace = minsPlayed > 0 ? g.totalSoFar/minsPlayed : 5.1;
+  if (pace > 5.5) signals.push({l:'Pace ↑', warn:false});
+  else if (pace < 4.5) signals.push({l:'Pace ↓', warn:true});
+  if (g.secsRemaining < 240 && diff < 8) signals.push({l:'Foul Risk ↑', warn:true});
+  else signals.push({l:'Efficiency ↑', warn:false});
+  if (diff > 15) signals.push({l:'Blowout Risk', warn:true});
+
+  const isFav = !!(window.__favs && window.__favs[g.id]);
+
+  return `<div class="game-card ${edgeClass}" onclick="openGameView('${g.id}')">
+    <div style="display:flex;justify-content:flex-end;padding:0 0 6px;">
+      <button class="fav-btn${isFav?' on':''}" onclick="event.stopPropagation();toggleFav('${g.id}')" title="Favorite">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="${isFav?'currentColor':'none'}" stroke="currentColor" stroke-width="1.4"><path d="M7 1l1.5 3 3.5.5-2.5 2.5.5 3.5L7 9l-3 1.5.5-3.5L2 4.5 5.5 4z" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="gc-score-row">
+      <div class="gc-team">
+        <div class="gc-abbr">${g.away}</div>
+        <div class="gc-score">${g.awayScore}</div>
+        <div class="gc-rec">${g.awayRec}</div>
+      </div>
+      <div class="gc-center">
+        <div class="gc-sep">–</div>
+        <div class="gc-period">${g.period}</div>
+        <div class="gc-clock">${g.clock}</div>
+        <div class="gc-network">${g.network}</div>
+      </div>
+      <div class="gc-team right">
+        <div class="gc-abbr">${g.home}</div>
+        <div class="gc-score">${g.homeScore}</div>
+        <div class="gc-rec">${g.homeRec}</div>
+      </div>
+    </div>
+    <div class="gc-edge-row">
+      ${isPregame
+        ? `<span class="gc-edge-nums">Total: <strong>${g.marketTotal}</strong> &nbsp; <span style="color:var(--dim);">Edge calculates when live</span></span>`
+        : `<span class="gc-edge-nums">Live: ${g.marketTotal} &nbsp; Fair: <span class="edge-val ${edgeColor}">${m.model}</span> (<span class="edge-val ${edgeColor}">${edgeSign}${m.edge} ${g.side}</span>)</span>`
+      }
+      <span class="gc-badge ${badgeClass}">${g.badge}</span>
+    </div>
+    ${!isPregame ? `<div class="gc-windows">${winCols}</div>` : ''}
+    ${!isPregame ? `<div class="gc-signals">${signals.map(s=>`<span class="signal-pill${s.warn?' warn':''}">${s.l}</span>`).join('')}</div>` : ''}
+    <div class="gc-actions">
+      <button class="gc-btn primary" onclick="event.stopPropagation();openGameView('${g.id}')">View Game</button>
+      <button class="gc-btn" onclick="event.stopPropagation();openTrackModal('${g.id}')">Track</button>
+      <button class="gc-btn" onclick="event.stopPropagation();openAlertModal('${g.id}')">Alert</button>
+    </div>
+  </div>`;
+}
+
+/* ── GAME VIEW ──────────────────────────────────────────── */
+function openGameView(gameId) {
+  activeGame = getGameById(gameId) || GAMES[gameId];
+  if (!activeGame) return;
+  activeGameSecs = activeGame.secsRemaining;
+  activeTab = 'edge';
+  activeWinIdx = 0;
+  renderGameView();
+  goTo('s-game');
+}
+
+function renderGameView() {
+  if (!activeGame) return;
+  const g = activeGame;
+  const el = document.getElementById('game-view-content');
+
+  const maxSecs = g.secsRemaining;
+  const qtrBars = g.qtrs.map((q, i) => {
+    const maxQ = Math.max(...g.qtrs.flat(), 1);
+    const awayH = Math.round((q[0]/maxQ)*28);
+    const homeH = Math.round((q[1]/maxQ)*28);
+    return `<div class="qtr-col">
+      <div class="qtr-bars">
+        <div class="qtr-bar-away" style="height:${awayH}px;"></div>
+        <div class="qtr-bar-home" style="height:${homeH}px;"></div>
+      </div>
+      <div class="qtr-label">Q${i+1}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="score-header">
+      <div class="sh-grid">
+        <div class="sh-team">
+          <div class="sh-abbr">${g.away}</div>
+          <div class="sh-score">${g.awayScore}</div>
+          <div class="sh-rec">${g.awayRec}</div>
+        </div>
+        <div class="sh-center">
+          <div class="sh-period">${g.period}</div>
+          <div class="sh-clock">${g.clock}</div>
+          <div class="sh-live"><span class="sh-live-dot"></span>LIVE</div>
+        </div>
+        <div class="sh-team" style="text-align:right;">
+          <div class="sh-abbr">${g.home}</div>
+          <div class="sh-score">${g.homeScore}</div>
+          <div class="sh-rec">${g.homeRec}</div>
+        </div>
+      </div>
+    </div>
+    <div class="qtr-chart">${qtrBars}</div>
+    <div class="tabs">
+      <button class="tab active" id="gtab-edge" onclick="switchGameTab('edge')">Edge</button>
+      <button class="tab" id="gtab-box" onclick="switchGameTab('box')">Box Score</button>
+    </div>
+    <div id="game-tab-content"></div>
+  `;
+
+  renderGameTabContent();
+}
+
+function switchGameTab(t) {
+  activeTab = t;
+  document.getElementById('gtab-edge').classList.toggle('active', t === 'edge');
+  document.getElementById('gtab-box').classList.toggle('active', t === 'box');
+  renderGameTabContent();
+}
+
+function renderGameTabContent() {
+  const el = document.getElementById('game-tab-content');
+  if (!el) return;
+  if (activeTab === 'edge') renderEdgeTab(el);
+  else renderBoxTab(el);
+}
+
+function renderEdgeTab(el) {
+  const g = activeGame;
+
+  if (g.isMLB) {
+    renderMLBEdgeTab(el, g);
+    return;
+  }
+
+  const secs = activeGameSecs;
+  const m = calcModel(g, secs);
+  const wins = getWindows(secs);
+  const alt = getAltState(secs);
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const confColor = m.conf >= 70 ? 'green' : 'amber';
+
+  if (activeWinIdx >= wins.length) activeWinIdx = wins.length - 1;
+  const selWin = wins[activeWinIdx];
+  const selProj = projWindow(g, secs, selWin.s);
+
+  const winTabsHtml = wins.map((w, i) =>
+    `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`
+  ).join('');
+
+  const chartW = 280, chartH = 52, pts = 8;
+  const modelStart = g.marketTotal + g.baseEdge;
+  const svgPoints = Array.from({length:pts}, (_,i) => {
+    const x = Math.round((i/(pts-1)) * chartW);
+    const marketY = Math.round(chartH/2);
+    const mY = Math.round(chartH/2 - (modelStart - g.marketTotal) * (i/(pts-1)) * 1.2);
+    return { x, marketY, modelY: Math.min(chartH-2, Math.max(2, mY)) };
+  });
+  const marketPath = svgPoints.map((p,i) => `${i?'L':'M'}${p.x},${p.marketY}`).join(' ');
+  const modelPath = svgPoints.map((p,i) => `${i?'L':'M'}${p.x},${p.modelY}`).join(' ');
+  const nowX = Math.round(chartW * (1 - secs/g.maxSecs));
+
+  el.innerHTML = `
+    <div class="edge-tab-content">
+      <div class="clock-strip">
+        <span class="clock-label">Clock</span>
+        <input type="range" class="clock-slider" min="0" max="${g.maxSecs}" value="${secs}" oninput="onClockSlide(this.value)">
+        <span class="clock-display" id="clock-disp">${fmt(secs)}</span>
+      </div>
+      <div class="edge-hero">
+        <div class="eh-row1">
+          <div><div class="eh-col-label">Score</div><div class="eh-score-val">${g.awayScore}–${g.homeScore}</div></div>
+          <div><div class="eh-col-label">Market</div><div class="eh-market-val">${g.marketTotal}</div></div>
+          <div><div class="eh-col-label">Model</div><div class="eh-model-val ${edgeColor}" id="model-val">${m.model}</div></div>
+        </div>
+        <div class="eh-edge">
+          <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
+          <div class="eh-playable">Over playable to: <span id="playable-to">${m.playableTo}</span></div>
+        </div>
+      </div>
+      <div class="conf-bar-wrap">
+        <div class="conf-bar-header">
+          <span class="conf-bar-label">Confidence</span>
+          <span class="conf-bar-pct" id="conf-pct" style="color:var(--${confColor})">${m.conf}%</span>
+        </div>
+        <div class="conf-bar-bg"><div class="conf-bar-fill ${confColor}" id="conf-fill" style="width:${m.conf}%"></div></div>
+      </div>
+      <div class="market-chart">
+        <div class="market-chart-label">Market vs Model</div>
+        <svg width="${chartW}" height="${chartH}" viewBox="0 0 ${chartW} ${chartH}" style="display:block;border:1px solid var(--border);background:var(--s1);">
+          <path d="${marketPath}" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.4"/>
+          <path d="${modelPath}" stroke="${m.edge>=0?'#00e676':'#ff453a'}" stroke-width="1.5" fill="none"/>
+          <line x1="${nowX}" y1="0" x2="${nowX}" y2="${chartH}" stroke="#555" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="4" y="10" font-size="7" fill="#555" font-family="DM Sans">Market</text>
+          <text x="4" y="20" font-size="7" fill="${m.edge>=0?'#00e676':'#ff453a'}" font-family="DM Sans">Model</text>
+        </svg>
+      </div>
+      <div class="windows-section">
+        <div class="ws-label">Next window projections</div>
+        <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
+        <div class="win-detail" id="win-detail">
+          <div class="wd-pts">${selProj.pts} pts</div>
+          <div class="wd-range">Range: ${selProj.lo} – ${selProj.hi}</div>
+          <div class="wd-note">${selWin.full ? 'Full remaining game' : 'Isolated window projection'}</div>
+        </div>
+      </div>
+      <div class="alt-line ${alt.cls}" id="alt-line">${alt.l}</div>
+      <div class="signals-section">
+        <div class="sig-row"><span class="sig-name">Pace</span><span class="sig-val ${m.pace>5.5?'green':m.pace<4.5?'red':'amber'}">${m.pace>5.5?'HIGH ↑':m.pace<4.5?'LOW ↓':'MODERATE'}</span></div>
+        <div class="sig-row"><span class="sig-name">Foul environment</span><span class="sig-val ${secs<240&&Math.abs(g.homeScore-g.awayScore)<8?'amber':'green'}">${secs<240&&Math.abs(g.homeScore-g.awayScore)<8?'ACTIVE':'NORMAL'}</span></div>
+        <div class="sig-row"><span class="sig-name">Timeout risk</span><span class="sig-val amber">MEDIUM</span></div>
+        <div class="sig-row"><span class="sig-name">Blowout risk</span><span class="sig-val ${Math.abs(g.homeScore-g.awayScore)>15?'red':'green'}">${Math.abs(g.homeScore-g.awayScore)>15?'HIGH':'LOW'}</span></div>
+        <div class="sig-row"><span class="sig-name">Garbage time</span><span class="sig-val ${Math.abs(g.homeScore-g.awayScore)>20?'amber':'green'}">${Math.abs(g.homeScore-g.awayScore)>20?'MODERATE RISK':'LOW'}</span></div>
+      </div>
+      <div class="action-block">
+        <div class="ab-playable">Over playable to: <span style="color:var(--green)" id="ab-playable">${m.playableTo}</span></div>
+        <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
+        <div class="ab-btns">
+          <button class="ab-btn primary" onclick="openTrackModal('${g.id}')">Track</button>
+          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Set Alert</button>
+          <button class="ab-btn danger" onclick="openSnapshot()">Snapshot</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMLBEdgeTab(el, g) {
+  const innings = g.inningsRemaining || 9;
+  const m = calcMLBModel(g, innings);
+  const wins = getMLBWindows(innings);
+  const alt = getMLBAltState(innings);
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const confColor = m.conf >= 70 ? 'green' : 'amber';
+  if (activeWinIdx >= wins.length) activeWinIdx = wins.length - 1;
+  const selWin = wins[activeWinIdx];
+  const selProj = projMLBWindow(g, innings, selWin.i);
+  const winTabsHtml = wins.map((w, i) =>
+    `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`
+  ).join('');
+  el.innerHTML = `
+    <div class="edge-tab-content">
+      <div class="clock-strip">
+        <span class="clock-label">Innings remaining</span>
+        <input type="range" class="clock-slider" min="0" max="9" step="0.5" value="${innings}" oninput="onInningSlide(this.value)">
+        <span class="clock-display" id="clock-disp">${innings.toFixed(1)}</span>
+      </div>
+      <div class="edge-hero">
+        <div class="eh-row1">
+          <div><div class="eh-col-label">Score</div><div class="eh-score-val">${g.awayScore}–${g.homeScore}</div></div>
+          <div><div class="eh-col-label">Market</div><div class="eh-market-val">${g.marketTotal}</div></div>
+          <div><div class="eh-col-label">Model</div><div class="eh-model-val ${edgeColor}" id="model-val">${m.model}</div></div>
+        </div>
+        <div class="eh-edge">
+          <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
+          <div class="eh-playable">Over playable to: <span id="playable-to">${m.playableTo}</span></div>
+        </div>
+      </div>
+      <div class="conf-bar-wrap">
+        <div class="conf-bar-header">
+          <span class="conf-bar-label">Confidence</span>
+          <span class="conf-bar-pct" id="conf-pct" style="color:var(--${confColor})">${m.conf}%</span>
+        </div>
+        <div class="conf-bar-bg"><div class="conf-bar-fill ${confColor}" id="conf-fill" style="width:${m.conf}%"></div></div>
+      </div>
+      <div class="windows-section">
+        <div class="ws-label">Next inning projections</div>
+        <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
+        <div class="win-detail" id="win-detail">
+          <div class="wd-pts">${selProj.pts} runs</div>
+          <div class="wd-range">Range: ${selProj.lo} – ${selProj.hi}</div>
+          <div class="wd-note">${selWin.full ? 'Full remaining game' : 'Isolated inning window'}</div>
+        </div>
+      </div>
+      <div class="alt-line ${alt.cls}" id="alt-line">${alt.l}</div>
+      <div class="signals-section">
+        <div class="sig-row"><span class="sig-name">Run pace</span><span class="sig-val ${m.pace>1.2?'green':m.pace<0.8?'red':'amber'}">${m.pace>1.2?'HIGH ↑':m.pace<0.8?'LOW ↓':'MODERATE'}</span></div>
+        <div class="sig-row"><span class="sig-name">Bullpen factor</span><span class="sig-val amber">LATE GAME</span></div>
+        <div class="sig-row"><span class="sig-name">Blowout risk</span><span class="sig-val ${Math.abs((g.homeScore||0)-(g.awayScore||0))>5?'red':'green'}">${Math.abs((g.homeScore||0)-(g.awayScore||0))>5?'HIGH':'LOW'}</span></div>
+      </div>
+      <div class="action-block">
+        <div class="ab-playable">Over playable to: <span style="color:var(--green)" id="ab-playable">${m.playableTo}</span></div>
+        <div class="ab-note">Edge decays each inning — act before late-game dampening kicks in.</div>
+        <div class="ab-btns">
+          <button class="ab-btn primary" onclick="openTrackModal('${g.id}')">Track</button>
+          <button class="ab-btn" onclick="openAlertModal('${g.id}')">Set Alert</button>
+          <button class="ab-btn danger" onclick="openSnapshot()">Snapshot</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function onClockSlide(val) {
+  activeGameSecs = parseInt(val);
+  const g = activeGame;
+  const secs = activeGameSecs;
+  const m = calcModel(g, secs);
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const confColor = m.conf >= 70 ? 'green' : 'amber';
+  const alt = getAltState(secs);
+
+  const cd = document.getElementById('clock-disp');
+  const mv = document.getElementById('model-val');
+  const en = document.getElementById('edge-num');
+  const pt = document.getElementById('playable-to');
+  const abp = document.getElementById('ab-playable');
+  const cp = document.getElementById('conf-pct');
+  const cf = document.getElementById('conf-fill');
+  const al = document.getElementById('alt-line');
+
+  if (cd) cd.textContent = fmt(secs);
+  if (mv) { mv.textContent = m.model; mv.className = 'eh-model-val ' + edgeColor; }
+  if (en) { en.textContent = `EDGE: ${edgeSign}${m.edge} ${g.side}`; en.className = 'eh-edge-num ' + edgeColor; }
+  if (pt) pt.textContent = m.playableTo;
+  if (abp) abp.textContent = m.playableTo;
+  if (cp) { cp.textContent = m.conf + '%'; cp.style.color = `var(--${confColor})`; }
+  if (cf) { cf.style.width = m.conf + '%'; cf.className = 'conf-bar-fill ' + confColor; }
+  if (al) { al.textContent = alt.l; al.className = 'alt-line ' + alt.cls; }
+
+  // Update window tabs
+  const wins = getWindows(secs);
+  if (activeWinIdx >= wins.length) activeWinIdx = wins.length - 1;
+  const wt = document.getElementById('win-tabs');
+  const wd = document.getElementById('win-detail');
+  if (wt) wt.innerHTML = wins.map((w,i) => `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`).join('');
+  if (wd) {
+    const sel = wins[activeWinIdx];
+    const p = projWindow(g, secs, sel.s);
+    wd.innerHTML = `<div class="wd-pts">${p.pts} pts</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated window projection'}</div>`;
+  }
+}
+
+function onInningSlide(val) {
+  const innings = parseFloat(val);
+  if (activeGame) activeGame.inningsRemaining = innings;
+  const g = activeGame;
+  const m = calcMLBModel(g, innings);
+  const edgeColor = m.edge >= 0 ? 'green' : 'red';
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const confColor = m.conf >= 70 ? 'green' : 'amber';
+  const alt = getMLBAltState(innings);
+  const cd = document.getElementById('clock-disp');
+  const mv = document.getElementById('model-val');
+  const en = document.getElementById('edge-num');
+  const pt = document.getElementById('playable-to');
+  const abp = document.getElementById('ab-playable');
+  const cp = document.getElementById('conf-pct');
+  const cf = document.getElementById('conf-fill');
+  const al = document.getElementById('alt-line');
+  if (cd) cd.textContent = innings.toFixed(1);
+  if (mv) { mv.textContent = m.model; mv.className = 'eh-model-val ' + edgeColor; }
+  if (en) { en.textContent = `EDGE: ${edgeSign}${m.edge} ${g.side}`; en.className = 'eh-edge-num ' + edgeColor; }
+  if (pt) pt.textContent = m.playableTo;
+  if (abp) abp.textContent = m.playableTo;
+  if (cp) { cp.textContent = m.conf + '%'; cp.style.color = `var(--${confColor})`; }
+  if (cf) { cf.style.width = m.conf + '%'; cf.className = 'conf-bar-fill ' + confColor; }
+  if (al) { al.textContent = alt.l; al.className = 'alt-line ' + alt.cls; }
+  const wins = getMLBWindows(innings);
+  if (activeWinIdx >= wins.length) activeWinIdx = wins.length - 1;
+  const wt = document.getElementById('win-tabs');
+  const wd = document.getElementById('win-detail');
+  if (wt) wt.innerHTML = wins.map((w,i) => `<button class="win-tab${i===activeWinIdx?' active':''}" onclick="selectWindow(${i})">${w.l}</button>`).join('');
+  if (wd) {
+    const sel = wins[activeWinIdx];
+    const p = projMLBWindow(g, innings, sel.i);
+    wd.innerHTML = `<div class="wd-pts">${p.pts} runs</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated inning window'}</div>`;
+  }
+}
+
+function selectWindow(idx) {
+  activeWinIdx = idx;
+  document.querySelectorAll('.win-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  const wd = document.getElementById('win-detail');
+  if (!wd) return;
+  if (activeGame?.isMLB) {
+    const innings = activeGame.inningsRemaining || 9;
+    const wins = getMLBWindows(innings);
+    const sel = wins[idx];
+    if (!sel) return;
+    const p = projMLBWindow(activeGame, innings, sel.i);
+    wd.innerHTML = `<div class="wd-pts">${p.pts} runs</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated inning window'}</div>`;
+  } else {
+    const wins = getWindows(activeGameSecs);
+    const sel = wins[idx];
+    if (!sel) return;
+    const p = projWindow(activeGame, activeGameSecs, sel.s);
+    wd.innerHTML = `<div class="wd-pts">${p.pts} pts</div><div class="wd-range">Range: ${p.lo} – ${p.hi}</div><div class="wd-note">${sel.full?'Full remaining game':'Isolated window projection'}</div>`;
+  }
+}
+
+function renderBoxTab(el) {
+  const g = activeGame;
+  const minsPlayed = 48 - g.secsRemaining/60;
+
+  function teamSection(players, name, abbr) {
+    const rows = players.map(p => {
+      const isHot = p.hot;
+      const sparkline = isHot
+        ? `<svg width="40" height="18" viewBox="0 0 40 18"><polyline points="0,14 8,10 16,8 24,5 32,3 40,1" stroke="#00e676" stroke-width="1.5" fill="none"/></svg>`
+        : `<svg width="40" height="18" viewBox="0 0 40 18"><polyline points="0,9 8,11 16,9 24,10 32,8 40,9" stroke="#2a2a2a" stroke-width="1.5" fill="none"/></svg>`;
+      return `<div class="bs-row">
+        <div class="bs-name">${p.n} <span class="bs-pos">${p.p}</span>${isHot?'<span class="hot-pill">HOT</span>':''}</div>
+        <div class="bs-stat${isHot?' hot':''}">${p.pts}</div>
+        <div class="bs-stat">${p.r}</div>
+        <div class="bs-stat">${p.a}</div>
+        <div>${sparkline}</div>
+      </div>`;
+    }).join('');
+    return `<div class="bs-team-header">${abbr} — ${name}</div>
+      <div class="bs-col-headers"><div>Player</div><div>PTS</div><div>REB</div><div>AST</div><div>Trend</div></div>
+      ${rows}`;
+  }
+
+  el.innerHTML = `<div class="bs-content">
+    ${teamSection(g.awayPlayers, g.title.split(' @ ')[0] || g.away, g.away)}
+    ${teamSection(g.homePlayers, g.title.split(' @ ')[1] || g.home, g.home)}
+  </div>`;
+}
+
+/* ── SNAPSHOT ───────────────────────────────────────────── */
+function openSnapshot() {
+  renderSnapshot();
+  goTo('s-snapshot');
+}
+
+function renderSnapshot() {
+  if (!activeGame) return;
+  const g = activeGame;
+  const secs = activeGameSecs;
+  const m = calcModel(g, secs);
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const edgeClass = m.edge >= 0 ? 'green' : 'red';
+  const badgeClass = g.badge === 'HEATING' ? 'heating' : 'closing';
+  const wins = getWindows(secs);
+  const fullWin = wins[wins.length-1];
+  const proj = projWindow(g, secs, fullWin.s);
+
+  document.getElementById('snapshot-content').innerHTML = `
+    <div class="snapshot-wrap">
+      <div class="share-card">
+        <div class="sc-logo">
+          <div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div>
+        </div>
+        <div class="sc-title">${g.title}</div>
+        <div class="sc-meta">${g.period} · ${g.clock} · ${g.network}</div>
+        <div class="sc-score">${g.away} ${g.awayScore} – ${g.homeScore} ${g.home}</div>
+        <div class="sc-row">
+          <div><div class="sc-row-label">Market</div><div class="sc-row-val">${g.marketTotal}</div></div>
+          <div><div class="sc-row-label">Model</div><div class="sc-row-val green">${m.model}</div></div>
+          <div><div class="sc-row-label">Conf</div><div class="sc-row-val">${m.conf}%</div></div>
+        </div>
+        <div class="sc-edge ${edgeClass}">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
+        <div class="sc-window">Next ${fullWin.l} → <span>${proj.pts} pts expected</span></div>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar-bg"><div class="conf-bar-fill green" style="width:${m.conf}%"></div></div>
+        </div>
+        <div class="sc-badge-row"><span class="sc-badge ${badgeClass}">${g.badge}</span></div>
+        <div class="sc-watermark">PARLAYKILLERAPP.COM</div>
+      </div>
+      <div class="share-note">Screenshot this card. Post the result after the game.</div>
+      <div class="share-btns">
+        <button class="share-btn-el green" onclick="shareToX()">Share to X</button>
+        <button class="share-btn-el ghost">Copy Image</button>
+      </div>
+    </div>
+  `;
+}
+
+function shareToX() {
+  if (!activeGame) return;
+  const g = activeGame;
+  const m = calcModel(g, activeGameSecs);
+  const sign = m.edge >= 0 ? '+' : '';
+  const txt = encodeURIComponent(`${g.title} | ${g.period} · ${g.clock}\nMarket: ${g.marketTotal} | Model: ${m.model}\nEDGE: ${sign}${m.edge} ${g.side}\n\nvia @ParlayKillerApp`);
+  window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
+}
+
+/* ── ACCOUNT ────────────────────────────────────────────── */
+function renderAccount() {
+  const user = window.__user || {};
+  const plan = user.plan || 'free';
+  const isPro = plan === 'pro';
+  const usage = user.todayUsage || 0;
+  const remaining = Math.max(0, 3 - usage);
+  const name = user.name || user.email || 'User';
+  const email = user.email || '';
+  const initial = name[0].toUpperCase();
+
+  document.getElementById('home-content').innerHTML = `
+    <div class="account-wrap">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div style="width:48px;height:48px;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;color:#080808;">${initial}</div>
+        <div>
+          <div class="acc-name">${name}</div>
+          <div class="acc-email">${email}</div>
+        </div>
+      </div>
+      <div class="acc-plan-badge ${isPro?'pro':'free'}">${isPro?'PRO — Unlimited':`Free — ${remaining} remaining`}</div>
+      <div class="acc-stats">
+        <div class="acc-stat-row"><span class="acc-stat-label">Plan</span><span class="acc-stat-val">${isPro?'Live Edge Pro':'Free'}</span></div>
+        <div class="acc-stat-row"><span class="acc-stat-label">Analyses today</span><span class="acc-stat-val">${usage}${!isPro?' / 3':''}</span></div>
+        <div class="acc-stat-row"><span class="acc-stat-label">Games tracked</span><span class="acc-stat-val">${favorites.length}</span></div>
+        <div class="acc-stat-row"><span class="acc-stat-label">Active alerts</span><span class="acc-stat-val">${alerts.length}</span></div>
+      </div>
+      ${!isPro?`<button class="acc-btn green" onclick="window.location.href='/api/billing/create-checkout-session'">Upgrade to Live Edge Pro</button>`:''}
+      <button class="acc-btn outline" onclick="signOut()">Sign Out</button>
+    </div>
+  `;
+}
+
+async function signOut() {
+  try { await fetch('/api/auth/logout', { method:'POST', credentials:'include' }); } catch {}
+  window.location.href = '/';
+}
+
+/* ── UPGRADE BANNER ─────────────────────────────────────── */
+function showUpgradeBanner(message) {
+  const existing = document.getElementById('upgrade-banner');
+  if (existing) existing.remove();
+  const b = document.createElement('div');
+  b.id = 'upgrade-banner';
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#00e676;color:#080808;font-size:11px;font-weight:700;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:999;letter-spacing:0.06em;font-family:DM Sans,sans-serif;max-width:480px;margin:0 auto;';
+  b.innerHTML = `<span>${message}</span><button onclick="window.location.href='/api/billing/create-checkout-session'" style="background:#080808;color:#00e676;border:none;font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer;letter-spacing:0.08em;">UPGRADE</button>`;
+  document.body.prepend(b);
+  setTimeout(() => b.remove(), 6000);
+}
+
+/* ── RUN ANALYSIS ───────────────────────────────────────── */
+async function runAnalysis(game, prop) {
+  const payload = {
+    playerName: prop.playerName, sport: 'NBA',
+    statType: prop.statType, currentStat: prop.currentStat,
+    propLine: prop.line, period: game.period,
+    timeRemaining: game.clock, homeScore: game.homeScore,
+    awayScore: game.awayScore,
+  };
+  try {
+    const r = await fetch('/api/liveunder', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+    if (r.status === 401) { showUpgradeBanner('Sign in to run full analysis'); return; }
+    if (data.limitReached) { showUpgradeBanner('Upgrade to Pro for unlimited analyses'); return; }
+    return data;
+  } catch(e) { return null; }
+}
+
+/* ── MODALS ─────────────────────────────────────────────── */
+function openTrackModal(gameId) {
+  const g = GAMES[gameId];
+  if (!g) return;
+  const m = calcModel(g, g.secsRemaining);
+  const edgeSign = m.edge >= 0 ? '+' : '';
+  const edgeClass = m.edge >= 0 ? 'green' : 'red';
+  showModal(`
+    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-title">Track this edge</div>
+    <div class="modal-game-info">${g.title} · ${g.period} · ${g.clock}</div>
+    <div class="modal-edge ${edgeClass}">Current edge: ${edgeSign}${m.edge} ${g.side}</div>
+    <div class="modal-section-label">Notify me when:</div>
+    <div class="modal-pills">
+      <button class="modal-pill on" onclick="this.classList.toggle('on')">Edge changes</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Edge > 5.0</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Model flips</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Alt lines pulled</button>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="confirmTrack('${gameId}')">Start Tracking</button>
+    </div>
+  `);
+}
+
+function confirmTrack(gameId) {
+  if (!favorites.includes(gameId)) favorites.push(gameId);
+  closeModal();
+  showConfirmModal('✓', 'Tracking Started', `You'll be notified when the edge changes on ${GAMES[gameId]?.title || 'this game'}.`);
+}
+
+function openAlertModal(gameId) {
+  const g = GAMES[gameId];
+  if (!g) return;
+  showModal(`
+    <div class="modal-logo"><div class="logo"><div class="logo-pk"><span class="w">Parlay</span><span class="g">Killer</span></div><div class="logo-le">Live Edge</div></div></div>
+    <div class="modal-title">Set Alert</div>
+    <div class="modal-game-info">${g.title} · ${g.period} · ${g.clock}</div>
+    <div class="modal-section-label">Alert when:</div>
+    <div class="modal-pills">
+      <button class="modal-pill on" onclick="this.classList.toggle('on')">Edge > 5.0</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Edge > 7.0</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Model flips side</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Alt lines pulling</button>
+    </div>
+    <div class="modal-section-label">Deliver via:</div>
+    <div class="modal-pills">
+      <button class="modal-pill on" onclick="this.classList.toggle('on')">In-app</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Push notification</button>
+      <button class="modal-pill" onclick="this.classList.toggle('on')">Email</button>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="confirmAlert('${gameId}')">Set Alert</button>
+    </div>
+  `);
+}
+
+function confirmAlert(gameId) {
+  const g = GAMES[gameId];
+  if (g) {
+    const m = calcModel(g, g.secsRemaining);
+    const sign = m.edge >= 0 ? '+' : '';
+    alerts.push({ gameId, title: g.title, msg: `Edge: ${sign}${m.edge} ${g.side}`, color: g.edgeColor, time: 'Just now' });
+  }
+  closeModal();
+  showConfirmModal('🔔', 'Alert Set', `We'll notify you when the edge threshold is crossed.`);
+}
+
+function showModal(html) {
+  const layer = document.getElementById('modal-layer');
+  layer.innerHTML = `<div class="modal-overlay open" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
+}
+
+function showConfirmModal(icon, title, msg) {
+  const layer = document.getElementById('modal-layer');
+  layer.innerHTML = `<div class="modal-overlay open confirm-modal" onclick="if(event.target===this)closeModal()"><div class="modal"><span class="confirm-icon">${icon}</span><div class="confirm-title">${title}</div><div class="confirm-msg">${msg}</div><button class="modal-btn primary" style="width:100%;" onclick="closeModal()">Done</button></div></div>`;
+}
+
+function closeModal() {
+  document.getElementById('modal-layer').innerHTML = '';
+}
+
+/* ── AUTH INIT ──────────────────────────────────────────── */
+function updateNavAvatar(user) {
+  // Usage warning injected via upgrade banner when needed
+}
+
+async function initApp() {
+  try {
+    const r = await fetch('/api/auth/me', { credentials:'include' });
+    const data = await r.json();
+    if (!data.user) { window.location.href = '/'; return; }
+    window.__user = data.user;
+    updateNavAvatar(data.user);
+    await loadLiveGames();
+    renderBoard();
+  } catch(e) { window.location.href = '/'; }
+}
+
+async function loadLiveGames() {
+  try {
+    const r = await fetch('/api/odds/live-games', { credentials:'include' });
+    const d = await r.json();
+    if (d.games && d.games.length > 0) {
+      window.__liveGames = d.games;
+      window.__dataSource = 'live';
+    } else {
+      window.__liveGames = null;
+      window.__dataSource = 'mock';
+    }
+  } catch(e) {
+    window.__liveGames = null;
+    window.__dataSource = 'mock';
+  }
+}
+
+function liveGameToCard(g) {
+  const now = new Date();
+  const commence = new Date(g.commenceTime);
+  const diffMins = (commence - now) / (1000 * 60);
+  let periodLabel, clockLabel;
+  if (g.status === 'live') {
+    periodLabel = 'LIVE'; clockLabel = '';
+  } else if (diffMins < 60) {
+    periodLabel = 'Starting soon'; clockLabel = Math.round(diffMins) + ' min';
+  } else {
+    periodLabel = commence.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short' });
+    clockLabel = '';
+  }
+  const isMLB = g.sport === 'MLB';
+  const base = {
+    id: g.id,
+    title: g.awayTeam + ' @ ' + g.homeTeam,
+    sport: g.sport || 'NBA',
+    away: g.awayAbbr, home: g.homeAbbr,
+    awayScore: '–', homeScore: '–',
+    awayRec: '', homeRec: '',
+    period: periodLabel, clock: clockLabel,
+    totalSoFar: 0, marketTotal: g.marketTotal,
+    baseEdge: 0, side: 'TBD',
+    edgeColor: '#555',
+    badge: g.status === 'live' ? 'LIVE' : 'PREGAME',
+    network: g.sport || '',
+    status: g.status,
+    books: g.books,
+    qtrs: [], awayPlayers: [], homePlayers: [],
+    isLive: false,
+  };
+  if (isMLB) {
+    return { ...base, isMLB: true, currentInning: 1, isBottom: false,
+      inningsRemaining: 9, maxSecs: 9, secsRemaining: 9 };
+  }
+  return { ...base, isMLB: false, maxSecs: 720, secsRemaining: 720 };
+}
+
+function renderBoard() {
+  renderHomeContent();
+}
+
+initApp();
+</script>
+</body>
+</html>

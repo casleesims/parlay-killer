@@ -192,6 +192,17 @@
     .plan-btn.blue { background: var(--blue); color: var(--navy); }
     .plan-btn.blue:hover { opacity: 0.88; }
 
+    /* FAQ */
+    .faq-section { max-width: 640px; margin: 0 auto; }
+    .faq-section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
+    .faq-item { border-bottom: 0.5px solid var(--border); padding: 20px 0; cursor: pointer; }
+    .faq-item:first-of-type { border-top: 0.5px solid var(--border); }
+    .faq-q { font-size: 15px; font-weight: 500; color: var(--white); display: flex; justify-content: space-between; align-items: center; gap: 12px; user-select: none; }
+    .faq-q .faq-icon { font-size: 18px; color: var(--dim); flex-shrink: 0; transition: transform 0.2s; }
+    .faq-item.open .faq-q .faq-icon { transform: rotate(45deg); color: var(--blue); }
+    .faq-a { font-size: 13px; font-weight: 300; color: var(--dim); line-height: 1.7; margin-top: 12px; display: none; }
+    .faq-item.open .faq-a { display: block; }
+
     /* FINAL CTA */
     .final-cta { border-bottom: none; text-align: center; }
     .final-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 20px; }
@@ -637,6 +648,39 @@
           <li>Alt line tracker</li>
         </ul>
         <button class="plan-btn blue" onclick="openModal('signup')">Start Free — 10 Reveals</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FAQ -->
+<div class="wrap">
+  <section class="section">
+    <div class="faq-section">
+      <div class="faq-section-label">Common questions</div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">What is a "live edge"?<span class="faq-icon">+</span></div>
+        <div class="faq-a">A live edge is the gap between the sportsbook's current total and what our model thinks the final total will be. A positive edge means the model projects the game to go OVER the market line; negative means UNDER. The larger the gap, the stronger the signal.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">How does the model work?<span class="faq-icon">+</span></div>
+        <div class="faq-a">The model uses the current score, time remaining, and live scoring pace to project the final total. It applies adjustments for blowout dampening, late-game foul inflation (NBA), and bullpen/inning factors (MLB). The output is compared against the live market total to calculate the edge.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">What is "Playable To"?<span class="faq-icon">+</span></div>
+        <div class="faq-a">Playable To is the specific total number the model says you can bet up to while still maintaining an edge over the house. If the edge is OVER 224.5, Playable To might say 227.0 — meaning you still have value on the OVER even if the line moves up to 227.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Is this betting advice?<span class="faq-icon">+</span></div>
+        <div class="faq-a">No. Parlay Killer Live Edge is a math tool. It shows you what the model calculates — it does not guarantee results or constitute financial advice. All betting involves risk. You are solely responsible for any wagers you place.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">What's included in the free tier?<span class="faq-icon">+</span></div>
+        <div class="faq-a">Free users get 10 Playable To reveals — the specific target number the model says is still +EV. The live board, edge signals, confidence scores, and best bet strip are all visible for free. No credit card required to start.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Can I cancel my Pro subscription?<span class="faq-icon">+</span></div>
+        <div class="faq-a">Yes — cancel anytime from your account page. You keep access until the end of your billing period. Annual subscribers who cancel within 7 days of signup are eligible for a full refund.</div>
       </div>
     </div>
   </section>

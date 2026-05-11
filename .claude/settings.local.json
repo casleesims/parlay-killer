@@ -23,7 +23,24 @@
       "Bash(curl -s \"http://localhost:3000/api/playerstats/mlb?name=jose+ramirez\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebFetch(domain:developer.sportradar.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(brew list:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/**)",
+      "Bash(ls /opt/homebrew/bin/python*)",
+      "Bash(ls ~/.pyenv/shims/python*)",
+      "Bash(command -v node)",
+      "Bash(command -v npx)",
+      "Bash(npx --version)",
+      "Bash(command -v uv)",
+      "Bash(command -v brew)",
+      "Bash(command -v python3)",
+      "Bash(cp /Users/encrypted/parlay-killer/public/landing.html /Users/encrypted/parlay-killer/public/landing.html.bak)",
+      "Bash(cp /Users/encrypted/parlay-killer/public/index.html /Users/encrypted/parlay-killer/public/index.html.bak)",
+      "Bash(ls ~/Downloads/*.html)"
     ]
   }
 }
