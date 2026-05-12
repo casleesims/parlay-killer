@@ -612,23 +612,21 @@ const FREE_GAME_LIMIT = 10;
 const BYPASS_EMAILS = ['simscaslee@gmail.com', 'parlay@parlaykillerapp.com'];
 
 function getFreeUsage() {
-  if (window.__user && (
+  const isPro = window.__isPro || (window.__user && (
     window.__user.plan === 'pro' ||
     window.__user.isOwner ||
     BYPASS_EMAILS.includes(window.__user.email)
-  )) return { count: 0, limit: FREE_GAME_LIMIT, isPro: true };
-  try {
-    const data = JSON.parse(localStorage.getItem('pk_free_usage') || '{"count":0}');
-    return { count: data.count || 0, limit: FREE_GAME_LIMIT, isPro: false };
-  } catch(e) { return { count: 0, limit: FREE_GAME_LIMIT, isPro: false }; }
+  ));
+  if (isPro) return { count: 0, limit: FREE_GAME_LIMIT, isPro: true, remaining: FREE_GAME_LIMIT };
+  const count = window.__usageCount || 0;
+  const limit = window.__usageLimit || FREE_GAME_LIMIT;
+  const remaining = Math.max(0, limit - count);
+  return { count, limit, isPro: false, remaining };
 }
 
 function incrementFreeUsage() {
-  const usage = getFreeUsage();
-  if (usage.isPro) return true;
-  const newCount = usage.count + 1;
-  localStorage.setItem('pk_free_usage', JSON.stringify({ count: newCount }));
-  return newCount <= FREE_GAME_LIMIT;
+  // No-op: server tracks usage, window.__usageCount updated after reveal
+  return true;
 }
 
 function hasHitFreeLimit() {
@@ -1101,6 +1099,7 @@ async function revealPlayableTo(gameId, buttonEl) {
 
     window.__usageCount = (window.__usageCount || 0) + 1;
     updateUsageDisplay();
+    if (activeGame) renderGameView();
     showToast('Tap Share Edge Call to post your edge call', 'info', 4000);
 
   } catch(e) {
@@ -1117,6 +1116,7 @@ async function revealPlayableTo(gameId, buttonEl) {
         </div>`;
         window.__usageCount = (window.__usageCount || 0) + 1;
         updateUsageDisplay();
+        if (activeGame) renderGameView();
         return;
       }
     } catch(_) {}
@@ -2314,8 +2314,8 @@ function renderAccount() {
   const plan = user.plan || 'free';
   const isPro = plan === 'pro' || user.isOwner;
   if (isPro) localStorage.removeItem('pk_free_usage');
-  const usage = user.todayUsage || 0;
-  const remaining = Math.max(0, 10 - usage);
+  const usage = window.__usageCount || user.todayUsage || 0;
+  const remaining = Math.max(0, (window.__usageLimit || 10) - usage);
   const name = user.name || user.email || 'User';
   const email = user.email || '';
   const initial = name[0].toUpperCase();
@@ -2334,7 +2334,7 @@ function renderAccount() {
       <div class="acc-plan-badge ${isPro?'pro':'free'}">${isPro?'PRO — Unlimited':`Free — ${remaining} remaining`}</div>
       <div class="acc-stats">
         <div class="acc-stat-row"><span class="acc-stat-label">Plan</span><span class="acc-stat-val">${isPro?'Live Edge Pro':'Free'}</span></div>
-        <div class="acc-stat-row"><span class="acc-stat-label">Analyses today</span><span class="acc-stat-val">${usage}${!isPro?' / 3':''}</span></div>
+        <div class="acc-stat-row"><span class="acc-stat-label">Reveals used</span><span class="acc-stat-val">${isPro ? 'Unlimited' : usage + ' / ' + (window.__usageLimit || 10)}</span></div>
         <div class="acc-stat-row"><span class="acc-stat-label">Active alerts</span><span class="acc-stat-val">${alerts.length}</span></div>
       </div>
       <div style="margin-bottom:20px;">
