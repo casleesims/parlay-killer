@@ -21,6 +21,7 @@
   <link rel="apple-touch-icon" href="/icon-192.png">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="/math.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -679,7 +680,6 @@ function showSignupWall() {
 }
 
 /* ── MATH ──────────────────────────────────────────────── */
-function fmt(s) { return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 
 function calcModel(game, secs) {
   const minsPlayed = 48 - secs/60;
@@ -721,32 +721,7 @@ function projWindow(game, secs, windowSecs) {
   return { pts, lo:Math.round(pts*0.83*10)/10, hi:Math.round(pts*1.17*10)/10 };
 }
 
-function getWindows(secs) {
-  const m = secs/60, w = [];
-  if(m>10){ w.push({l:'3:00',s:180}); w.push({l:'5:00',s:300}); w.push({l:'9:00',s:540}); }
-  else if(m>6){ w.push({l:'2:00',s:120}); w.push({l:'3:30',s:210}); w.push({l:'5:00',s:300}); }
-  else if(m>3.5){ w.push({l:'1:30',s:90}); w.push({l:'3:00',s:180}); }
-  else if(m>1){ w.push({l:'1:00',s:60}); }
-  w.push({l:fmt(secs)+' ★',s:secs,full:true});
-  return w;
-}
-
-function getAltState(secs) {
-  const m = secs/60;
-  if(m>3.5) return {l:'Full board available',cls:'full'};
-  if(m>1.5) return {l:'Lines thinning',cls:'thin'};
-  return {l:'Main only · -110 both ways',cls:'gone'};
-}
-
 /* ── MLB MATH ──────────────────────────────────────────── */
-function getMLBWindows(inningsRemaining) {
-  const w = [];
-  if (inningsRemaining > 4) { w.push({l:'1 inn',i:1}); w.push({l:'2 inn',i:2}); w.push({l:'3 inn',i:3}); }
-  else if (inningsRemaining > 2) { w.push({l:'1 inn',i:1}); w.push({l:'2 inn',i:2}); }
-  else if (inningsRemaining > 1) { w.push({l:'1 inn',i:1}); }
-  w.push({l: inningsRemaining.toFixed(1) + ' inn ★', i: inningsRemaining, full: true });
-  return w;
-}
 
 function calcMLBModel(game, inningsRemaining) {
   const inningsPlayed = Math.max(0.5, 9 - inningsRemaining);
@@ -772,12 +747,6 @@ function projMLBWindow(game, inningsRemaining, windowInnings) {
   const blow = diff > 5 ? 0.72 : diff > 3 ? 0.85 : 1.0;
   const runs = Math.round(pace * useInnings * late * blow * 10) / 10;
   return { pts: runs, lo: Math.round(runs * 0.70 * 10) / 10, hi: Math.round(runs * 1.30 * 10) / 10 };
-}
-
-function getMLBAltState(inningsRemaining) {
-  if (inningsRemaining > 2) return { l:'Full board available', cls:'full' };
-  if (inningsRemaining > 1) return { l:'Lines thinning', cls:'thin' };
-  return { l:'Main only · -110 both ways', cls:'gone' };
 }
 
 /* ── MOCK DATA ──────────────────────────────────────────── */
@@ -1523,21 +1492,26 @@ function openBestBet() {
 
 /* ── GAME VIEW ──────────────────────────────────────────── */
 function openGameView(gameId) {
-  const usage = getFreeUsage();
+  try {
+    const usage = getFreeUsage();
 
-  activeGame = getGameById(gameId) || GAMES[gameId];
-  if (!activeGame) return;
-  activeGameSecs = activeGame.secsRemaining;
-  activeTab = 'edge';
-  activeWinIdx = 0;
-  if (!window.__newsItems) {
-    fetch('/api/news/feed', { credentials: 'include' })
-      .then(r => r.json())
-      .then(d => { window.__newsItems = d.items || []; })
-      .catch(() => {});
+    activeGame = getGameById(gameId) || GAMES[gameId];
+    if (!activeGame) return;
+    activeGameSecs = activeGame.secsRemaining;
+    activeTab = 'edge';
+    activeWinIdx = 0;
+    if (!window.__newsItems) {
+      fetch('/api/news/feed', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => { window.__newsItems = d.items || []; })
+        .catch(() => {});
+    }
+    renderGameView();
+    goTo('s-game');
+  } catch(err) {
+    console.error('[openGameView]', err);
+    showToast('Failed to open game — try again', 'error', 3000);
   }
-  renderGameView();
-  goTo('s-game');
 }
 
 function renderGameView() {
@@ -3403,11 +3377,17 @@ function liveGameToCard(g) {
 }
 
 function renderBoard() {
-  showBoardTabs();
-  const games = getAllGames();
-  updateBestBet(games);
-  renderHomeContent();
-  updateDesktopSidebar();
+  try {
+    showBoardTabs();
+    const games = getAllGames();
+    updateBestBet(games);
+    renderHomeContent();
+    updateDesktopSidebar();
+  } catch(err) {
+    console.error('[renderBoard]', err);
+    const body = document.getElementById('home-content');
+    if (body) body.innerHTML = '<div style="padding:48px 20px;text-align:center;font-size:13px;color:#555;">Board error — <button onclick="loadLiveGames().then(renderBoard)" style="color:#00e676;background:none;border:none;cursor:pointer;font-size:13px;">Retry</button></div>';
+  }
 }
 
 (function initPullToRefresh() {
@@ -3632,5 +3612,10 @@ initApp();
 </div><!-- end desktop-layout -->
 <div class="toast" id="toast"></div>
 <div id="onboarding-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;flex-direction:column;max-width:480px;margin:0 auto;"></div>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+  }
+</script>
 </body>
 </html>

@@ -1,9 +1,27 @@
 const express = require('express');
 const router = express.Router();
 
-let cache         = { data: null, timestamp: 0 };
-let tomorrowCache = { data: null, timestamp: 0 };
-const CACHE_TTL   = 10 * 60 * 1000; // 10 minutes
+const cache = new Map();
+const CACHE_TTL = 30 * 60 * 1000;
+
+function cacheGet(key) {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL) { cache.delete(key); return null; }
+  return entry.data;
+}
+function cacheSet(key, data) {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
+router.get('/cache-status', (req, res) => {
+  if (process.env.NODE_ENV === 'production') return res.status(404).end();
+  const status = {};
+  cache.forEach((v, k) => {
+    status[k] = { age: Math.round((Date.now()-v.timestamp)/1000)+'s', ttl: Math.round((CACHE_TTL-(Date.now()-v.timestamp))/1000)+'s' };
+  });
+  res.json(status);
+});
 
 let scoresCache = { nba: null, mlb: null, lastFetch: 0 };
 const SCORES_CACHE_MS = 45 * 1000;
@@ -501,20 +519,18 @@ function oddsUrl(extra = '') {
 // ── Status ──────────────────────────────────────────────────────────────────
 router.get('/status', (req, res) => {
   const now     = Date.now();
-  const isCached = cache.data !== null;
-  const age      = isCached ? Math.floor((now - cache.timestamp) / 1000) : null;
-  const nextRefresh = isCached
-    ? Math.max(0, Math.floor((CACHE_TTL - (now - cache.timestamp)) / 1000))
-    : 0;
-  res.json({ cached: isCached, age, gamesCount: isCached ? cache.data.length : 0, nextRefresh });
+  const entry = cache.get('odds');
+  const isCached = !!entry;
+  const age = isCached ? Math.floor((Date.now() - entry.timestamp) / 1000) : null;
+  const nextRefresh = isCached ? Math.max(0, Math.floor((CACHE_TTL - (Date.now() - entry.timestamp)) / 1000)) : 0;
+  res.json({ cached: isCached, age, gamesCount: isCached ? entry.data.length : 0, nextRefresh });
 });
 
 // ── Tomorrow ─────────────────────────────────────────────────────────────────
 router.get('/tomorrow', async (req, res) => {
   const now = Date.now();
-  if (tomorrowCache.data && (now - tomorrowCache.timestamp) < CACHE_TTL) {
-    return res.json(tomorrowCache.data);
-  }
+  const cachedTomorrow = cacheGet('tomorrow');
+  if (cachedTomorrow) return res.json(cachedTomorrow);
 
   if (!process.env.ODDS_API_KEY) {
     return res.status(503).json({ error: 'ODDS_API_KEY not configured' });
@@ -535,7 +551,7 @@ router.get('/tomorrow', async (req, res) => {
     }
     const data  = await response.json();
     const games = data.map(transformGame).filter(Boolean);
-    tomorrowCache = { data: games, timestamp: now };
+    cacheSet('tomorrow', games);
     res.json(games);
   } catch (err) {
     res.status(502).json({ error: 'Failed to fetch tomorrow odds', detail: err.message });
@@ -545,9 +561,8 @@ router.get('/tomorrow', async (req, res) => {
 // ── Today (default) ──────────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   const now = Date.now();
-  if (cache.data && (now - cache.timestamp) < CACHE_TTL) {
-    return res.json(cache.data);
-  }
+  const cachedOdds = cacheGet('odds');
+  if (cachedOdds) return res.json(cachedOdds);
 
   if (!process.env.ODDS_API_KEY) {
     return res.status(503).json({ error: 'ODDS_API_KEY not configured' });
@@ -561,7 +576,7 @@ router.get('/', async (req, res) => {
     }
     const data  = await response.json();
     const games = data.map(transformGame).filter(Boolean);
-    cache = { data: games, timestamp: now };
+    cacheSet('odds', games);
     res.json(games);
   } catch (err) {
     res.status(502).json({ error: 'Failed to fetch odds', detail: err.message });

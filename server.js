@@ -45,6 +45,7 @@ async function initDb() {
 }
 initDb();
 
+const morgan            = require('morgan');
 const analyzeRouter     = require('./routes/analyze');
 const oddsRouter        = require('./routes/odds');
 const scoresRouter      = require('./routes/scores');
@@ -61,7 +62,31 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.googleapis.com",
+        "https://js.stripe.com",
+        "blob:",
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com",
+      ],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://cdn.nba.com", "https://a.espncdn.com"],
+      connectSrc: ["'self'", "https://api.the-odds-api.com"],
+      frameSrc: ["https://js.stripe.com"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 
 // ── Session ────────────────────────────────────────────────
 app.use(session({
@@ -127,6 +152,9 @@ const authLimiter = rateLimit({
 
 // ── Middleware ─────────────────────────────────────────────
 if (sentryEnabled) app.use(Sentry.Handlers.requestHandler());
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+}
 app.use(generalLimiter);
 app.use(cors({ origin: true, credentials: true }));
 
@@ -152,6 +180,12 @@ app.get('/privacy', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
 });
 
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Content-Type', 'application/javascript');
+  res.sendFile(path.join(__dirname, 'public', 'sw.js'));
+});
+
 // { index: false } prevents express.static from auto-serving index.html for /
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
@@ -161,6 +195,11 @@ app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} | ${req.ip} | ${req.method} ${req.path} | ${res.statusCode} | ${Date.now() - start}ms`);
   });
   next();
+});
+
+// ── Health check ───────────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: Math.round(process.uptime()), env: process.env.NODE_ENV });
 });
 
 // ── Routes ─────────────────────────────────────────────────
@@ -175,10 +214,18 @@ app.use('/api/playerstats', playerStatsLimiter,   playerStatsRouter);
 app.use('/api/billing',                           billingRouter);
 app.use('/api/news',                              newsRouter);
 
+// 404
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Route not found' });
+  res.status(404).sendFile(path.join(__dirname, 'public', 'landing.html'));
+});
+
+// Global error handler — must be after Sentry if enabled
 if (sentryEnabled) app.use(Sentry.Handlers.errorHandler());
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong. We've been notified." });
+  console.error('[Error]', err.message);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({ error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message });
 });
 
 // ── Reset password page ────────────────────────────────────

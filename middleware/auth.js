@@ -19,9 +19,12 @@ async function checkUsage(req, res, next) {
   }
 
   try {
-    // Owner bypass
+    const BYPASS_EMAILS = (process.env.BYPASS_EMAILS || 'simscaslee@gmail.com').split(',').map(e => e.trim());
+
+    // Owner / bypass bypass
     const ownerCheck = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
-    if (ownerCheck.rows[0]?.email === 'simscaslee@gmail.com') {
+    const userEmail = ownerCheck.rows[0]?.email;
+    if (BYPASS_EMAILS.includes(userEmail)) {
       return next();
     }
 
@@ -32,16 +35,9 @@ async function checkUsage(req, res, next) {
 
     const user = userResult.rows[0];
 
-    // Pro users and bypass emails skip usage check
-    const BYPASS_EMAILS = [
-      'simscaslee@gmail.com',
-      'parlay@parlaykillerapp.com',
-    ];
-
     if (user && (
       user.plan === 'pro' ||
-      user.subscription_status === 'active' ||
-      BYPASS_EMAILS.includes(ownerCheck.rows[0]?.email)
+      user.subscription_status === 'active'
     )) {
       return next();
     }
