@@ -904,17 +904,16 @@ function goBack(to) {
 
 function navTo(tab) {
   activeNavTab = tab;
+
+  // Update bottom nav buttons
   document.querySelectorAll('.bn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('bn-' + tab);
   if (btn) btn.classList.add('active');
 
-  document.querySelectorAll('.scr').forEach(s => {
-    s.classList.remove('active', 'behind');
-    s.classList.add('inactive');
-  });
-  document.getElementById('s-home').classList.remove('inactive');
-  document.getElementById('s-home').classList.add('active');
+  // Update desktop nav
+  updateDesktopNav(tab);
 
+  // Switch screens
   if (tab === 'board') {
     showBoardTabs();
     activeSportTab = 'all';
@@ -932,7 +931,6 @@ function navTo(tab) {
     hideBoardTabs();
     renderAccount();
   }
-  updateDesktopNav(tab);
 }
 
 function showBoardTabs() {
