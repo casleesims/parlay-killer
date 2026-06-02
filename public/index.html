@@ -3643,5 +3643,12 @@ initApp();
 </div><!-- end desktop-layout -->
 <div class="toast" id="toast"></div>
 <div id="onboarding-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;flex-direction:column;max-width:480px;margin:0 auto;"></div>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => reg.unregister());
+    });
+  }
+</script>
 </body>
 </html>
