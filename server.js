@@ -141,7 +141,7 @@ app.use(express.json());
 
 // Serve landing page to logged-out visitors, the app to logged-in users
 app.get('/', (req, res) => {
-  if (req.session && req.session.userId) {
+  if (req.isAuthenticated()) {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
   } else {
     res.sendFile(path.join(__dirname, 'public', 'landing.html'));
