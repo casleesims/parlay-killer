@@ -62,31 +62,7 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://cdnjs.cloudflare.com",
-        "https://fonts.googleapis.com",
-        "https://js.stripe.com",
-        "blob:",
-      ],
-      styleSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://fonts.googleapis.com",
-      ],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https://cdn.nba.com", "https://a.espncdn.com"],
-      connectSrc: ["'self'", "https://api.the-odds-api.com"],
-      frameSrc: ["https://js.stripe.com"],
-    },
-  },
-  crossOriginEmbedderPolicy: false,
-}));
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // ── Session ────────────────────────────────────────────────
 app.use(session({
