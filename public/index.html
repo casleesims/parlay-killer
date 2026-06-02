@@ -612,21 +612,23 @@ const FREE_GAME_LIMIT = 10;
 const BYPASS_EMAILS = ['simscaslee@gmail.com', 'parlay@parlaykillerapp.com'];
 
 function getFreeUsage() {
-  const isPro = window.__isPro || (window.__user && (
+  if (window.__user && (
     window.__user.plan === 'pro' ||
     window.__user.isOwner ||
     BYPASS_EMAILS.includes(window.__user.email)
-  ));
-  if (isPro) return { count: 0, limit: FREE_GAME_LIMIT, isPro: true, remaining: FREE_GAME_LIMIT };
-  const count = window.__usageCount || 0;
-  const limit = window.__usageLimit || FREE_GAME_LIMIT;
-  const remaining = Math.max(0, limit - count);
-  return { count, limit, isPro: false, remaining };
+  )) return { count: 0, limit: FREE_GAME_LIMIT, isPro: true };
+  try {
+    const data = JSON.parse(localStorage.getItem('pk_free_usage') || '{"count":0}');
+    return { count: data.count || 0, limit: FREE_GAME_LIMIT, isPro: false };
+  } catch(e) { return { count: 0, limit: FREE_GAME_LIMIT, isPro: false }; }
 }
 
 function incrementFreeUsage() {
-  // No-op: server tracks usage, window.__usageCount updated after reveal
-  return true;
+  const usage = getFreeUsage();
+  if (usage.isPro) return true;
+  const newCount = usage.count + 1;
+  localStorage.setItem('pk_free_usage', JSON.stringify({ count: newCount }));
+  return newCount <= FREE_GAME_LIMIT;
 }
 
 function hasHitFreeLimit() {
@@ -662,7 +664,6 @@ function showUpgradeWall(context) {
           </li>`).join('')}
       </ul>
       <button onclick="closeModal()" style="width:100%;background:none;border:0.5px solid var(--b2);color:var(--dim);font-size:11px;padding:11px;cursor:pointer;">Maybe later</button>
-      <div style="font-size:10px;color:#2a2a2a;text-align:center;margin-top:12px;line-height:1.6;">ParlayKiller shows where the math says edge exists.<br>You decide whether to act.</div>
     </div>
   `);
 }
@@ -1094,12 +1095,10 @@ async function revealPlayableTo(gameId, buttonEl) {
     parent.innerHTML = `<div class="gc-playable-reveal revealed">
       <span class="gc-playable-label">Playable to</span>
       <span class="gc-playable-num">${playableTo}</span>
-      <div style="font-size:9px;color:#2a2a2a;margin-top:4px;letter-spacing:0.04em;">Math-identified edge · Your judgment closes the loop</div>
     </div>`;
 
     window.__usageCount = (window.__usageCount || 0) + 1;
     updateUsageDisplay();
-    if (activeGame) renderGameView();
     showToast('Tap Share Edge Call to post your edge call', 'info', 4000);
 
   } catch(e) {
@@ -1112,11 +1111,9 @@ async function revealPlayableTo(gameId, buttonEl) {
         parent.innerHTML = `<div class="gc-playable-reveal revealed">
           <span class="gc-playable-label">Playable to</span>
           <span class="gc-playable-num">${m.playableTo}</span>
-          <div style="font-size:9px;color:#2a2a2a;margin-top:4px;letter-spacing:0.04em;">Math-identified edge · Your judgment closes the loop</div>
         </div>`;
         window.__usageCount = (window.__usageCount || 0) + 1;
         updateUsageDisplay();
-        if (activeGame) renderGameView();
         return;
       }
     } catch(_) {}
@@ -1525,6 +1522,22 @@ function openBestBet() {
 function openGameView(gameId) {
   const usage = getFreeUsage();
 
+  if (!usage.isPro && usage.count >= usage.limit) {
+    showUpgradeWall('game-view');
+    return;
+  }
+
+  if (!usage.isPro) {
+    incrementFreeUsage();
+    const newUsage = getFreeUsage();
+    const remaining = usage.limit - newUsage.count;
+    if (remaining === 1) {
+      setTimeout(() => showUpgradeBanner('1 free analysis remaining — upgrade for unlimited'), 2000);
+    } else if (remaining === 0) {
+      setTimeout(() => showUpgradeBanner('That was your last free analysis — upgrade to continue'), 2000);
+    }
+  }
+
   activeGame = getGameById(gameId) || GAMES[gameId];
   if (!activeGame) return;
   activeGameSecs = activeGame.secsRemaining;
@@ -1664,7 +1677,7 @@ function renderEdgeTab(el) {
         </div>
         <div class="eh-edge">
           <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
-          <div class="eh-playable">Playable to: ${(usage.isPro || usage.remaining > 0)
+          <div class="eh-playable">Playable to: ${usage.isPro
             ? `<span id="playable-to" style="color:var(--white);font-weight:500;">${m.playableTo}</span>`
             : `<span style="filter:blur(5px);user-select:none;color:var(--white);font-weight:500;">999.9</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;">Pro →</button>`
           }</div>
@@ -1688,7 +1701,7 @@ function renderEdgeTab(el) {
           <text x="4" y="20" font-size="7" fill="${m.edge>=0?'#4da6ff':'#ff5a52'}" font-family="DM Sans">Model</text>
         </svg>
       </div>
-      ${(usage.isPro || usage.remaining > 0) ? `
+      ${usage.isPro ? `
       <div class="windows-section">
         <div class="ws-label">Next window projections</div>
         <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
@@ -1741,12 +1754,11 @@ function renderEdgeTab(el) {
         <div style="font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;">% of bankroll suggested based on this edge. Half Kelly reduces variance.</div>
       </div>
       <div class="action-block">
-        <div class="ab-playable">${(usage.isPro || usage.remaining > 0)
+        <div class="ab-playable">${usage.isPro
           ? `Playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span>`
           : `Playable to: <span style="filter:blur(4px);opacity:0.3;">${m.playableTo}</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;">Unlock Pro →</button>`
         }</div>
         <div class="ab-note">Edge decays as clock runs — act before the model catches the market.</div>
-        <div style="font-size:9px;color:#2a2a2a;margin-top:4px;">We price it. You decide.</div>
         <div class="ab-btns">
           <button class="ab-btn primary" onclick="openBetNow(activeGame)">Bet Now → ${SPORTSBOOK_LINKS[getSportsbookPref()]?.name || 'DraftKings'}</button>
           <button class="ab-btn" onclick="openAlertModal('${g.id}')">Alert When Edge Moves</button>
@@ -1854,7 +1866,7 @@ function renderMLBEdgeTab(el, g) {
         </div>
         <div class="eh-edge">
           <div class="eh-edge-num ${edgeColor}" id="edge-num">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
-          <div class="eh-playable">Playable to: ${(usage.isPro || usage.remaining > 0)
+          <div class="eh-playable">Playable to: ${usage.isPro
             ? `<span id="playable-to" style="color:var(--white);font-weight:500;">${m.playableTo}</span>`
             : `<span style="filter:blur(5px);user-select:none;color:var(--white);font-weight:500;">999.9</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;letter-spacing:0.04em;">Pro →</button>`
           }</div>
@@ -1868,7 +1880,7 @@ function renderMLBEdgeTab(el, g) {
         <div class="conf-bar-bg"><div class="conf-bar-fill ${confColor}" id="conf-fill" style="width:${m.conf}%"></div></div>
         <div style="font-size:10px;color:var(--dim);margin-top:5px;" id="conf-label">${confLabel}</div>
       </div>
-      ${(usage.isPro || usage.remaining > 0) ? `
+      ${usage.isPro ? `
       <div class="windows-section">
         <div class="ws-label">Next inning projections</div>
         <div class="win-tabs" id="win-tabs">${winTabsHtml}</div>
@@ -1919,7 +1931,7 @@ function renderMLBEdgeTab(el, g) {
         <div style="font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;">% of bankroll suggested based on this edge. Half Kelly reduces variance.</div>
       </div>
       <div class="action-block">
-        <div class="ab-playable">${(usage.isPro || usage.remaining > 0)
+        <div class="ab-playable">${usage.isPro
           ? `Playable to: <span style="color:var(--blue)" id="ab-playable">${m.playableTo}</span>`
           : `Playable to: <span style="filter:blur(4px);opacity:0.3;">${m.playableTo}</span> <button onclick="showUpgradeWall('playable-to')" style="font-size:10px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;">Unlock Pro →</button>`
         }</div>
@@ -2243,8 +2255,7 @@ function renderSnapshot() {
             <div style="font-size:15px;font-weight:700;color:#e8f2fb;">${m.conf}%</div>
           </div>
         </div>
-        <div style="text-align:center;font-size:18px;font-weight:900;letter-spacing:0.08em;color:${m.edge>=0?'#4da6ff':'#ff453a'};margin-bottom:4px;">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
-        <div style="font-size:9px;color:#2a2a2a;text-align:center;margin-bottom:8px;letter-spacing:0.04em;">Math-identified · Human judgment required</div>
+        <div style="text-align:center;font-size:18px;font-weight:900;letter-spacing:0.08em;color:${m.edge>=0?'#4da6ff':'#ff453a'};margin-bottom:8px;">EDGE: ${edgeSign}${m.edge} ${g.side}</div>
         <div style="font-size:11px;color:#4a6480;text-align:center;margin-bottom:12px;">Next ${fullWin.l} → ${proj.pts} ${isMLB?'runs':'pts'} projected</div>
         <div style="background:#0d1520;border-radius:2px;height:4px;overflow:hidden;margin-bottom:8px;">
           <div style="height:100%;width:${m.conf}%;background:${m.edge>=0?'#4da6ff':'#ff453a'};"></div>
@@ -2314,8 +2325,8 @@ function renderAccount() {
   const plan = user.plan || 'free';
   const isPro = plan === 'pro' || user.isOwner;
   if (isPro) localStorage.removeItem('pk_free_usage');
-  const usage = window.__usageCount || user.todayUsage || 0;
-  const remaining = Math.max(0, (window.__usageLimit || 10) - usage);
+  const usage = user.todayUsage || 0;
+  const remaining = Math.max(0, 10 - usage);
   const name = user.name || user.email || 'User';
   const email = user.email || '';
   const initial = name[0].toUpperCase();
@@ -2334,7 +2345,7 @@ function renderAccount() {
       <div class="acc-plan-badge ${isPro?'pro':'free'}">${isPro?'PRO — Unlimited':`Free — ${remaining} remaining`}</div>
       <div class="acc-stats">
         <div class="acc-stat-row"><span class="acc-stat-label">Plan</span><span class="acc-stat-val">${isPro?'Live Edge Pro':'Free'}</span></div>
-        <div class="acc-stat-row"><span class="acc-stat-label">Reveals used</span><span class="acc-stat-val">${isPro ? 'Unlimited' : usage + ' / ' + (window.__usageLimit || 10)}</span></div>
+        <div class="acc-stat-row"><span class="acc-stat-label">Analyses today</span><span class="acc-stat-val">${usage}${!isPro?' / 3':''}</span></div>
         <div class="acc-stat-row"><span class="acc-stat-label">Active alerts</span><span class="acc-stat-val">${alerts.length}</span></div>
       </div>
       <div style="margin-bottom:20px;">
@@ -2988,7 +2999,7 @@ const onboardingSteps = [
   {
     icon: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
     title: 'You Have 10 Free',
-    body: 'Your first 10 edge reveals are free — no credit card. After that, Pro is $9.99/month for unlimited reveals on every live game. The math shows the edge. Your read of the game is the final call.',
+    body: 'Your first 10 edge reveals are free — no credit card. After that, Pro is $9.99/month for unlimited reveals on every live game.',
     example: `<div style="display:flex;flex-direction:column;gap:8px;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);">
         <span style="font-size:12px;color:var(--dim);">Free tier</span>
